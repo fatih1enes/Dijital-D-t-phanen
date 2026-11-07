@@ -12,40 +12,8 @@
     href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uo0qcPxh4Plq7G5tGm0rU+1SPhVotteLpBERwTkw==" crossorigin="anonymous" referrerpolicy="no-referrer">
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/tokens.css') }}?v=2026110805">
   <style>
-    :root {
-      --ink: #181815;
-      --paper: #f2f0ea;
-      --paper-dark: #e8e5dc;
-      --sepia: #82745e;
-      --sepia-light: #b9b3a6;
-      --sepia-pale: #e6e1d6;
-      --accent: #1f4a38;
-      --accent-soft: #2f6b52;
-      --accent-glow: rgba(31, 74, 56, 0.12);
-      --muted: #6f6a60;
-      --line: rgba(130,116,94, 0.16);
-      --shadow-lg: 0 16px 40px rgba(28, 23, 16, 0.08);
-      --card-bg: rgba(255, 255, 255, 0.85);
-      --radius: 20px;
-      --radius-sm: 12px;
-    }
-
-    [data-theme="dark"] {
-      --ink: #ecebe4;
-      --paper: #111311;
-      --paper-dark: #232220;
-      --sepia: #a09a8d;
-      --sepia-light: #5b574f;
-      --sepia-pale: #2a2926;
-      --accent: #3f8d68;
-      --accent-soft: #5aa584;
-      --accent-glow: rgba(90, 165, 132, 0.16);
-      --muted: #a09a8d;
-      --line: rgba(255, 255, 255, 0.08);
-      --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.5);
-      --card-bg: rgba(21, 18, 16, 0.85);
-    }
 
     * {
       box-sizing: border-box;
@@ -353,9 +321,6 @@
       opacity: 0.8;
     }
 
-    /* ── Tasarım sistemi v4 (design.css ile aynı değerler) ── */
-    :root { --paper:#f4f1eb; --ink:#292825; --muted:#6f6a60; --line:#ddd8cf; --accent:#6e614c; --accent-soft:#82745e; --accent-glow:rgba(110,97,76,.1); --card-bg:#faf9f6; --radius:10px; --radius-sm:6px; }
-    [data-theme="dark"] { --paper:#1b1a17; --ink:#ece8df; --muted:#a09a8d; --line:rgba(236,232,223,.12); --accent:#b9a98c; --accent-soft:#a8987b; --accent-glow:rgba(185,169,140,.14); --card-bg:#232220; }
     body { background-image: none; }
     .theme-toggle-btn { width: 36px; height: 36px; border-radius: 6px; backdrop-filter: none; box-shadow: none; background: transparent; color: var(--muted); border-color: transparent; }
     .theme-toggle-btn:hover { transform: none; background: var(--card-bg); border-color: var(--line); color: var(--ink); box-shadow: none; }

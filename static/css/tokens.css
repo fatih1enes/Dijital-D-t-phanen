@@ -1,138 +1,229 @@
 /**
- * 🎨 Dijital Kütüphane - 3-Tier Design System & CSS Cascade Layers
- * Tokens: Primitives, semantic mappings, and dark mode tokens.
+ * 🎨 Dijital Kütüphane - Unified Design Tokens (Single Source of Truth)
+ * Conforms to Apple Books / Linear / Tesla Editorial Minimalist Standard.
  */
 
 :root {
-    /* -------------------------------------------------------------
-       TIER 1: PRIMITIVES (Raw Hues, Scales, Typographic Steps)
-       ------------------------------------------------------------- */
-    --primitive-hue-warm: 35;
-    --primitive-hue-accent: 15;
-    --primitive-hue-info: 215;
-    --primitive-hue-success: 142;
-    --primitive-hue-warning: 38;
-    --primitive-hue-danger: 0;
+  /* ═══════════════ 1. PRIMITIVES & SCALES ═══════════════ */
+  --primitive-hue-warm: 35;
+  --primitive-hue-accent: 15;
+  --primitive-hue-info: 215;
+  --primitive-hue-success: 142;
+  --primitive-hue-warning: 38;
+  --primitive-hue-danger: 0;
 
-    --font-stack-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    --font-stack-serif: "Merriweather", "Georgia", "Cambria", "Times New Roman", serif;
-    --font-stack-mono: "Cascadia Code", "Fira Code", Consolas, Monaco, "Courier New", monospace;
+  /* Typography Stacks */
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-serif: 'Newsreader', Georgia, serif;
+  --font-ui: 'Geist', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, Consolas, monospace;
 
-    /* Space Scale */
-    --space-2xs: 4px;
-    --space-xs: 8px;
-    --space-sm: 12px;
-    --space-md: 16px;
-    --space-lg: 24px;
-    --space-xl: 32px;
-    --space-2xl: 48px;
+  /* Typography Font Sizes */
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.8125rem;
+  --fs-base: 0.9375rem;
+  --fs-lg: 1.125rem;
+  --fs-xl: 1.5rem;
+  --fs-2xl: 2.25rem;
 
-    /* Radius Scale */
-    --radius-full: 9999px;
-    --radius-xl: 24px;
-    --radius-lg: 18px;
-    --radius-md: 12px;
-    --radius-sm: 8px;
-    --radius-xs: 4px;
+  /* Spacing Scale (4px Grid) */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
 
-    /* Elevation / Shadows */
-    --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
-    --shadow-medium: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
-    --shadow-elevated: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    --shadow-modal: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --space-2xs: var(--sp-1);
+  --space-xs: var(--sp-2);
+  --space-sm: var(--sp-3);
+  --space-md: var(--sp-4);
+  --space-lg: var(--sp-5);
+  --space-xl: var(--sp-6);
+  --space-2xl: var(--sp-7);
 
-    /* Transitions & Physics */
-    --ease-out-smooth: cubic-bezier(0.16, 1, 0.3, 1);
-    --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    --duration-instant: 100ms;
-    --duration-fast: 180ms;
-    --duration-normal: 250ms;
-    --duration-slow: 400ms;
+  /* Radius Scale */
+  --r-xs: 3px;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+  --r-full: 9999px;
 
-    /* -------------------------------------------------------------
-       TIER 2: SEMANTIC TOKENS (Light Mode Theme Baseline)
-       ------------------------------------------------------------- */
-    --color-canvas: #f4f1eb;
-    --color-surface: #ffffff;
-    --color-surface-hover: #faf8f5;
-    --color-surface-sunken: #ebe7de;
+  --radius-xs: var(--r-xs);
+  --radius-sm: var(--r-sm);
+  --radius: var(--r-md);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+  --radius-xl: 20px;
+  --radius-full: var(--r-full);
 
-    --color-text-main: #1f1e1b;
-    --color-text-secondary: #5e523f;
-    --color-text-muted: #6b675d;
-    --color-text-inverse: #ffffff;
+  /* Motion & Physics (Single Motion Standard) */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.2);
+  --t-fast: 150ms;
+  --t-base: 240ms;
+  --duration-instant: 100ms;
+  --duration-fast: 150ms;
+  --duration-normal: 240ms;
+  --duration-slow: 380ms;
 
-    --color-border-subtle: #ddd8cf;
-    --color-border-medium: #c4bdb0;
-    --color-border-strong: #8a8579;
+  --transition-fast: var(--t-fast) var(--ease-out);
+  --transition-smooth: var(--t-base) var(--ease-out);
+  --transition-spring: 0.35s var(--ease-spring);
 
-    --color-primary: #5e523f;
-    --color-primary-hover: #4a4031;
-    --color-primary-soft: #786952;
-    --color-primary-subtle: rgba(94, 82, 63, 0.12);
+  /* ═══════════════ 2. LIGHT MODE SEMANTIC COLORS ═══════════════ */
+  /* Surfaces */
+  --paper: #f4f1eb;          /* Ana arka plan (Sıcak krem / kâğıt) */
+  --surface: #ffffff;        /* Yükseltilmiş kart, modal, panel yüzeyi */
+  --surface-hover: #faf8f5;  /* Yüzey hover */
+  --paper-dark: #ebe7de;     /* Gömülü zemin, tab bar arkası, tag'ler */
+  --sepia-pale: #e5dfd2;     /* Kapak placeholder zemini */
+  --card-bg: var(--surface);
+  --modal-bg: var(--surface);
 
-    --color-accent-blue: #0284c7;
-    --color-accent-green: #16a34a;
-    --color-accent-amber: #d97706;
-    --color-accent-red: #dc2626;
+  --color-canvas: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-sunken: var(--paper-dark);
 
-    /* -------------------------------------------------------------
-       LEGACY SYSTEM ALIASES (Ensures 100% Zero-Breakage Compatibility)
-       ------------------------------------------------------------- */
-    --ink: var(--color-text-main);
-    --paper: var(--color-canvas);
-    --paper-dark: var(--color-surface-sunken);
-    --sepia: #8a7355;
-    --sepia-light: #bfaa8c;
-    --sepia-pale: #e8dfd0;
-    --accent: var(--color-primary);
-    --accent-soft: var(--color-primary-soft);
-    --accent-glow: var(--color-primary-subtle);
-    --muted: var(--color-text-muted);
-    --line: var(--color-border-subtle);
-    --shadow: var(--shadow-subtle);
-    --shadow-md: var(--shadow-medium);
-    --shadow-lg: var(--shadow-elevated);
-    --radius: var(--radius-lg);
-    --radius-sm: var(--radius-md);
-    --radius-xs: var(--radius-sm);
-    --modal-bg: rgba(250, 248, 244, 0.98);
-    --transition-fast: var(--duration-fast) var(--ease-out-smooth);
-    --transition-smooth: var(--duration-slow) var(--ease-out-smooth);
-    --transition-spring: 0.45s var(--ease-spring);
-  }
+  /* Typography & Contrast */
+  --ink: #1f1e1b;            /* Derin antrasit ana metin (Kontrast: 14:1) */
+  --muted: #6b675d;          /* İkincil yardımcı metin (Kontrast: 5.2:1) */
+  --muted-light: #8a8579;    /* Üçüncül / placeholder metin */
+  --sepia: #6b675d;
+  --sepia-light: #b9b3a6;
 
-  /* -------------------------------------------------------------
-     DARK MODE OVERRIDES (Applied on [data-theme="dark"] or .dark-mode)
-     ------------------------------------------------------------- */
-  [data-theme="dark"], body.dark-mode {
-    --color-canvas: #161513;
-    --color-surface: #201e1b;
-    --color-surface-hover: #292723;
-    --color-surface-sunken: #272522;
+  --color-text-main: var(--ink);
+  --color-text-secondary: var(--muted);
+  --color-text-muted: var(--muted);
+  --color-text-inverse: #ffffff;
 
-    --color-text-main: #f0ece3;
-    --color-text-secondary: #c4b59b;
-    --color-text-muted: #a39e93;
-    --color-text-inverse: #161513;
+  /* Lines & Borders */
+  --line: #ddd8cf;           /* Birincil ince ayraç */
+  --line-strong: #c4bdb0;    /* İnput, çerçeve ve aktif kenarlıklar */
+  --line-subtle: #eae5dc;    /* Çok yumuşak ayırıcılar */
 
-    --color-border-subtle: rgba(240, 236, 227, 0.11);
-    --color-border-medium: rgba(240, 236, 227, 0.22);
-    --color-border-strong: rgba(240, 236, 227, 0.35);
+  --color-border-subtle: var(--line);
+  --color-border-medium: var(--line-strong);
+  --color-border-strong: #8a8579;
 
-    --color-primary: #c4b59b;
-    --color-primary-hover: #d5c8b0;
-    --color-primary-soft: #b0a187;
-    --color-primary-subtle: rgba(196, 181, 155, 0.16);
+  /* Accent (Library Lamp & Warm Earth) */
+  --accent: #5e523f;         /* Metin ve ikon vurgusu */
+  --accent-soft: #786952;    /* Dolgulu butonlar, hover'lar */
+  --accent-glow: rgba(94, 82, 63, 0.12);
+  --accent-rgb: 94, 82, 63;
+  --on-accent: #ffffff;
 
-    --ink: var(--color-text-main);
-    --paper: var(--color-canvas);
-    --paper-dark: var(--color-surface-sunken);
-    --sepia-pale: #292723;
-    --line: var(--color-border-subtle);
-    --modal-bg: var(--color-surface);
-    --shadow: rgba(0, 0, 0, 0.3);
-    --shadow-md: rgba(0, 0, 0, 0.5);
-    --shadow-lg: rgba(0, 0, 0, 0.7);
-  }
+  --color-primary: var(--accent);
+  --color-primary-hover: #4a4031;
+  --color-primary-soft: var(--accent-soft);
+  --color-primary-subtle: var(--accent-glow);
 
+  /* Status Colors */
+  --ok: #2e5f38;
+  --ok-bg: #eaf3ec;
+  --warn: #8c6314;
+  --warn-bg: #fdf5e2;
+  --danger: #9c2e25;
+  --danger-bg: #fbeceb;
+  --info: #2d587b;
+  --info-bg: #eaf1f8;
+
+  --color-accent-blue: var(--info);
+  --color-accent-green: var(--ok);
+  --color-accent-amber: var(--warn);
+  --color-accent-red: var(--danger);
+
+  /* Shadows (Natural Diffusion) */
+  --shadow-color: rgba(31, 30, 27, 0.08);
+  --shadow-sm: 0 1px 3px rgba(31, 30, 27, 0.05), 0 1px 2px rgba(31, 30, 27, 0.03);
+  --shadow-md: 0 4px 14px -2px rgba(31, 30, 27, 0.08), 0 2px 6px -1px rgba(31, 30, 27, 0.04);
+  --shadow-lg: 0 18px 40px -10px rgba(31, 30, 27, 0.16), 0 4px 12px -2px rgba(31, 30, 27, 0.05);
+  --shadow-xl: 0 24px 50px -12px rgba(31, 30, 27, 0.22), 0 8px 16px -4px rgba(31, 30, 27, 0.08);
+
+  --shadow: var(--shadow-sm);
+  --shadow-subtle: var(--shadow-sm);
+  --shadow-medium: var(--shadow-md);
+  --shadow-elevated: var(--shadow-lg);
+  --shadow-modal: var(--shadow-xl);
+  --elev-1: var(--shadow-sm);
+  --elev-2: var(--shadow-lg);
+}
+
+/* ═══════════════ 3. DARK MODE (OBSIDIAN & WARM CHARCOAL) ═══════════════ */
+[data-theme="dark"],
+body.dark-mode {
+  /* Surfaces */
+  --paper: #161513;          /* Derin obsidian kömür */
+  --surface: #201e1b;        /* Yükseltilmiş kart ve modal yüzeyi */
+  --surface-hover: #292723;
+  --paper-dark: #272522;
+  --sepia-pale: #292723;
+  --card-bg: var(--surface);
+  --modal-bg: var(--surface);
+
+  --color-canvas: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-sunken: var(--paper-dark);
+
+  /* Typography & Contrast */
+  --ink: #f0ece3;            /* Yüksek kontrastlı temiz krem metin */
+  --muted: #a39e93;          /* Yardımcı metin */
+  --muted-light: #736e64;
+  --sepia: #a39e93;
+  --sepia-light: #59554e;
+
+  --color-text-main: var(--ink);
+  --color-text-secondary: var(--muted);
+  --color-text-muted: var(--muted);
+  --color-text-inverse: #161513;
+
+  /* Lines & Borders */
+  --line: rgba(240, 236, 227, 0.11);
+  --line-strong: rgba(240, 236, 227, 0.22);
+  --line-subtle: rgba(240, 236, 227, 0.06);
+
+  --color-border-subtle: var(--line);
+  --color-border-medium: var(--line-strong);
+  --color-border-strong: rgba(240, 236, 227, 0.35);
+
+  /* Accent */
+  --accent: #c4b59b;
+  --accent-soft: #b0a187;
+  --accent-glow: rgba(196, 181, 155, 0.16);
+  --accent-rgb: 196, 181, 155;
+  --on-accent: #161513;
+
+  --color-primary: var(--accent);
+  --color-primary-hover: #d5c8b0;
+  --color-primary-soft: var(--accent-soft);
+  --color-primary-subtle: var(--accent-glow);
+
+  /* Status Colors */
+  --ok: #88c495;
+  --ok-bg: #1c2b20;
+  --warn: #e4b85c;
+  --warn-bg: #302613;
+  --danger: #ea7f76;
+  --danger-bg: #351b19;
+  --info: #78aed9;
+  --info-bg: #192633;
+
+  /* Shadows */
+  --shadow-color: rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 6px 18px -3px rgba(0, 0, 0, 0.65);
+  --shadow-lg: 0 20px 48px -10px rgba(0, 0, 0, 0.85);
+  --shadow-xl: 0 28px 60px -12px rgba(0, 0, 0, 0.92);
+
+  --shadow: var(--shadow-sm);
+  --shadow-subtle: var(--shadow-sm);
+  --shadow-medium: var(--shadow-md);
+  --shadow-elevated: var(--shadow-lg);
+  --shadow-modal: var(--shadow-xl);
+  --elev-1: var(--shadow-sm);
+  --elev-2: var(--shadow-lg);
+}
