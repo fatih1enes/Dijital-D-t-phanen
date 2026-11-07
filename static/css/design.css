@@ -133,40 +133,118 @@ button:active:not(:disabled),
   transform: scale(0.985);
 }
 
-/* 1. Birincil Butonlar */
+/* ═══════════════ UNIFIED BUTTON COMPONENT SYSTEM (E5) ═══════════════ */
+.btn,
 .btn-import,
 .btn-modal-primary,
 .btn-modal-save,
 .btn-settings-save,
 .btn-empty-add,
-.btn-banner-load {
-  background: var(--ink);
-  color: var(--paper);
-  border: 1px solid var(--ink);
+.btn-banner-load,
+.btn-modal-secondary,
+.btn-modal-fav,
+.btn-settings-cancel,
+.btn-empty-clear,
+.btn-cascade-reset,
+.btn-modal-danger,
+.btn-primary-action,
+.btn-hero-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  height: 36px;
+  padding: 0 var(--sp-4);
   border-radius: var(--r-sm);
-  box-shadow: none;
   font-family: var(--font-ui);
-  font-size: var(--fs-sm);
+  font-size: 0.875rem;
   font-weight: 500;
-  letter-spacing: 0;
-  text-transform: none;
-  transition: all 140ms var(--ease-out);
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  box-sizing: border-box;
+  box-shadow: none;
+  transition: background-color var(--t-micro) var(--ease-out),
+              border-color var(--t-micro) var(--ease-out),
+              color var(--t-micro) var(--ease-out),
+              transform var(--t-micro) var(--ease-out);
+}
+
+.btn:active:not(:disabled),
+.btn-import:active:not(:disabled),
+.btn-modal-primary:active:not(:disabled),
+.btn-modal-save:active:not(:disabled),
+.btn-settings-save:active:not(:disabled),
+.btn-empty-add:active:not(:disabled),
+.btn-modal-secondary:active:not(:disabled),
+.btn-settings-cancel:active:not(:disabled),
+.btn-empty-clear:active:not(:disabled),
+.btn-cascade-reset:active:not(:disabled),
+.btn-modal-danger:active:not(:disabled),
+.btn-primary-action:active:not(:disabled),
+.btn-hero-primary:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn:disabled,
+button:disabled,
+[class*="btn-"]:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
   transform: none;
 }
 
+/* Button Sizes */
+.btn--sm,
+.btn-primary-action.compact {
+  height: 32px;
+  padding: 0 var(--sp-3);
+  font-size: 0.8125rem;
+}
+
+.btn--lg,
+.btn-hero-primary {
+  height: 44px;
+  padding: 0 var(--sp-6);
+  font-size: 1rem;
+  border-radius: var(--r-md);
+}
+
+/* 1. Primary Variant */
+.btn--primary,
+.btn-import,
+.btn-modal-primary,
+.btn-modal-save,
+.btn-settings-save,
+.btn-empty-add,
+.btn-banner-load,
+.btn-primary-action,
+.btn-hero-primary {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+.btn--primary:hover,
 .btn-import:hover,
 .btn-modal-primary:hover,
 .btn-modal-save:hover,
 .btn-settings-save:hover,
-.btn-empty-add:hover {
-  background: var(--accent-soft);
-  border-color: var(--accent-soft);
-  color: var(--on-accent);
-  transform: none;
-  box-shadow: none;
+.btn-empty-add:hover,
+.btn-banner-load:hover,
+.btn-primary-action:hover,
+.btn-hero-primary:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--paper);
 }
 
-/* 2. İkincil Butonlar */
+/* 2. Secondary Variant */
+.btn--secondary,
 .btn-modal-secondary,
 .btn-modal-fav,
 .btn-settings-cancel,
@@ -175,28 +253,19 @@ button:active:not(:disabled),
 .btn-sync {
   background: var(--surface);
   color: var(--ink);
-  border: 1px solid var(--line-strong);
-  border-radius: var(--r-sm);
-  box-shadow: none;
-  font-family: var(--font-ui);
-  font-size: var(--fs-sm);
-  font-weight: 500;
-  letter-spacing: 0;
-  text-transform: none;
-  transition: all 140ms var(--ease-out);
-  transform: none;
+  border-color: var(--line);
 }
 
+.btn--secondary:hover,
 .btn-modal-secondary:hover,
 .btn-modal-fav:hover,
 .btn-settings-cancel:hover,
 .btn-empty-clear:hover,
+.btn-cascade-reset:hover,
 .btn-sync:hover {
   background: var(--paper-dark);
-  border-color: var(--ink);
+  border-color: var(--line-strong);
   color: var(--ink);
-  transform: none;
-  box-shadow: none;
 }
 
 .btn-modal-fav.is-fav {
@@ -205,26 +274,31 @@ button:active:not(:disabled),
   color: var(--accent);
 }
 
-/* 3. Tehlike Butonları */
-.btn-modal-danger {
-  border-radius: var(--r-sm);
-  font-family: var(--font-ui);
-  font-size: var(--fs-sm);
-  letter-spacing: 0;
-  text-transform: none;
-  transition: all var(--t-micro) var(--ease-out);
+/* 3. Ghost Variant */
+.btn--ghost {
+  background: transparent;
+  color: var(--muted);
+  border-color: transparent;
 }
 
+.btn--ghost:hover {
+  background: var(--paper-dark);
+  color: var(--ink);
+}
+
+/* 4. Danger Variant */
+.btn--danger,
+.btn-modal-danger {
+  background: var(--surface);
+  color: var(--danger);
+  border-color: var(--line);
+}
+
+.btn--danger:hover,
 .btn-modal-danger:hover {
   background: var(--danger-bg);
-  color: var(--danger);
   border-color: var(--danger);
-}
-
-button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-  transform: none;
+  color: var(--danger);
 }
 
 /* ═══════════════ 5. HEADER & KOMPAKT NAV ═══════════════ */
@@ -275,50 +349,10 @@ h1 em {
   gap: var(--sp-2);
 }
 
-.btn-primary-action {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  background: var(--ink);
-  color: var(--paper);
-  border: 1px solid var(--ink);
-  border-radius: var(--r-sm);
-  padding: 0.5rem 1rem;
-  font-family: var(--font-ui);
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  transition: transform var(--t-micro) var(--ease-out), box-shadow var(--t-micro) var(--ease-out), background var(--t-micro) var(--ease-out);
-  white-space: nowrap;
-}
-
 .btn-primary-action.hidden,
 #header-add-book-btn[style*="display: none"],
 #compact-add-book-btn[style*="display: none"] {
   display: none !important;
-}
-
-.btn-primary-action:hover {
-  transform: none;
-  box-shadow: none;
-  background: var(--accent);
-  border-color: var(--accent);
-}
-
-.btn-primary-action:active {
-  transform: scale(0.985);
-}
-
-[data-theme="dark"] .btn-primary-action {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #ffffff;
-}
-
-.btn-primary-action.compact {
-  padding: 0.35rem 0.75rem;
-  font-size: var(--fs-xs);
 }
 
 .header-action-divider {
@@ -2122,58 +2156,7 @@ i[class*="fa-heart"] {
   color: var(--ok);
 }
 
-/* ═══════════════ FLUID 60FPS INTERACTION PHYSICS ═══════════════ */
-.btn-import,
-.btn-modal-primary,
-.btn-modal-save,
-.btn-settings-save,
-.btn-empty-add,
-.btn-banner-load,
-.btn-primary-action,
-.btn-hero-primary {
-  background: var(--ink);
-  color: var(--paper);
-  border: 1px solid var(--ink);
-  border-radius: var(--r-sm);
-  box-shadow: var(--shadow-sm);
-  font-family: var(--font-ui);
-  font-size: var(--fs-sm);
-  font-weight: 500;
-  letter-spacing: 0;
-  text-transform: none;
-  transition: background-color var(--t-micro) var(--ease-out),
-              border-color var(--t-micro) var(--ease-out),
-              color var(--t-micro) var(--ease-out),
-              transform var(--t-micro) var(--ease-out);
-}
-
-/* İkincil Butonlar */
-.btn-modal-secondary,
-.btn-modal-fav,
-.btn-settings-cancel,
-.btn-empty-clear,
-.btn-cascade-reset,
-.btn-sync,
-.btn-hero-secondary,
-#btn-telegram,
-#btn-sync {
-  background: var(--surface);
-  color: var(--ink);
-  border: 1px solid var(--line-strong);
-  border-radius: var(--r-sm);
-  box-shadow: none;
-  font-family: var(--font-ui);
-  font-size: var(--fs-sm);
-  font-weight: 500;
-  letter-spacing: 0;
-  text-transform: none;
-  cursor: pointer;
-  transition: background-color var(--t-micro) var(--ease-out),
-              border-color var(--t-micro) var(--ease-out),
-              color var(--t-micro) var(--ease-out),
-              transform var(--t-micro) var(--ease-out);
-}
-
+/* ═══════════════ FLUID INTERACTION PHYSICS ═══════════════ */
 /* İkon Butonları */
 .header-icon-btn,
 .view-btn,
@@ -2199,6 +2182,7 @@ i[class*="fa-heart"] {
 
 /* ── MOUSE HOVER: Sadece fare/pointer cihazlarda çalışır, dokunmatik ekranda asla yapışmaz ── */
 @media (hover: hover) and (pointer: fine) {
+  .btn--primary:hover:not(:disabled),
   .btn-import:hover:not(:disabled),
   .btn-modal-primary:hover:not(:disabled),
   .btn-modal-save:hover:not(:disabled),
@@ -2207,23 +2191,21 @@ i[class*="fa-heart"] {
   .btn-banner-load:hover:not(:disabled),
   .btn-primary-action:hover:not(:disabled),
   .btn-hero-primary:hover:not(:disabled) {
-    background: var(--accent-soft);
-    border-color: var(--accent-soft);
-    color: var(--on-accent);
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--paper);
     transform: none;
   }
 
+  .btn--secondary:hover:not(:disabled),
   .btn-modal-secondary:hover:not(:disabled),
   .btn-modal-fav:hover:not(:disabled),
   .btn-settings-cancel:hover:not(:disabled),
   .btn-empty-clear:hover:not(:disabled),
   .btn-cascade-reset:hover:not(:disabled),
-  .btn-sync:hover:not(:disabled),
-  .btn-hero-secondary:hover:not(:disabled),
-  #btn-telegram:hover:not(:disabled),
-  #btn-sync:hover:not(:disabled) {
-    background: var(--surface-hover);
-    border-color: var(--ink);
+  .btn-sync:hover:not(:disabled) {
+    background: var(--paper-dark);
+    border-color: var(--line-strong);
     color: var(--ink);
     transform: none;
   }
@@ -2259,14 +2241,8 @@ i[class*="fa-heart"] {
 
 /* ── BASMA GERİ BİLDİRİMİ: Hem fare hem dokunmatik ekranda çalışır ── */
 button:active:not(:disabled),
-[class*="btn-"]:active:not(:disabled),
-.btn-primary-action:active:not(:disabled),
-.btn-hero-primary:active:not(:disabled),
-.btn-hero-secondary:active:not(:disabled),
-#btn-telegram:active:not(:disabled),
-#btn-sync:active:not(:disabled),
-.btn-modal-primary:active:not(:disabled),
-.btn-modal-secondary:active:not(:disabled) {
+.btn:active:not(:disabled),
+[class*="btn-"]:active:not(:disabled) {
   transform: scale(0.97);
 }
 
