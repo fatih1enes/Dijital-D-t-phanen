@@ -1,4 +1,5 @@
 /* ═══════════ ui_core.js — UI Rendering, Grid, Table & Collections ═══════════ */
+    window.shouldStagger = true;
     // --- CATEGORY LABELS ---
     function buildCategoryTags() {
       const books = window.allBooks || [];
@@ -367,6 +368,7 @@
       } else if (window.currentView === 'table') {
         renderTable(books);
       }
+      window.shouldStagger = false;
     }
 
     function renderRecentShelf() {
@@ -433,12 +435,25 @@
       });
       grid.innerHTML = '';
       activeUploads.forEach(node => grid.appendChild(node));
+
+      const isSearchingOrFiltering = Boolean(document.getElementById('search-input')?.value?.trim()) ||
+        (window.activeCategory && window.activeCategory !== 'all') ||
+        (window.activeCollection && window.activeCollection !== 'all') ||
+        Boolean(window.showOnlyFav);
+
+      const doStagger = Boolean(window.shouldStagger) && !isSearchingOrFiltering;
+
       books.forEach((b, i) => {
         const card = document.createElement('div');
         card.className = 'book-card';
-        const staggerIdx = Math.min(i, 35);
-        card.style.setProperty('--card-index', staggerIdx);
-        card.style.animationDelay = `${staggerIdx * 0.028}s`;
+        if (doStagger) {
+          card.classList.add('stagger-in');
+          const staggerIdx = i < 12 ? i : 0;
+          card.style.setProperty('--card-index', staggerIdx);
+          card.style.animationDelay = i < 12 ? `${i * 30}ms` : '0ms';
+        } else {
+          card.style.animation = 'none';
+        }
 
         const coverInner = b.has_cover
           ? `<img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" loading="lazy">`
@@ -504,11 +519,24 @@
       const tbody = document.getElementById('table-body');
       if (!tbody) return;
       tbody.innerHTML = '';
+
+      const isSearchingOrFiltering = Boolean(document.getElementById('search-input')?.value?.trim()) ||
+        (window.activeCategory && window.activeCategory !== 'all') ||
+        (window.activeCollection && window.activeCollection !== 'all') ||
+        Boolean(window.showOnlyFav);
+
+      const doStagger = Boolean(window.shouldStagger) && !isSearchingOrFiltering;
+
       books.forEach((b, i) => {
         const tr = document.createElement('tr');
-        const staggerIdx = Math.min(i, 40);
-        tr.style.setProperty('--card-index', staggerIdx);
-        tr.style.animationDelay = `${staggerIdx * 0.02}s`;
+        if (doStagger) {
+          tr.classList.add('stagger-in');
+          const staggerIdx = i < 12 ? i : 0;
+          tr.style.setProperty('--card-index', staggerIdx);
+          tr.style.animationDelay = i < 12 ? `${i * 30}ms` : '0ms';
+        } else {
+          tr.style.animation = 'none';
+        }
         tr.id = `book-${b.hash}`;
         tr.dataset.hash = b.hash;
         if (selectedBooks.has(b.hash)) tr.classList.add('selected');
@@ -1010,12 +1038,14 @@
       if (btnTable) btnTable.classList.toggle('active', v === 'table');
       if (btnStats) btnStats.classList.toggle('active', v === 'stats');
 
+      window.shouldStagger = true;
       if (v === 'table') {
         renderTable(getFiltered());
       } else if (v === 'grid') {
         renderGrid(getFiltered());
         setTimeout(enableDragSort, 100);
       }
+      window.shouldStagger = false;
       if (v === 'stats' && typeof loadStats === 'function') void loadStats();
     }
 
