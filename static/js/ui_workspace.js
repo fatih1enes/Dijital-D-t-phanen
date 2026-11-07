@@ -1691,8 +1691,11 @@
           wrapper.style.setProperty('--scale-factor', String(viewport.scale));
         }
         
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2.5); // Retina netliği & bellek tavanı
+        canvas.width = Math.floor(viewport.width * dpr);
+        canvas.height = Math.floor(viewport.height * dpr);
+        canvas.style.width = viewport.width + 'px';
+        canvas.style.height = viewport.height + 'px';
         
         if (textLayer) {
           textLayer.style.width = viewport.width + 'px';
@@ -1706,7 +1709,8 @@
         
         const renderContext = {
           canvasContext: ctx,
-          viewport: viewport
+          viewport: viewport,
+          transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : null
         };
         
         const renderTask = page.render(renderContext);
@@ -3414,4 +3418,20 @@
       }
     }
     window.openWorkspaceAtPage = openWorkspaceAtPage;
+
+    // Listen for DPI changes (e.g. dragging between Retina & standard screens)
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      const setupDprWatcher = () => {
+        const dpr = window.devicePixelRatio || 1;
+        const mq = window.matchMedia(`(resolution: ${dpr}dppx)`);
+        mq.addEventListener('change', () => {
+          if (pdfDoc && typeof isPdfOpen !== 'undefined' && isPdfOpen) {
+            Object.keys(pdfRenderedPages).forEach(p => cleanupOffscreenPage(Number(p)));
+            if (typeof checkVisiblePagesAndRender === 'function') checkVisiblePagesAndRender();
+          }
+          setupDprWatcher();
+        }, { once: true });
+      };
+      setupDprWatcher();
+    }
 
