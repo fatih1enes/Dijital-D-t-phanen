@@ -705,8 +705,22 @@ h1 em {
 .book-card::before,
 .book-card::after { display: none !important; }
 
-.book-card:hover {
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  .book-card:hover {
+    transform: translateY(-4px);
+  }
+  .book-card:hover .card-cover {
+    box-shadow: inset 0 0 0 1px var(--line), var(--shadow-lg);
+  }
+  .book-card:hover .card-cover img,
+  .book-card:hover .card-cover-placeholder {
+    transform: scale(1.02);
+  }
+}
+
+.book-card:active {
+  transform: translateY(-2px) scale(0.99);
+  transition-duration: var(--t-micro);
 }
 
 .card-cover {
@@ -1269,17 +1283,6 @@ h1 em {
               border-color var(--t-micro) var(--ease-out);
 }
 
-.ops-toggle:hover {
-  background: var(--surface-hover);
-  border-color: var(--ink);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-}
-
-.ops-toggle:active {
-  transform: translateY(0px) scale(0.975);
-  box-shadow: var(--shadow-sm);
-}
 
 .ops-status-dot {
   width: 8px;
@@ -1344,16 +1347,6 @@ h1 em {
               background-color var(--t-micro) var(--ease-out);
 }
 
-#chat-panel:not(.active):hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--ink);
-  background: var(--surface-hover);
-}
-
-#chat-panel:not(.active):active {
-  transform: translateY(0px) scale(0.975);
-}
 
 #chat-panel:not(.active) .chat-body,
 #chat-panel:not(.active) .chat-input-area {
@@ -1495,13 +1488,6 @@ h1 em {
   border: 1px solid var(--line-strong);
   border-radius: var(--r-full);
   box-shadow: var(--shadow-md);
-}
-
-#scroll-top-btn:hover {
-  background: var(--paper-dark);
-  border-color: var(--ink);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
 }
 
 /* ═══════════════ 7. SIFIR DURUMU (ZERO STATE) & İÇE AKTARMA ═══════════════ */
@@ -1709,13 +1695,15 @@ h1 em {
   border: 1px solid var(--line);
   border-radius: var(--r-sm);
   cursor: pointer;
-  transition: all 140ms var(--ease-out);
+  transition: background-color var(--t-micro) var(--ease-out),
+              border-color var(--t-micro) var(--ease-out);
 }
 
-.shelf-item:hover {
-  background: var(--paper-dark);
-  border-color: var(--line-strong);
-  transform: translateY(-1.5px);
+@media (hover: hover) and (pointer: fine) {
+  .shelf-item:hover {
+    background: var(--paper-dark);
+    border-color: var(--line-strong);
+  }
 }
 
 .shelf-item:active {
@@ -1869,29 +1857,13 @@ h1 em {
   font-weight: 500;
   letter-spacing: 0;
   text-transform: none;
-  transition: transform var(--t-ui) var(--ease-out),
-              box-shadow var(--t-ui) var(--ease-out),
-              background-color var(--t-micro) var(--ease-out),
+  transition: background-color var(--t-micro) var(--ease-out),
               border-color var(--t-micro) var(--ease-out),
-              color var(--t-micro) var(--ease-out);
+              color var(--t-micro) var(--ease-out),
+              transform var(--t-micro) var(--ease-out);
 }
 
-.btn-import:hover:not(:disabled),
-.btn-modal-primary:hover:not(:disabled),
-.btn-modal-save:hover:not(:disabled),
-.btn-settings-save:hover:not(:disabled),
-.btn-empty-add:hover:not(:disabled),
-.btn-banner-load:hover:not(:disabled),
-.btn-primary-action:hover:not(:disabled),
-.btn-hero-primary:hover:not(:disabled) {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--on-accent);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-/* İkincil Butonlar — %100 İkiz Fizik ve Gölge Standardı (#btn-telegram ve #btn-sync dahil) */
+/* İkincil Butonlar */
 .btn-modal-secondary,
 .btn-modal-fav,
 .btn-settings-cancel,
@@ -1905,65 +1877,126 @@ h1 em {
   color: var(--ink);
   border: 1px solid var(--line-strong);
   border-radius: var(--r-sm);
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
   font-family: var(--font-ui);
   font-size: var(--fs-sm);
   font-weight: 500;
   letter-spacing: 0;
   text-transform: none;
-  transition: transform var(--t-ui) var(--ease-out),
-              box-shadow var(--t-ui) var(--ease-out),
-              background-color var(--t-micro) var(--ease-out),
+  cursor: pointer;
+  transition: background-color var(--t-micro) var(--ease-out),
               border-color var(--t-micro) var(--ease-out),
-              color var(--t-micro) var(--ease-out);
+              color var(--t-micro) var(--ease-out),
+              transform var(--t-micro) var(--ease-out);
 }
 
-.btn-modal-secondary:hover:not(:disabled),
-.btn-modal-fav:hover:not(:disabled),
-.btn-settings-cancel:hover:not(:disabled),
-.btn-empty-clear:hover:not(:disabled),
-.btn-cascade-reset:hover:not(:disabled),
-.btn-sync:hover:not(:disabled),
-.btn-hero-secondary:hover:not(:disabled),
-#btn-telegram:hover:not(:disabled),
-#btn-sync:hover:not(:disabled) {
-  background: var(--paper-dark);
-  border-color: var(--ink);
-  color: var(--ink);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+/* İkon Butonları */
+.header-icon-btn,
+.view-btn,
+.theme-toggle-btn,
+.ops-btn-icon,
+.ops-btn-close {
+  cursor: pointer;
+  transition: background-color var(--t-micro) var(--ease-out),
+              border-color var(--t-micro) var(--ease-out),
+              color var(--t-micro) var(--ease-out),
+              transform var(--t-micro) var(--ease-out);
 }
 
-/* Dokunsal Basılma (Tactile Press) */
+/* Yüzen Haplar (#ops-toggle ve #chat-panel kapalı hapı) */
+.ops-toggle,
+#chat-panel:not(.active) {
+  cursor: pointer;
+  transition: background-color var(--t-micro) var(--ease-out),
+              border-color var(--t-micro) var(--ease-out),
+              box-shadow var(--t-micro) var(--ease-out),
+              transform var(--t-micro) var(--ease-out);
+}
+
+/* ── MOUSE HOVER: Sadece fare/pointer cihazlarda çalışır, dokunmatik ekranda asla yapışmaz ── */
+@media (hover: hover) and (pointer: fine) {
+  .btn-import:hover:not(:disabled),
+  .btn-modal-primary:hover:not(:disabled),
+  .btn-modal-save:hover:not(:disabled),
+  .btn-settings-save:hover:not(:disabled),
+  .btn-empty-add:hover:not(:disabled),
+  .btn-banner-load:hover:not(:disabled),
+  .btn-primary-action:hover:not(:disabled),
+  .btn-hero-primary:hover:not(:disabled) {
+    background: var(--accent-soft);
+    border-color: var(--accent-soft);
+    color: var(--on-accent);
+    transform: none;
+  }
+
+  .btn-modal-secondary:hover:not(:disabled),
+  .btn-modal-fav:hover:not(:disabled),
+  .btn-settings-cancel:hover:not(:disabled),
+  .btn-empty-clear:hover:not(:disabled),
+  .btn-cascade-reset:hover:not(:disabled),
+  .btn-sync:hover:not(:disabled),
+  .btn-hero-secondary:hover:not(:disabled),
+  #btn-telegram:hover:not(:disabled),
+  #btn-sync:hover:not(:disabled) {
+    background: var(--surface-hover);
+    border-color: var(--ink);
+    color: var(--ink);
+    transform: none;
+  }
+
+  .header-icon-btn:hover:not(:disabled),
+  .view-btn:hover:not(:disabled),
+  .theme-toggle-btn:hover:not(:disabled),
+  .ops-btn-icon:hover:not(:disabled),
+  .ops-btn-close:hover:not(:disabled) {
+    background: var(--paper-dark);
+    color: var(--ink);
+    transform: none;
+  }
+
+  .ops-toggle:hover {
+    background: var(--surface-hover);
+    border-color: var(--ink);
+    transform: none;
+  }
+
+  #chat-panel:not(.active):hover {
+    background: var(--surface-hover);
+    border-color: var(--ink);
+    transform: none;
+  }
+
+  #scroll-top-btn:hover {
+    background: var(--paper-dark);
+    border-color: var(--ink);
+    transform: none;
+  }
+}
+
+/* ── BASMA GERİ BİLDİRİMİ: Hem fare hem dokunmatik ekranda çalışır ── */
 button:active:not(:disabled),
+[class*="btn-"]:active:not(:disabled),
 .btn-primary-action:active:not(:disabled),
 .btn-hero-primary:active:not(:disabled),
 .btn-hero-secondary:active:not(:disabled),
 #btn-telegram:active:not(:disabled),
 #btn-sync:active:not(:disabled),
 .btn-modal-primary:active:not(:disabled),
-.btn-modal-secondary:active:not(:disabled),
-.header-icon-btn:active:not(:disabled) {
-  transform: translateY(0px) scale(0.975);
-  box-shadow: var(--shadow-sm);
-  transition-duration: var(--t-micro);
+.btn-modal-secondary:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
-/* Header İkon Butonları Akıcı Hover */
-.header-icon-btn {
-  transition: transform var(--t-micro) var(--ease-out),
-              box-shadow var(--t-micro) var(--ease-out),
-              background-color var(--t-micro) var(--ease-out),
-              border-color var(--t-micro) var(--ease-out),
-              color var(--t-micro) var(--ease-out);
+.header-icon-btn:active:not(:disabled),
+.view-btn:active:not(:disabled),
+.theme-toggle-btn:active:not(:disabled),
+.ops-btn-icon:active:not(:disabled),
+.ops-btn-close:active:not(:disabled) {
+  transform: scale(0.94);
 }
 
-.header-icon-btn:hover {
-  background: var(--paper-dark);
-  color: var(--ink);
-  border-color: var(--line-strong);
-  transform: translateY(-1.5px);
-  box-shadow: var(--shadow-md);
+.ops-toggle:active,
+#chat-panel:not(.active):active {
+  transform: scale(0.96);
 }
 
 /* Zero-State Hero Giriş Animasyonu ve Derinliği */

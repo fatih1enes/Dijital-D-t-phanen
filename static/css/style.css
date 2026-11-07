@@ -444,10 +444,9 @@
     }
 
     .tag:hover {
-      border-color: var(--sepia);
-      color: var(--sepia);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 10px var(--shadow-color);
+      border-color: var(--ink);
+      color: var(--ink);
+      background: var(--paper-dark);
     }
 
     .tag.active {
@@ -822,7 +821,7 @@
       overflow: hidden;
       cursor: pointer;
       transition: transform var(--t-ui) var(--ease-out), box-shadow var(--t-ui) var(--ease-out), border-color var(--t-ui) var(--ease-out);
-      animation: fadeSlideUp var(--t-page) var(--ease-out) both;
+      animation: fadeSlideUp var(--t-page) var(--ease-out);
       animation-delay: calc(var(--card-index, 0) * 28ms);
       display: flex;
       flex-direction: column;
@@ -2403,10 +2402,8 @@
 
     .theme-toggle:hover,
     #settings-btn:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-      transform: translateY(-3px) scale(1.08);
-      box-shadow: 0 10px 25px rgba(110,97,76, 0.15);
+      border-color: var(--line-strong);
+      color: var(--ink);
       background: var(--paper-dark);
     }
 
@@ -5049,7 +5046,6 @@
     .source-capsule:hover {
       background: rgba(110,97,76, 0.15);
       border-color: var(--accent);
-      transform: translateY(-1px);
     }
 
     .chat-user .source-capsule {
@@ -6305,9 +6301,9 @@
     }
 
     .btn-empty-clear:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-      transform: translateY(-1px);
+      border-color: var(--ink);
+      color: var(--ink);
+      background: var(--paper-dark);
     }
 
     .btn-empty-add {
@@ -6380,8 +6376,6 @@
     .chat-page-cite:hover {
       background: var(--accent);
       color: #fff;
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px var(--accent-glow);
     }
 
     .pdf-page-wrapper.page-pulse {
@@ -6410,7 +6404,6 @@
     .btn-stop-chat:hover {
       background: #8f3228;
       color: #fff;
-      transform: translateY(-1px);
     }
 
     /* ═══════════ Mobile Responsive Workspace ═══════════ */
