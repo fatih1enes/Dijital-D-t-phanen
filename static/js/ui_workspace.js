@@ -1670,18 +1670,7 @@
       try {
         const page = await pdfDoc.getPage(pageNum);
         const wrapper = document.getElementById(`pdf-page-wrapper-${pageNum}`);
-        let canvas = document.getElementById(`pdf-render-canvas-${pageNum}`);
-        if (!canvas && wrapper) {
-          canvas = document.createElement('canvas');
-          canvas.id = `pdf-render-canvas-${pageNum}`;
-          canvas.className = 'pdf-page-canvas';
-          wrapper.insertBefore(canvas, wrapper.firstChild);
-        }
-        if (!canvas) {
-          delete pdfRenderedPages[pageNum];
-          return;
-        }
-        const ctx = canvas.getContext('2d');
+        const existingCanvas = document.getElementById(`pdf-render-canvas-${pageNum}`);
         const textLayer = document.getElementById(`textLayer-${pageNum}`);
         const highlightLayer = document.getElementById(`pdf-highlight-layer-${pageNum}`);
         const viewport = page.getViewport({ scale: pdfScale });
@@ -1691,12 +1680,22 @@
           wrapper.style.height = viewport.height + 'px';
           wrapper.style.setProperty('--scale-factor', String(viewport.scale));
         }
+
+        // Çift tamponlama (double-buffering): Eski canvas render bitene kadar yerinde kalır, beyaz flaş engellenir
+        if (existingCanvas) {
+          existingCanvas.style.width = viewport.width + 'px';
+          existingCanvas.style.height = viewport.height + 'px';
+        }
         
         const dpr = Math.min(window.devicePixelRatio || 1, 2.5); // Retina netliği & bellek tavanı
-        canvas.width = Math.floor(viewport.width * dpr);
-        canvas.height = Math.floor(viewport.height * dpr);
-        canvas.style.width = viewport.width + 'px';
-        canvas.style.height = viewport.height + 'px';
+        const newCanvas = document.createElement('canvas');
+        newCanvas.className = 'pdf-page-canvas';
+        newCanvas.width = Math.floor(viewport.width * dpr);
+        newCanvas.height = Math.floor(viewport.height * dpr);
+        newCanvas.style.width = viewport.width + 'px';
+        newCanvas.style.height = viewport.height + 'px';
+        
+        const ctx = newCanvas.getContext('2d');
         
         if (textLayer) {
           textLayer.style.width = viewport.width + 'px';
@@ -1720,7 +1719,17 @@
         await renderTask.promise;
         delete pdfRenderTasks[pageNum];
         pdfRenderedPages[pageNum] = 'done';
-        applyChromaGuard(canvas, currentReaderSurfaceMode);
+        applyChromaGuard(newCanvas, currentReaderSurfaceMode);
+        
+        // requestAnimationFrame ile atomik ve flaşsız canvas değişimi
+        requestAnimationFrame(() => {
+          newCanvas.id = `pdf-render-canvas-${pageNum}`;
+          if (existingCanvas && existingCanvas.parentNode) {
+            existingCanvas.parentNode.replaceChild(newCanvas, existingCanvas);
+          } else if (wrapper) {
+            wrapper.insertBefore(newCanvas, wrapper.firstChild);
+          }
+        });
         
         if (textLayer) {
           await renderTextLayerForPage(page, textLayer, viewport, pageNum);
@@ -1771,6 +1780,13 @@
           if (wrapper) {
             wrapper.style.width = viewport.width + 'px';
             wrapper.style.height = viewport.height + 'px';
+            
+            // Mevcut canvas'ı hemen silme, yeni boyuta göre CSS ile ölçeklendir (beyaz boşluğu önle)
+            const existingCanvas = document.getElementById(`pdf-render-canvas-${p}`);
+            if (existingCanvas) {
+              existingCanvas.style.width = viewport.width + 'px';
+              existingCanvas.style.height = viewport.height + 'px';
+            }
             
             const textLayer = document.getElementById(`textLayer-${p}`);
             if (textLayer) {
@@ -1854,13 +1870,27 @@
       hideFloatingBar();
     }
 
-    // Zoom Controls
+    // Zoom Controls & Hardware Acceleration State
+    let zoomWillChangeTimer = null;
+    function markZoomActive() {
+      const container = document.getElementById('pdf-canvas-container');
+      if (container) {
+        container.classList.add('is-zooming');
+      }
+      if (zoomWillChangeTimer) clearTimeout(zoomWillChangeTimer);
+      zoomWillChangeTimer = setTimeout(() => {
+        const c = document.getElementById('pdf-canvas-container');
+        if (c) c.classList.remove('is-zooming');
+      }, 300);
+    }
+
     function updateZoomLabel() {
       const pct = Math.round(pdfScale * 100);
       document.getElementById('pdf-zoom-percent').textContent = pct + "%";
     }
 
     function pdfZoomIn() {
+      markZoomActive();
       pdfIsFitWidth = false;
       pdfIsFitHeight = false;
       document.getElementById('pdf-fit-width-btn')?.classList.remove('active');
@@ -1873,6 +1903,7 @@
     }
 
     function pdfZoomOut() {
+      markZoomActive();
       pdfIsFitWidth = false;
       pdfIsFitHeight = false;
       document.getElementById('pdf-fit-width-btn')?.classList.remove('active');
@@ -1885,6 +1916,7 @@
     }
 
     function pdfFitWidth() {
+      markZoomActive();
       const btn = document.getElementById('pdf-fit-width-btn');
       const otherBtn = document.getElementById('pdf-fit-height-btn');
       if (pdfIsFitWidth) {
@@ -1903,6 +1935,7 @@
     }
 
     function pdfFitHeight() {
+      markZoomActive();
       const btn = document.getElementById('pdf-fit-height-btn');
       const otherBtn = document.getElementById('pdf-fit-width-btn');
       if (pdfIsFitHeight) {
@@ -1919,6 +1952,19 @@
       resizeAllPagesForZoom();
       hideFloatingBar();
     }
+
+    // Ctrl + Mouse Wheel ile pürüzsüz zoom desteği
+    document.addEventListener('wheel', function(e) {
+      if (!e.ctrlKey) return;
+      const container = document.getElementById('pdf-canvas-container');
+      if (!container || !container.contains(e.target)) return;
+      e.preventDefault();
+      if (e.deltaY < 0) {
+        pdfZoomIn();
+      } else {
+        pdfZoomOut();
+      }
+    }, { passive: false });
 
     // Toggle Notes Sidebar on left
     function toggleNotesSidebar() {

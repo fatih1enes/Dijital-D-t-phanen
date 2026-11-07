@@ -2379,3 +2379,9 @@ button:active:not(:disabled),
   filter: none;
   transition: filter var(--t-ui) var(--ease-out);
 }
+
+/* ═══════════════ READER DOUBLE-BUFFERED ZOOM (GPU TRANSITION) ═══════════════ */
+#pdf-canvas-container.is-zooming .pdf-page-canvas,
+#pdf-canvas-container.is-zooming .pdf-page-wrapper {
+  will-change: transform;
+}
