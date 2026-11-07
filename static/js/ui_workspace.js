@@ -1428,6 +1428,37 @@
       renderNotesSidebar();
     }
 
+    // --- [D2: PDF Pre-Fetching & Skeleton Loader] ---
+    const pdfPrefetchCache = new Map();
+
+    function prefetchPdfDocument(hash) {
+      if (!hash || !window.pdfjsLib || pdfPrefetchCache.has(hash)) return;
+      const pdfUrl = `/api/download/${hash}`;
+      try {
+        const loadingTask = window.pdfjsLib.getDocument(pdfUrl);
+        pdfPrefetchCache.set(hash, {
+          task: loadingTask,
+          promise: loadingTask.promise
+        });
+      } catch (e) {
+        console.debug('Prefetch silent skip:', e);
+      }
+    }
+    window.prefetchPdfDocument = prefetchPdfDocument;
+
+    function cancelPdfPrefetch(hash) {
+      if (!hash || !pdfPrefetchCache.has(hash)) return;
+      const item = pdfPrefetchCache.get(hash);
+      if (item && item.cleanupTimer) clearTimeout(item.cleanupTimer);
+      if (item) {
+        item.cleanupTimer = setTimeout(() => {
+          try { item.task.destroy(); } catch (_) {}
+          pdfPrefetchCache.delete(hash);
+        }, 8000);
+      }
+    }
+    window.cancelPdfPrefetch = cancelPdfPrefetch;
+
     function initCustomPdfViewer(book, initialPage = null) {
       // Reset state
       pdfDoc = null;
@@ -1533,7 +1564,21 @@
 
       const container = document.getElementById('pdf-canvas-container');
       if (container) {
-        container.innerHTML = `<div style="padding: 2rem; color: var(--muted); text-align: center; font-family: 'Geist', sans-serif;"><i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i> Belge yükleniyor...</div>`;
+        container.innerHTML = `
+          <div class="reader-skeleton-wrap">
+            <div class="reader-skeleton-cover-preview">
+              ${book.has_cover ? `<img src="/thumbnails/${book.hash}.jpg" alt="">` : '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);"><i class="fas fa-book" style="font-size:2.5rem;"></i></div>'}
+            </div>
+            <div class="reader-skeleton-page">
+              <div class="reader-skeleton-line title"></div>
+              <div class="reader-skeleton-line short"></div>
+              <div class="reader-skeleton-line"></div>
+              <div class="reader-skeleton-line"></div>
+              <div class="reader-skeleton-line"></div>
+              <div class="reader-skeleton-line medium"></div>
+            </div>
+          </div>
+        `;
       }
 
       // Check file extension: If .txt, render clean typography reader
@@ -1557,8 +1602,18 @@
         return;
       }
 
-      const loadingTask = window.pdfjsLib.getDocument(pdfUrl);
-      loadingTask.promise
+      // D2: Use pre-fetched promise if available for zero-latency instant open
+      let docPromise = null;
+      if (pdfPrefetchCache.has(book.hash)) {
+        const cached = pdfPrefetchCache.get(book.hash);
+        docPromise = cached.promise;
+        pdfPrefetchCache.delete(book.hash);
+      } else {
+        const loadingTask = window.pdfjsLib.getDocument(pdfUrl);
+        docPromise = loadingTask.promise;
+      }
+
+      docPromise
         .then(pdf => setupLoadedPdf(pdf, book, container, pdfUrl))
         .catch(function(error) {
           console.error("PDF.js yükleme hatası:", error);

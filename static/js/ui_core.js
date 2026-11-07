@@ -461,6 +461,25 @@
         </div>
       `;
 
+      let prefetchHoverTimer = null;
+      card.addEventListener('pointerenter', () => {
+        prefetchHoverTimer = setTimeout(() => {
+          if (typeof window.prefetchPdfDocument === 'function') {
+            window.prefetchPdfDocument(b.hash);
+          }
+        }, 150);
+      });
+
+      card.addEventListener('pointerleave', () => {
+        if (prefetchHoverTimer) {
+          clearTimeout(prefetchHoverTimer);
+          prefetchHoverTimer = null;
+        }
+        if (typeof window.cancelPdfPrefetch === 'function') {
+          window.cancelPdfPrefetch(b.hash);
+        }
+      });
+
       card.onclick = () => {
         if (window.isSelectionMode) {
           toggleSelectBook(card, b.hash);
