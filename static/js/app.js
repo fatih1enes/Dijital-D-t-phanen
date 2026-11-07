@@ -205,28 +205,36 @@
 
     // ─── İŞLEM MERKEZİ MANTIĞI ──────────────────────────────────────────
 
-    // ─── MODERN SCROLL LOGIC (Smooth & Zero Jitter) ─────────────────────
-    let lastScrollY = window.scrollY;
+    // ─── HEADER & COMPACT-NAV INTERSECTION OBSERVER (Zero Jitter) ──────
+    const mainHeader = document.querySelector('header:not(.workspace-header)');
     const compactNav = document.getElementById('compact-nav');
     const scrollBtn = document.getElementById('scroll-top-btn');
 
+    if (mainHeader && compactNav && 'IntersectionObserver' in window) {
+      const headerObserver = new IntersectionObserver((entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting) {
+          compactNav.classList.remove('visible');
+        } else {
+          const workspace = document.getElementById('workspace-view');
+          const isWorkspaceActive = workspace && workspace.classList.contains('active');
+          if (!isWorkspaceActive) {
+            compactNav.classList.add('visible');
+          }
+        }
+      }, {
+        threshold: 0
+      });
+      headerObserver.observe(mainHeader);
+    }
+
+    // Scroll to Top Button Visibility
     window.addEventListener('scroll', () => {
-      const currentScrollY = window.scrollY;
-
-      if (currentScrollY <= 150) {
-        compactNav?.classList.remove('visible');
-      } else if (currentScrollY > lastScrollY && currentScrollY > 300) {
-        compactNav?.classList.remove('visible');
-      } else if (currentScrollY < lastScrollY) {
-        compactNav?.classList.add('visible');
-      }
-
-      if (currentScrollY > 600) {
+      if (window.scrollY > 600) {
         scrollBtn?.classList.add('visible');
       } else {
         scrollBtn?.classList.remove('visible');
       }
-      lastScrollY = currentScrollY;
     }, { passive: true });
 
 // EXPOSE FUNCTIONS TO GLOBAL SCOPE

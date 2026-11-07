@@ -360,8 +360,20 @@
     function updateStats() {
       const total = window.allBooks?.length || 0;
       const statTotal = document.getElementById('stat-total');
-      if (statTotal) statTotal.textContent = total;
-      document.querySelectorAll('.stat-total-val').forEach(el => el.textContent = total);
+      if (statTotal && statTotal.textContent !== String(total)) {
+        statTotal.textContent = total;
+        statTotal.classList.remove('stat-count-bump');
+        void statTotal.offsetWidth;
+        statTotal.classList.add('stat-count-bump');
+      }
+      document.querySelectorAll('.stat-total-val').forEach(el => {
+        if (el.textContent !== String(total)) {
+          el.textContent = total;
+          el.classList.remove('stat-count-bump');
+          void el.offsetWidth;
+          el.classList.add('stat-count-bump');
+        }
+      });
     }
 
     // --- FILTER (Feature 7: Enhanced with AND Logic) ---

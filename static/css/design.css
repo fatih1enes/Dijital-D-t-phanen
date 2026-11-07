@@ -456,13 +456,26 @@ h1 em {
 }
 
 .compact-nav {
-  background: var(--surface);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   border-bottom: 1px solid var(--line);
   box-shadow: var(--shadow-sm);
   padding: var(--sp-2) 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  transform: translateY(-101%);
+  transition: transform var(--t-ui) var(--ease-out);
+  z-index: 2000;
+}
+
+.compact-nav.visible {
+  transform: translateY(0);
 }
 
 .compact-brand {
@@ -506,6 +519,23 @@ h1 em {
 
 .stat-pill i { color: var(--muted); }
 .stat-pill span { color: var(--ink); font-weight: 600; }
+
+#stat-total,
+.stat-total-val {
+  font-variant-numeric: tabular-nums;
+  display: inline-block;
+  transition: transform var(--t-micro) var(--ease-spring);
+}
+
+@keyframes statCountBump {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.18); color: var(--accent); }
+  100% { transform: scale(1); }
+}
+
+.stat-count-bump {
+  animation: statCountBump 320ms var(--ease-spring);
+}
 
 .theme-toggle {
   width: 36px;
