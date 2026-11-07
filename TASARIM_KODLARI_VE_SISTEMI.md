@@ -1,6 +1,6 @@
-# 🏛️ DİJİTAL KÜTÜPHANE — BÜTÜN TASARIM, ARAYÜZ, HAREKET VE PERFORMANS SİSTEMİ KODLARI (FAZ A + B + C GÜNCEL SÜRÜM)
+# 🏛️ DİJİTAL KÜTÜPHANE — BÜTÜN TASARIM, ARAYÜZ, HAREKET VE İMZA ETKİLEŞİM SİSTEMİ KODLARI (FAZ A + B + C + D GÜNCEL SÜRÜM)
 
-Bu dosya, Dijital Kütüphane projesinin **tüm görsel tasarım sistemi, CSS katman mimarisi, tasarım token'ları, hareket fizikleri (60 FPS motion), HTML şablonları, çift tamponlama (double-buffering) ve kritik UI/UX performans kodlarını** yapay zekâ modellerine (Claude, GPT-4, Gemini vb.) tek parça halinde aktarmak amacıyla eksiksiz olarak bir araya getirilmiştir.
+Bu dosya, Dijital Kütüphane projesinin **tüm görsel tasarım sistemi, CSS katman mimarisi, tasarım token'ları, hareket fizikleri (60 FPS motion), paylaşılan eleman geçişleri (View Transitions morph), çift tamponlama ve imza UI/UX etkileşim kodlarını** yapay zekâ modellerine (Claude, GPT-4, Gemini vb.) tek parça halinde aktarmak amacıyla eksiksiz olarak bir araya getirilmiştir.
 
 ---
 
@@ -10,16 +10,17 @@ Bu dosya, Dijital Kütüphane projesinin **tüm görsel tasarım sistemi, CSS ka
 2. **FAZ A: TEMEL VE KARARLILIK İYİLEŞTİRMELERİ (A1 - A12)**
 3. **FAZ B: HAREKET SİSTEMİ STANDARDI (B1 - B5)**
 4. **FAZ C: PERFORMANS VE ÇİFT TAMPONLAMA (C1 - C7)**
-5. **KOD DOSYALARI:**
+5. **FAZ D: İMZA ETKİLEŞİMLER (D1 - D6)**
+6. **KOD DOSYALARI:**
    - **DOSYA 0:** `static/css/app.css` (CSS Cascade Layers: `@layer legacy, tokens, design;`)
    - **DOSYA 1:** `static/css/tokens.css` (Tek Doğru Kaynak: Renk, Tipografi, Boşluk, Radius, Hareket Token'ları)
-   - **DOSYA 2:** `static/css/design.css` (Rafine Tasarım Katmanı, Mikro-Etkileşim Standartları & View Transitions)
+   - **DOSYA 2:** `static/css/design.css` (Rafine Tasarım Katmanı, View Transitions & İmza Etkileşimler)
    - **DOSYA 3:** `templates/kutuphane.html` (Ana Kütüphane Arayüzü, Hero, Raf & Çalışma Alanı Şablonu)
    - **DOSYA 4:** `templates/login.html` (Giriş Ekranı, Sıcak Kâğıt/Mürekkep Paleti & View Transitions)
    - **DOSYA 5:** `static/css/style.css` (Temel Bileşenler, Modallar, Panel Yapıları & Temizlikleri)
    - **DOSYA 6.1:** `static/js/app.js` (Uygulama Yaşam Döngüsü, View Transitions Tema Geçişi)
-   - **DOSYA 6.2:** `static/js/ui_core.js` (UI Çekirdeği, cardElementsMap & tableRowsMap ile Sıfır Re-render)
-   - **DOSYA 6.3:** `static/js/ui_workspace.js` (Retina 2.5 DPR, Çift Tamponlama Zoom, GPU Yüzey Filtreleri)
+   - **DOSYA 6.2:** `static/js/ui_core.js` (UI Çekirdeği, cardElementsMap, Klavye Erişilebilirliği & showAppConfirm)
+   - **DOSYA 6.3:** `static/js/ui_workspace.js` (Retina 2.5 DPR, openBookWithMorph, Prefetch & Çift Tamponlama Zoom)
    - **DOSYA 6.4:** `static/js/ui_chat_settings.js` (Daktilo Efekti 2.5s Sınırlaması, Akıllı Scroll)
    - **DOSYA 6.5:** `static/js/ui_logs.js` (İşlem Merkezi & Canlı Log Akışı)
 
@@ -30,26 +31,32 @@ Bu dosya, Dijital Kütüphane projesinin **tüm görsel tasarım sistemi, CSS ka
 - **Sessiz ve Rafine Estetik:** Yapay zekâ SaaS şablonu klişelerinden (mor/mavi degrade, gereksiz neon parlama, kontrolsüz 20px+ blur, zıplayan hover efektleri) tamamen arındırılmıştır.
 - **Sıcak Kâğıt & Derin Mürekkep Paleti:** Açık temada sıcak kâğıt (`#f4f1eb`) ve derin antrasit mürekkep (`#1f1e1b`, kontrast 14:1); koyu temada obsidian kömür (`#161513`) ve temiz krem metin (`#f0ece3`).
 - **Doğal Tipografi:** Başlıklarda Instrument Serif (yalnızca 400 normal/italik, sahte kalın yasak); editoryal metinlerde Newsreader; kullanıcı arayüzünde Geist; sayısal ve künye alanlarında Geist Mono.
-- **60 FPS Tutarlı Hareket Fizikleri:** Butonlarda zıplama (`translateY`) yasak, sadece dokunsal basılma (`scale(0.97)` / `scale(0.94)`). Kartlarda sakin yükseklik (`translateY(-2px)` + `--shadow-md`). Süreler ve eğriler token'dan (`--t-micro: 150ms`, `--t-ui: 280ms`, `--ease-out`, `--ease-spring`).
-- **Giriş Kadar Çıkış Da Güzel:** Bütün modallar, paneller ve açılır menüler hem giriş (`modalOverlayIn`, `modalPopIn`, `dropdownIn`) hem çıkış (`modalOverlayOut`, `modalPopOut`) animasyonuna sahiptir.
-- **Sıfır Flaş & Çift Tamponlama (Double-Buffering):** Okuyucuda zoom yapıldığında mevcut canvas silinmez; yeni yüksek çözünürlüklü sayfa arka planda render edilip tek bir `requestAnimationFrame` içinde takas edilir.
+- **Paylaşılan Eleman Geçişleri (D1):** Karttan okuyucuya geçerken kapak görseli View Transitions API ile kart konumundan okuyucu başlığına (`#workspace-cover-slot`) akıcı bir yaylanmayla (`--ease-spring`) büyür; okuyucu kapatıldığında karttaki yerine geri uçar.
+- **Klavye Erişilebilirliği (D5):** Tüm açılır menüler ve araçlar klavye ok tuşları (↑/↓), Enter ve Escape ile yönetilebilir; kapandığında odak tetikleyici butona geri döner.
+- **Uygulama İçi Şık Onay Pencereleri (D6):** Tarayıcının kaba yerel `confirm()` pencereleri tamamen kaldırıldı; sıcak kâğıt paletinde çalışan, animasyonlu `showAppConfirm` modalı devreye alındı.
 
 ---
 
-## 2. FAZ A, B VE C İLE GETİRİLEN MİMARİ DÖNÜŞÜMLER
+## 2. FAZ A, B, C VE D MİMARİ DÖNÜŞÜMLERİ
 
 1. **CSS Katman Mimarisi (`@layer`):** `style.css` (legacy), `tokens.css` (tokens) ve `design.css` (design) katmanlarına ayrıldı. `design.css` içindeki 920'den fazla zorlama `!important` temizlendi.
 2. **Merkezi Token Sistemi:** `tokens.css` tek doğru kaynak haline getirildi; mükerrer `:root` blokları silindi.
 3. **Modal Sayfa Kayması:** `html { scrollbar-gutter: stable; }` ve `body.modal-open` sınıf standardı ile Windows'ta 15px layout shift çözüldü.
-4. **Stagger Kontrolü (B4):** Kart stagger animasyonu yalnızca ilk sayfa yüklemesinde ve görünüm değişiminde çalışır; canlı arama yazarken veya filtre tıklamasında `doStagger = false` ile sıfır gecikmeli gösterilir.
+4. **Stagger Kontrolü (B4):** Canlı arama ve filtrelemede `doStagger = false` ile sıfır gecikmeli gösterim sağlandı.
 5. **Erişilebilirlik (B5):** `prefers-reduced-motion: reduce` altında 0.01ms hilesi kaldırıldı; sakin 100-150ms opaklık solması sağlandı.
-6. **Bulanıklık Temizliği (C1):** Sabit navigasyon ve kontrollerdeki ağır blur'lar kaldırılarak saf yüzey rengine (`var(--surface)`) dönüldü, GPU yükü sıfırlandı.
-7. **GPU Bellek Tasarrufu (C2):** `.book-card` üzerindeki kalıcı `will-change` kaldırıldı; yalnızca hover ve stagger anında geçici olarak uygulanması sağlandı. `login.html`'deki 10 adet `translateZ(0)` temizlendi.
+6. **Bulanıklık Temizliği (C1):** Sabit navigasyon ve kontrollerdeki ağır blur'lar kaldırılarak saf yüzey rengine (`var(--surface)`) dönüldü.
+7. **GPU Bellek Tasarrufu (C2):** `.book-card` üzerindeki kalıcı `will-change` kaldırıldı; geçici hover/stagger durumlarına bağlandı.
 8. **DOM Eleman Ön Bellekleme (C3):** `cardElementsMap` ve `tableRowsMap` ile arama ve filtrelemede `innerHTML = ''` yerine `display: none` / `''` kullanıldı; sıfır DOM re-render!
-9. **View Transitions API (C4):** `theme-transitioning` sınıfı ve tüm DOM'u kilitleyen `*` seçicisi silindi; `document.startViewTransition()` ile 0ms layout lag sağlandı.
-10. **GPU Yüzey Modları (C5):** Sepya ve E-Ink modları canvas piksel döngüsünden alınıp donanım hızlandırmalı CSS filtrelerine (`filter: sepia(...)`, `filter: grayscale(1)...`) bağlandı; UI donma süresi 0ms'ye indi. ChromaGuard `requestIdleCallback` ile asenkron yapıldı.
+9. **View Transitions API (C4):** `theme-transitioning` sınıfı silindi; `document.startViewTransition()` ile layout recalculation < 1ms sağlandı.
+10. **GPU Yüzey Modları (C5):** Sepya ve E-Ink modları canvas piksel döngüsünden alınıp donanım hızlandırmalı CSS filtrelerine bağlandı (`0.29ms`).
 11. **Çift Tamponlama Zoom (C6):** Zoom sırasında beyaz flaş engellendi, `is-zooming` ile `will-change` dinamik yönetildi.
-12. **Daktilo Efekti Hızlandırması (C7):** 500 kelimelik yapay zekâ yanıtları 2.5s ile sınırlandı; ara reflow'lar ve ara markdown parse işlemleri engellendi.
+12. **Daktilo Efekti Hızlandırması (C7):** 500 kelimelik yapay zekâ yanıtları 2.5s ile sınırlandı; ara reflow'lar durduruldu.
+13. **Paylaşılan Eleman Geçişi (D1):** `openBookWithMorph` ve `#workspace-cover-slot` ile karttan okuyucuya kesintisiz kapak akışı sağlandı.
+14. **PDF Pre-fetching & İskelet Yükleyici (D2):** Karta hover yapıldığında (150ms debounce) `pdfjsLib.getDocument` önceden başlatıldı; okuyucuda sakin kapaklı iskelet (skeleton) gösterildi.
+15. **Yumuşak Kapak Yükleme (D3):** Kapaklara `loading="lazy"`, `decoding="async"` ve `onload="this.classList.add('loaded')"` ile `--t-ui` opaklık geçişi eklendi; sakin shimmer bağlandı.
+16. **Kart Okuma İlerlemesi (D4):** Başlanmış kitapların altına 2px `--accent` okuma çizgisi ve `%xx` rozeti eklendi; okunmamış kitaplarda (%0) gizlendi.
+17. **Klavye Erişilebilirliği (D5):** Açılır menülerde ↑/↓/Enter/Esc klavye navigasyonu ve tetikleyiciye odak dönüşü sağlandı.
+18. **Uygulama İçi Onay Diyaloğu (D6):** Tüm yerel `confirm()` çağrıları kaldırıldı; `showAppConfirm` modalına geçirildi.
 
 ---
 
@@ -2732,6 +2739,279 @@ button:active:not(:disabled),
 #pdf-canvas-container.is-zooming .pdf-page-wrapper {
   will-change: transform;
 }
+
+/* ═══════════════ D1: SHARED ELEMENT MORPH (CARD <-> WORKSPACE) ═══════════════ */
+::view-transition-group(book-cover) {
+  animation-duration: var(--t-page);
+  animation-timing-function: var(--ease-spring);
+}
+
+.workspace-cover-slot {
+  width: 28px;
+  height: 38px;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  background: var(--paper-dark);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  margin-left: var(--sp-2);
+}
+
+.workspace-cover-slot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ═══════════════ D2: SKELETON READER LOADER ═══════════════ */
+.reader-skeleton-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-6);
+  padding: var(--sp-8) var(--sp-4);
+  max-width: 680px;
+  margin: 0 auto;
+  min-height: 70vh;
+}
+
+.reader-skeleton-cover-preview {
+  width: 140px;
+  height: 196px;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--line);
+  background: var(--paper-dark);
+}
+
+.reader-skeleton-cover-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.reader-skeleton-page {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: var(--sp-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  box-shadow: var(--shadow-sm);
+}
+
+.reader-skeleton-line {
+  height: 14px;
+  background: var(--paper-dark);
+  border-radius: var(--r-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.reader-skeleton-line.title {
+  height: 24px;
+  width: 60%;
+  margin-bottom: var(--sp-2);
+}
+
+.reader-skeleton-line.short {
+  width: 40%;
+  margin-bottom: var(--sp-3);
+}
+
+.reader-skeleton-line.medium {
+  width: 75%;
+}
+
+.reader-skeleton-line::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  animation: skeletonPulse 1.8s var(--ease-out) infinite;
+}
+
+[data-theme="light"] .reader-skeleton-line::after {
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.04), transparent);
+}
+
+@keyframes skeletonPulse {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ═══════════════ D3: SMOOTH COVER LOADING & CALM SHIMMER ═══════════════ */
+.card-cover {
+  position: relative;
+  background: var(--paper-dark);
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+}
+
+.card-cover img,
+.shelf-item-cover img,
+.modal-cover-wrap img {
+  opacity: 0;
+  transition: opacity var(--t-ui) var(--ease-out);
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-cover img.loaded,
+.card-cover img[complete],
+.shelf-item-cover img.loaded,
+.modal-cover-wrap img.loaded {
+  opacity: 1;
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, var(--paper-dark) 20%, rgba(255, 255, 255, 0.05) 50%, var(--paper-dark) 80%);
+  background-size: 200% 100%;
+  animation: calmShimmer 2.2s var(--ease-out) infinite;
+}
+
+[data-theme="light"] .skeleton-shimmer {
+  background: linear-gradient(90deg, var(--paper-dark) 20%, rgba(0, 0, 0, 0.03) 50%, var(--paper-dark) 80%);
+  background-size: 200% 100%;
+  animation: calmShimmer 2.2s var(--ease-out) infinite;
+}
+
+@keyframes calmShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ═══════════════ D4: CARD READING PROGRESS BAR ═══════════════ */
+.card-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: var(--accent);
+  z-index: 10;
+  transition: width var(--t-ui) var(--ease-out);
+}
+
+.card-progress-badge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-glow);
+  padding: 1px 5px;
+  border-radius: var(--r-full);
+  margin-left: auto;
+}
+
+.modal-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-top: var(--sp-2);
+  margin-bottom: var(--sp-3);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.modal-progress-track {
+  flex: 1;
+  height: 4px;
+  background: var(--paper-dark);
+  border-radius: var(--r-full);
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+
+.modal-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: var(--r-full);
+}
+
+/* ═══════════════ D6: IN-APP CONFIRMATION DIALOG & EMPTY STATES ═══════════════ */
+.app-confirm-dialog {
+  max-width: 420px !important;
+  width: 90% !important;
+  padding: var(--sp-6) var(--sp-6) !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--r-lg) !important;
+  box-shadow: var(--shadow-xl) !important;
+}
+
+.confirm-dialog-title {
+  font-family: var(--font-title);
+  font-size: 1.6rem;
+  font-weight: 400;
+  color: var(--ink);
+  margin-bottom: var(--sp-2);
+}
+
+.confirm-dialog-msg {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--muted);
+  white-space: pre-line;
+  margin-bottom: var(--sp-6);
+}
+
+.confirm-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-3);
+}
+
+.confirm-dialog-actions button {
+  min-width: 90px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--sp-12) var(--sp-6);
+  max-width: 540px;
+  margin: var(--sp-8) auto;
+}
+
+#empty-state-title {
+  font-family: var(--font-title);
+  font-size: 2.2rem;
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--ink);
+  margin-bottom: var(--sp-2);
+}
+
+#empty-state-desc {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  color: var(--muted);
+  line-height: 1.55;
+  max-width: 44ch;
+  margin-bottom: var(--sp-6);
+}
+
+.empty-state-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+}
 ```
 
 
@@ -3264,6 +3544,7 @@ button:active:not(:disabled),
         <button type="button" class="btn-workspace-back" onclick="closeWorkspace()">
           <i class="fas fa-arrow-left"></i> Kütüphaneye Dön
         </button>
+        <div id="workspace-cover-slot" class="workspace-cover-slot" aria-hidden="true"></div>
         <span class="workspace-book-divider">|</span>
         <div class="workspace-book-meta">
           <span id="workspace-book-cat" class="workspace-book-cat">—</span>
@@ -11675,21 +11956,112 @@ window.login = () => { window.location.href = "/login"; };
       loadCollectionsFromAPI().catch(err => console.warn(err)); // Update active states
     }
 
+    let lastActiveDropdownTrigger = null;
+
+    function openCustomDropdown(el) {
+      if (!el) return;
+      el.classList.add('open');
+      const trigger = el.querySelector('.dropdown-trigger') || el.querySelector('button');
+      if (trigger) {
+        trigger.setAttribute('aria-expanded', 'true');
+        lastActiveDropdownTrigger = trigger;
+      }
+      const menu = el.querySelector('.dropdown-menu');
+      if (menu) {
+        const items = Array.from(menu.querySelectorAll('.dropdown-item, button, a, [tabindex]')).filter(i => i.offsetParent !== null);
+        items.forEach(item => {
+          if (!item.hasAttribute('tabindex')) item.setAttribute('tabindex', '0');
+        });
+        if (items.length > 0) {
+          setTimeout(() => items[0].focus(), 40);
+        }
+      }
+    }
+
+    function closeCustomDropdown(el) {
+      if (!el) return;
+      el.classList.remove('open');
+      const trigger = el.querySelector('.dropdown-trigger') || el.querySelector('button');
+      if (trigger) {
+        trigger.setAttribute('aria-expanded', 'false');
+      }
+      if (lastActiveDropdownTrigger && el.contains(lastActiveDropdownTrigger)) {
+        lastActiveDropdownTrigger.focus();
+        lastActiveDropdownTrigger = null;
+      }
+    }
+
     function toggleDropdown(id) {
       const el = document.getElementById(id);
       if (!el) return;
       const isOpen = el.classList.contains('open');
 
       // Close others
-      document.querySelectorAll('.custom-dropdown').forEach(d => d.classList.remove('open'));
+      document.querySelectorAll('.custom-dropdown.open').forEach(d => {
+        if (d !== el) closeCustomDropdown(d);
+      });
 
-      if (!isOpen) el.classList.add('open');
+      if (!isOpen) {
+        openCustomDropdown(el);
+      } else {
+        closeCustomDropdown(el);
+      }
     }
 
     // Global click listener to close dropdowns
     window.addEventListener('click', (e) => {
       if (!e.target?.closest?.('.custom-dropdown')) {
-        document.querySelectorAll('.custom-dropdown').forEach(d => d.classList.remove('open'));
+        document.querySelectorAll('.custom-dropdown.open').forEach(d => closeCustomDropdown(d));
+      }
+    });
+
+    // Klavye erişilebilirliği: ↑, ↓ gezinme, Enter ile seçim, Esc ile kapatma ve tetikleyiciye odak dönüşü
+    document.addEventListener('keydown', (e) => {
+      const activeDropdown = document.querySelector('.custom-dropdown.open');
+      const toolsMenu = document.getElementById('header-tools-menu');
+      const isToolsOpen = toolsMenu && toolsMenu.style.display !== 'none' && !toolsMenu.classList.contains('closing');
+
+      if (!activeDropdown && !isToolsOpen) return;
+
+      const activeMenu = activeDropdown
+        ? activeDropdown.querySelector('.dropdown-menu')
+        : toolsMenu;
+
+      if (!activeMenu) return;
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        if (activeDropdown) closeCustomDropdown(activeDropdown);
+        if (isToolsOpen && typeof closeToolsMenu === 'function') closeToolsMenu();
+        return;
+      }
+
+      const items = Array.from(activeMenu.querySelectorAll('.dropdown-item, .tools-menu-item, button, a, [tabindex="0"]')).filter(i => i.offsetParent !== null);
+      if (items.length === 0) return;
+
+      const currentIndex = items.indexOf(document.activeElement);
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const nextIndex = (currentIndex + 1) % items.length;
+        items[nextIndex].focus();
+        return;
+      }
+
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const prevIndex = (currentIndex - 1 + items.length) % items.length;
+        items[prevIndex].focus();
+        return;
+      }
+
+      if (e.key === 'Enter') {
+        if (document.activeElement && items.includes(document.activeElement)) {
+          e.preventDefault();
+          document.activeElement.click();
+          if (activeDropdown) closeCustomDropdown(activeDropdown);
+          if (isToolsOpen && typeof closeToolsMenu === 'function') closeToolsMenu();
+        }
       }
     });
 
@@ -11766,7 +12138,8 @@ window.login = () => { window.location.href = "/login"; };
     }
 
     async function deleteCollection(colId) {
-      if (!confirm("Koleksiyonu silmek istediğinize emin misiniz? (İçindeki kitaplar silinmez, sadece liste silinir)")) return;
+      const ok = await (window.showAppConfirm ? window.showAppConfirm("Koleksiyonu silmek istediğinize emin misiniz? (İçindeki kitaplar silinmez, sadece liste silinir)", "Koleksiyonu Sil", "Sil", true) : Promise.resolve(confirm("Koleksiyonu silmek istediğinize emin misiniz?")));
+      if (!ok) return;
       try {
         const res = await apiFetch(`/api/collections/${colId}`, { method: 'DELETE' });
         if (res?.ok) {
@@ -11994,15 +12367,22 @@ window.login = () => { window.location.href = "/login"; };
         <div class="recent-shelf-grid">
           ${recentBooks.map(b => {
             const cover = b.has_cover
-              ? `<img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" loading="lazy">`
+              ? `<img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" loading="lazy" decoding="async" onload="this.classList.add('loaded')">`
               : `<div class="shelf-cover-placeholder"><i class="fas fa-book"></i></div>`;
+            const progress = (typeof getBookReadingProgress === 'function') ? getBookReadingProgress(b) : null;
+            const progressBar = progress ? `<div class="card-progress-bar" style="width: ${progress.pct}%;"></div>` : '';
+            const progressBadge = progress ? `<span class="card-progress-badge" style="font-size:0.6rem; padding:0 4px; margin-left:6px;">%${progress.pct}</span>` : '';
             return `
-              <div class="shelf-item" onclick="const target = (window.allBooks || []).find(x => x.hash === '${b.hash}'); if (target) openWorkspace(target);">
+              <div class="shelf-item" onclick="const target = (window.allBooks || []).find(x => x.hash === '${b.hash}'); if (target) { if (typeof openBookWithMorph === 'function') openBookWithMorph(this, target); else openWorkspace(target); }">
                 <div class="shelf-item-cover">
                   ${cover}
+                  ${progressBar}
                 </div>
                 <div class="shelf-item-info">
-                  <span class="shelf-item-cat">${esc(b.category) || 'Genel'}</span>
+                  <div style="display:flex; align-items:center; justify-content:space-between;">
+                    <span class="shelf-item-cat">${esc(b.category) || 'Genel'}</span>
+                    ${progressBadge}
+                  </div>
                   <h4 class="shelf-item-title">${esc(b.title) || 'İsimsiz'}</h4>
                   <span class="shelf-item-author">${esc(b.author) || 'Bilinmeyen Yazar'}</span>
                 </div>
@@ -12015,6 +12395,18 @@ window.login = () => { window.location.href = "/login"; };
     window.renderRecentShelf = renderRecentShelf;
 
     // --- PERSISTENT ELEMENT MAPS (60FPS ZERO-REBUILD ARCHITECTURE) ---
+    function getBookReadingProgress(b) {
+      if (!b) return null;
+      const readPage = Number.parseInt(b.okunulan_sayfa || b.read_page || 0, 10);
+      const totalPages = Number.parseInt(b.sayfa_sayisi || b.pages || b.page_count || 0, 10);
+      if (readPage > 0 && totalPages > 0) {
+        const pct = Math.min(100, Math.max(1, Math.round((readPage / totalPages) * 100)));
+        return { readPage, totalPages, pct };
+      }
+      return null;
+    }
+    window.getBookReadingProgress = getBookReadingProgress;
+
     const cardElementsMap = new Map();
     window.cardElementsMap = cardElementsMap;
     const tableRowsMap = new Map();
@@ -12027,13 +12419,21 @@ window.login = () => { window.location.href = "/login"; };
       card.dataset.hash = b.hash;
 
       const coverInner = b.has_cover
-        ? `<img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" loading="lazy" decoding="async">`
+        ? `<img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" loading="lazy" decoding="async" onload="this.classList.add('loaded')">`
         : `<div class="card-cover-placeholder">${BOOK_ICON_LG}<span>${esc(b.title) || 'Kapak yok'}</span></div>`;
 
       const favIcon = b.is_favorite
         ? `<i class="fas fa-heart" style="color: #ff3e3e; font-size: 1.1rem;"></i>`
         : `<i class="far fa-heart" style="color: #fff; font-size: 1.1rem;"></i>`;
       const favBtnText = b.is_favorite ? 'Favorilerden Çıkar' : 'Favorilere Ekle';
+
+      const progress = getBookReadingProgress(b);
+      const progressBarHtml = progress
+        ? `<div class="card-progress-bar" style="width: ${progress.pct}%;" title="%${progress.pct} okundu (${progress.readPage}/${progress.totalPages} sayfa)"></div>`
+        : '';
+      const progressBadgeHtml = progress
+        ? `<span class="card-progress-badge">%${progress.pct}</span>`
+        : '';
 
       card.innerHTML = `
         <div class="selection-indicator"></div>
@@ -12043,12 +12443,35 @@ window.login = () => { window.location.href = "/login"; };
              ${favIcon}
           </div>
           ${coverInner}
+          ${progressBarHtml}
         </div>
         <div class="card-body">
           <div class="card-title">${esc(b.title) || '<em>İsimsiz</em>'}</div>
-          <div class="card-author">${esc(b.author) || 'Bilinmeyen Yazar'}</div>
+          <div class="card-author" style="display:flex; align-items:center; justify-content:space-between;">
+            <span>${esc(b.author) || 'Bilinmeyen Yazar'}</span>
+            ${progressBadgeHtml}
+          </div>
         </div>
       `;
+
+      let prefetchHoverTimer = null;
+      card.addEventListener('pointerenter', () => {
+        prefetchHoverTimer = setTimeout(() => {
+          if (typeof window.prefetchPdfDocument === 'function') {
+            window.prefetchPdfDocument(b.hash);
+          }
+        }, 150);
+      });
+
+      card.addEventListener('pointerleave', () => {
+        if (prefetchHoverTimer) {
+          clearTimeout(prefetchHoverTimer);
+          prefetchHoverTimer = null;
+        }
+        if (typeof window.cancelPdfPrefetch === 'function') {
+          window.cancelPdfPrefetch(b.hash);
+        }
+      });
 
       card.onclick = () => {
         if (window.isSelectionMode) {
@@ -12327,15 +12750,26 @@ window.login = () => { window.location.href = "/login"; };
         : '';
 
       const coverHtml = b.has_cover
-        ? `<div class="modal-cover-wrap"><img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" style="width:200px; height:266px; object-fit:cover; border-radius:8px; box-shadow:0 10px 30px var(--shadow);"></div>`
+        ? `<div class="modal-cover-wrap"><img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" loading="lazy" decoding="async" onload="this.classList.add('loaded')" style="width:200px; height:266px; object-fit:cover; border-radius:8px; box-shadow:0 10px 30px var(--shadow);"></div>`
         : `<div class="modal-cover-wrap"><div class="modal-cover-empty" style="width:200px; height:266px; background:var(--sepia-pale); border-radius:8px; display:flex; align-items:center; justify-content:center;">${BOOK_ICON_LG}</div></div>`;
+
+      const progress = getBookReadingProgress(b);
+      const progressModalHtml = progress ? `
+        <div class="modal-progress-wrap">
+          <div class="modal-progress-track">
+            <div class="modal-progress-fill" style="width: ${progress.pct}%;"></div>
+          </div>
+          <span>%${progress.pct} (${progress.readPage} / ${progress.totalPages} sayfa)</span>
+        </div>
+      ` : '';
 
       document.getElementById('modal-content').innerHTML = `
     <div class="modal-layout" style="display: flex; gap: 2.5rem; padding: 2.5rem;">
       <div class="modal-left" style="width: 220px; flex-shrink: 0; display: flex; flex-direction: column; gap: 1rem;">
         ${coverHtml}
+        ${progressModalHtml}
         <div class="modal-actions" id="modal-actions-sidebar" style="display: flex; flex-direction: column; gap: 0.75rem;">
-          <button class="btn-modal-primary" onclick="closeModalDirect(); const target = (window.allBooks || []).find(x => x.hash === '${b.hash}'); if (target) openWorkspace(target);">
+          <button class="btn-modal-primary" onclick="closeModalDirect(); const target = (window.allBooks || []).find(x => x.hash === '${b.hash}'); const card = document.querySelector('.book-card[data-hash=\\'${b.hash}\\']'); if (target) { if (typeof openBookWithMorph === 'function') openBookWithMorph(card, target); else openWorkspace(target); }">
             <i class="fas fa-book-open"></i> Kitabı Oku
           </button>
           <button id="btn-modal-fav" class="${b.is_favorite ? 'btn-modal-fav is-fav' : 'btn-modal-fav'}" onclick="toggleFavorite('${b.hash}')">
@@ -12498,6 +12932,79 @@ window.login = () => { window.location.href = "/login"; };
       });
     }
 
+    // --- [D6: UYGULAMA İÇİ ŞIK ONAY DİYALOĞU (NATIVE CONFIRM YERİNE)] ---
+    function showAppConfirm(message, title = 'Onay Gerekiyor', confirmText = 'Onayla', isDanger = true) {
+      return new Promise((resolve) => {
+        let overlay = document.getElementById('app-confirm-modal');
+        if (!overlay) {
+          overlay = document.createElement('div');
+          overlay.id = 'app-confirm-modal';
+          overlay.className = 'modal-overlay';
+          overlay.innerHTML = `
+            <div class="modal app-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
+              <div class="confirm-dialog-header">
+                <h3 id="confirm-dialog-title" class="confirm-dialog-title"></h3>
+              </div>
+              <div class="confirm-dialog-body">
+                <p id="confirm-dialog-msg" class="confirm-dialog-msg"></p>
+              </div>
+              <div class="confirm-dialog-actions">
+                <button type="button" class="btn-modal-secondary" id="confirm-dialog-cancel">Vazgeç</button>
+                <button type="button" class="btn-modal-primary" id="confirm-dialog-ok">Onayla</button>
+              </div>
+            </div>
+          `;
+          document.body.appendChild(overlay);
+        }
+
+        const titleEl = overlay.querySelector('#confirm-dialog-title');
+        const msgEl = overlay.querySelector('#confirm-dialog-msg');
+        const okBtn = overlay.querySelector('#confirm-dialog-ok');
+        const cancelBtn = overlay.querySelector('#confirm-dialog-cancel');
+
+        titleEl.textContent = title;
+        msgEl.textContent = message;
+        okBtn.textContent = confirmText;
+
+        if (isDanger) {
+          okBtn.style.background = 'var(--danger, #b0473c)';
+          okBtn.style.color = '#ffffff';
+          okBtn.style.borderColor = 'var(--danger, #b0473c)';
+        } else {
+          okBtn.style.background = '';
+          okBtn.style.color = '';
+          okBtn.style.borderColor = '';
+        }
+
+        let isResolved = false;
+        const cleanup = (result) => {
+          if (isResolved) return;
+          isResolved = true;
+          window.removeEventListener('keydown', handleKey);
+          closeModalWithAnimation(overlay, () => resolve(result));
+        };
+
+        const handleKey = (e) => {
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            cleanup(false);
+          }
+        };
+
+        window.addEventListener('keydown', handleKey);
+        okBtn.onclick = () => cleanup(true);
+        cancelBtn.onclick = () => cleanup(false);
+        overlay.onclick = (e) => {
+          if (e.target === overlay) cleanup(false);
+        };
+
+        overlay.classList.add('open');
+        document.body.classList.add('modal-open');
+        setTimeout(() => cancelBtn.focus(), 60);
+      });
+    }
+    window.showAppConfirm = showAppConfirm;
+
     // --- BULK OPERATIONS ---
     function toggleSelectionMode() {
       window.isSelectionMode = !window.isSelectionMode;
@@ -12528,7 +13035,8 @@ window.login = () => { window.location.href = "/login"; };
 
     async function bulkDelete() {
       if (selectedBooks.size === 0) return;
-      if (!confirm(`${selectedBooks.size} kitabı silmek istediğinize emin misiniz?`)) return;
+      const ok = await (window.showAppConfirm ? window.showAppConfirm(`${selectedBooks.size} kitabı kalıcı olarak silmek istediğinize emin misiniz?`, 'Toplu Silme', 'Seçilenleri Sil', true) : Promise.resolve(confirm(`${selectedBooks.size} kitabı silmek istediğinize emin misiniz?`)));
+      if (!ok) return;
 
       const toDelete = Array.from(selectedBooks);
       let successCount = 0;
@@ -13086,7 +13594,8 @@ window.login = () => { window.location.href = "/login"; };
     // ── [Option C] In-Place PDF Compression / Size Reducer ──
     async function compressBook(fileHash) {
       if (!fileHash) return;
-      if (!confirm('Bu PDF dosyasını kayıpsız/hafif JPEG sıkıştırma ile optimize etmek istiyor musunuz? Orijinal dosya güvenlik amacıyla yedeklenerek optimize edilir.')) {
+      const ok = await (window.showAppConfirm ? window.showAppConfirm('Bu PDF dosyasını kayıpsız/hafif JPEG sıkıştırma ile optimize etmek istiyor musunuz? Orijinal dosya güvenlik amacıyla yedeklenerek optimize edilir.', 'PDF Optimize Et', 'Optimize Et', false) : Promise.resolve(confirm('Bu PDF dosyasını optimize etmek istiyor musunuz?')));
+      if (!ok) {
         return;
       }
 
@@ -13232,7 +13741,8 @@ window.login = () => { window.location.href = "/login"; };
     }
 
     async function deleteDuplicateBook(fileHash, btnEl, groupId) {
-      if (!confirm('Bu mükerrer kopyayı kalıcı olarak silmek istediğinize emin misiniz?')) return;
+      const ok = await (window.showAppConfirm ? window.showAppConfirm('Bu mükerrer kopyayı kalıcı olarak silmek istediğinize emin misiniz?', 'Kopyayı Sil', 'Sil', true) : Promise.resolve(confirm('Bu mükerrer kopyayı kalıcı olarak silmek istediğinize emin misiniz?')));
+      if (!ok) return;
 
       if (btnEl) {
         btnEl.disabled = true;
@@ -13312,6 +13822,8 @@ window.login = () => { window.location.href = "/login"; };
       if (isHidden) {
         menu.classList.remove('closing');
         menu.style.display = 'flex';
+        const firstItem = menu.querySelector('.tools-menu-item, button, a');
+        if (firstItem) setTimeout(() => firstItem.focus(), 40);
       } else {
         closeToolsMenu();
       }
@@ -13325,6 +13837,8 @@ window.login = () => { window.location.href = "/login"; };
       setTimeout(() => {
         menu.classList.remove('closing');
         menu.style.display = 'none';
+        const trigger = document.getElementById('header-tools-btn');
+        if (trigger) trigger.focus();
       }, 150);
     }
     window.closeToolsMenu = closeToolsMenu;
@@ -13543,9 +14057,15 @@ window.login = () => { window.location.href = "/login"; };
       // Reset copy chat button if active
       resetCopyButtonUI();
       
-      // Sync meta text
+      // Sync meta text and cover slot
       document.getElementById('workspace-book-cat').textContent = book.category || 'Belge';
       document.getElementById('workspace-book-title').textContent = book.title || 'İsimsiz';
+      const coverSlot = document.getElementById('workspace-cover-slot');
+      if (coverSlot) {
+        coverSlot.innerHTML = book.has_cover
+          ? `<img src="/thumbnails/${book.hash}.jpg" alt="${esc(book.title || '')}">`
+          : `<i class="fas fa-book-open" style="font-size:0.75rem; color:var(--muted);"></i>`;
+      }
       
       // Reset banner
       resetBannerState();
@@ -13586,33 +14106,88 @@ window.login = () => { window.location.href = "/login"; };
       }, 300);
     }
 
+    function openBookWithMorph(cardOrCover, book) {
+      const targetBook = book || (typeof allBooks !== 'undefined' ? allBooks.find(b => b.hash === cardOrCover?.dataset?.hash) : null);
+      if (!targetBook) return;
+
+      const card = (cardOrCover instanceof HTMLElement) ? (cardOrCover.closest('.book-card') || cardOrCover) : document.querySelector(`.book-card[data-hash="${targetBook.hash}"]`);
+      const cover = card ? (card.querySelector('.card-cover') || card) : null;
+
+      if (!document.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        if (typeof closeModalDirect === 'function') closeModalDirect();
+        openWorkspace(targetBook);
+        return;
+      }
+
+      if (cover) cover.style.viewTransitionName = 'book-cover';
+      if (typeof closeModalDirect === 'function') closeModalDirect();
+
+      const transition = document.startViewTransition(() => {
+        openWorkspace(targetBook);
+        const slot = document.getElementById('workspace-cover-slot');
+        if (slot) slot.style.viewTransitionName = 'book-cover';
+        if (cover) cover.style.viewTransitionName = '';
+      });
+
+      transition.finished.finally(() => {
+        const slot = document.getElementById('workspace-cover-slot');
+        if (slot) slot.style.removeProperty('view-transition-name');
+        if (cover) cover.style.removeProperty('view-transition-name');
+      });
+    }
+    window.openBookWithMorph = openBookWithMorph;
+
     function closeWorkspace() {
-      document.getElementById('workspace-reader').classList.remove('open');
-      document.body.classList.remove('modal-open');
-      
-      // Stop ongoing typewriter or TTS
-      if (activeTypewriterTimer) {
-        clearInterval(activeTypewriterTimer);
-        activeTypewriterTimer = null;
-      }
-      const stopWrap = document.getElementById('workspace-stop-wrap');
-      if (stopWrap) stopWrap.style.display = 'none';
+      const currentBook = activeWorkspaceBook;
+      const card = currentBook ? document.querySelector(`.book-card[data-hash="${currentBook.hash}"]`) : null;
+      const cover = card ? (card.querySelector('.card-cover') || card) : null;
+      const slot = document.getElementById('workspace-cover-slot');
 
-      if (window.speechSynthesis?.speaking) {
-        window.speechSynthesis.cancel();
-      }
-      isSpeaking = false;
-      const ttsBtn = document.getElementById('pdf-tts-btn');
-      if (ttsBtn) {
-        ttsBtn.classList.remove('active');
-        ttsBtn.innerHTML = '<i class="fas fa-volume-high"></i> Dinle';
+      const doClose = () => {
+        document.getElementById('workspace-reader').classList.remove('open');
+        document.body.classList.remove('modal-open');
+        
+        // Stop ongoing typewriter or TTS
+        if (activeTypewriterTimer) {
+          clearInterval(activeTypewriterTimer);
+          activeTypewriterTimer = null;
+        }
+        const stopWrap = document.getElementById('workspace-stop-wrap');
+        if (stopWrap) stopWrap.style.display = 'none';
+
+        if (window.speechSynthesis?.speaking) {
+          window.speechSynthesis.cancel();
+        }
+        isSpeaking = false;
+        const ttsBtn = document.getElementById('pdf-tts-btn');
+        if (ttsBtn) {
+          ttsBtn.classList.remove('active');
+          ttsBtn.innerHTML = '<i class="fas fa-volume-high"></i> Dinle';
+        }
+
+        // Cleanup custom HTML5 PDF.js Reader resources
+        cleanupCustomPdfViewer();
+        
+        activeWorkspaceBook = null;
+        isFullBookLoaded = false;
+      };
+
+      if (!document.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches || !cover) {
+        doClose();
+        return;
       }
 
-      // Cleanup custom HTML5 PDF.js Reader resources
-      cleanupCustomPdfViewer();
-      
-      activeWorkspaceBook = null;
-      isFullBookLoaded = false;
+      if (slot) slot.style.viewTransitionName = 'book-cover';
+      const transition = document.startViewTransition(() => {
+        doClose();
+        if (cover) cover.style.viewTransitionName = 'book-cover';
+        if (slot) slot.style.viewTransitionName = '';
+      });
+
+      transition.finished.finally(() => {
+        if (cover) cover.style.removeProperty('view-transition-name');
+        if (slot) slot.style.removeProperty('view-transition-name');
+      });
     }
 
     function handleWorkspaceChatKey(e) {
@@ -14713,6 +15288,37 @@ window.login = () => { window.location.href = "/login"; };
       renderNotesSidebar();
     }
 
+    // --- [D2: PDF Pre-Fetching & Skeleton Loader] ---
+    const pdfPrefetchCache = new Map();
+
+    function prefetchPdfDocument(hash) {
+      if (!hash || !window.pdfjsLib || pdfPrefetchCache.has(hash)) return;
+      const pdfUrl = `/api/download/${hash}`;
+      try {
+        const loadingTask = window.pdfjsLib.getDocument(pdfUrl);
+        pdfPrefetchCache.set(hash, {
+          task: loadingTask,
+          promise: loadingTask.promise
+        });
+      } catch (e) {
+        console.debug('Prefetch silent skip:', e);
+      }
+    }
+    window.prefetchPdfDocument = prefetchPdfDocument;
+
+    function cancelPdfPrefetch(hash) {
+      if (!hash || !pdfPrefetchCache.has(hash)) return;
+      const item = pdfPrefetchCache.get(hash);
+      if (item && item.cleanupTimer) clearTimeout(item.cleanupTimer);
+      if (item) {
+        item.cleanupTimer = setTimeout(() => {
+          try { item.task.destroy(); } catch (_) {}
+          pdfPrefetchCache.delete(hash);
+        }, 8000);
+      }
+    }
+    window.cancelPdfPrefetch = cancelPdfPrefetch;
+
     function initCustomPdfViewer(book, initialPage = null) {
       // Reset state
       pdfDoc = null;
@@ -14818,7 +15424,21 @@ window.login = () => { window.location.href = "/login"; };
 
       const container = document.getElementById('pdf-canvas-container');
       if (container) {
-        container.innerHTML = `<div style="padding: 2rem; color: var(--muted); text-align: center; font-family: 'Geist', sans-serif;"><i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i> Belge yükleniyor...</div>`;
+        container.innerHTML = `
+          <div class="reader-skeleton-wrap">
+            <div class="reader-skeleton-cover-preview">
+              ${book.has_cover ? `<img src="/thumbnails/${book.hash}.jpg" alt="">` : '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);"><i class="fas fa-book" style="font-size:2.5rem;"></i></div>'}
+            </div>
+            <div class="reader-skeleton-page">
+              <div class="reader-skeleton-line title"></div>
+              <div class="reader-skeleton-line short"></div>
+              <div class="reader-skeleton-line"></div>
+              <div class="reader-skeleton-line"></div>
+              <div class="reader-skeleton-line"></div>
+              <div class="reader-skeleton-line medium"></div>
+            </div>
+          </div>
+        `;
       }
 
       // Check file extension: If .txt, render clean typography reader
@@ -14842,8 +15462,18 @@ window.login = () => { window.location.href = "/login"; };
         return;
       }
 
-      const loadingTask = window.pdfjsLib.getDocument(pdfUrl);
-      loadingTask.promise
+      // D2: Use pre-fetched promise if available for zero-latency instant open
+      let docPromise = null;
+      if (pdfPrefetchCache.has(book.hash)) {
+        const cached = pdfPrefetchCache.get(book.hash);
+        docPromise = cached.promise;
+        pdfPrefetchCache.delete(book.hash);
+      } else {
+        const loadingTask = window.pdfjsLib.getDocument(pdfUrl);
+        docPromise = loadingTask.promise;
+      }
+
+      docPromise
         .then(pdf => setupLoadedPdf(pdf, book, container, pdfUrl))
         .catch(function(error) {
           console.error("PDF.js yükleme hatası:", error);
@@ -17580,7 +18210,8 @@ window.login = () => { window.location.href = "/login"; };
     window.saveAccessPasswordDirect = saveAccessPasswordDirect;
 
     async function removeAccessPassword() {
-      if (!confirm('Erişim şifresini kaldırmak istediğinizden emin misiniz?\n(Uzaktan telefon bağlantısı için şifre gereklidir)')) {
+      const ok = await (window.showAppConfirm ? window.showAppConfirm('Erişim şifresini kaldırmak istediğinizden emin misiniz?\n(Uzaktan telefon bağlantısı için şifre gereklidir)', 'Şifreyi Kaldır', 'Kaldır', true) : Promise.resolve(confirm('Erişim şifresini kaldırmak istediğinizden emin misiniz?')));
+      if (!ok) {
         return;
       }
       try {
@@ -17994,7 +18625,8 @@ window.login = () => { window.location.href = "/login"; };
     }
 
     async function clearLogsUI() {
-      if (!confirm("Tüm sistem ve işlem loglarını temizlemek istediğinize emin misiniz?")) {
+      const ok = await (window.showAppConfirm ? window.showAppConfirm("Tüm sistem ve işlem loglarını temizlemek istediğinize emin misiniz?", "Logları Temizle", "Temizle", true) : Promise.resolve(confirm("Tüm logları temizlemek istediğinize emin misiniz?")));
+      if (!ok) {
         return;
       }
       try {
