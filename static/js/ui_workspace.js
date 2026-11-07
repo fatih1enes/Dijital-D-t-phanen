@@ -114,7 +114,7 @@
           const chatMessages = document.getElementById('workspace-chat-messages');
           chatMessages.insertAdjacentHTML('beforeend', `
             <div class="chat-msg chat-ai" style="max-width: 100%;">
-              <div class="chat-msg-avatar"><i class="fas fa-sparkles"></i></div>
+              <div class="chat-msg-avatar"><i class="fas fa-wand-magic-sparkles"></i></div>
               <div class="chat-msg-text"><strong>${esc(activeWorkspaceBook.title)}</strong> kitabı yapay zeka oturumuna başarıyla yüklendi. Artık tüm sorularınız beklemeden ve doğrudan kitap üzerinden yanıtlanacak.</div>
             </div>
           `);
@@ -159,7 +159,7 @@
       }
       return `
         <div class="chat-msg chat-ai">
-          <div class="chat-msg-avatar"><i class="fas fa-sparkles"></i></div>
+          <div class="chat-msg-avatar"><i class="fas fa-wand-magic-sparkles"></i></div>
           <div class="chat-msg-text">${parseMarkdown(item.text)}</div>
         </div>
       `;
@@ -220,7 +220,7 @@
       const chatMessages = document.getElementById('workspace-chat-messages');
       chatMessages.innerHTML = `
         <div class="chat-msg chat-ai">
-          <div class="chat-msg-avatar"><i class="fas fa-sparkles"></i></div>
+          <div class="chat-msg-avatar"><i class="fas fa-wand-magic-sparkles"></i></div>
           <div class="chat-msg-text">Merhaba! Şu anda <strong>${esc(book.title)}</strong> eseri üzerinde konuşmaya hazırız. Kitabın ana fikirleri, terimleri veya sormak istediğiniz kısımları hakkında sorular sorabilirsiniz.</div>
         </div>
       `;
@@ -359,7 +359,7 @@
         : '';
       chatMessages.insertAdjacentHTML('beforeend', `
         <div class="chat-msg chat-ai" id="${tempId}">
-          <div class="chat-msg-avatar"><i class="fas fa-sparkles"></i></div>
+          <div class="chat-msg-avatar"><i class="fas fa-wand-magic-sparkles"></i></div>
           <div class="chat-msg-text">
             ${loadingNoticeText}
             <div class="chat-typing-indicator">
@@ -399,7 +399,7 @@
         const replyId = `reply-${Date.now()}`;
         chatMessages.insertAdjacentHTML('beforeend', `
           <div class="chat-msg chat-ai" id="${replyId}">
-            <div class="chat-msg-avatar"><i class="fas fa-sparkles"></i></div>
+            <div class="chat-msg-avatar"><i class="fas fa-wand-magic-sparkles"></i></div>
             <div class="chat-msg-text"></div>
           </div>
         `);
@@ -410,7 +410,7 @@
         const errText = err?.message || 'Bağlantı hatası: Sunucuya ulaşılamadı.';
         chatMessages.insertAdjacentHTML('beforeend', `
           <div class="chat-msg chat-ai">
-            <div class="chat-msg-avatar"><i class="fas fa-sparkles"></i></div>
+            <div class="chat-msg-avatar"><i class="fas fa-wand-magic-sparkles"></i></div>
             <div class="chat-msg-text" style="color: #b0473c;">${esc(errText)}</div>
           </div>
         `);
@@ -3213,7 +3213,7 @@
         badge.innerHTML = '<i class="fas fa-robot"></i> <span id="workspace-status-text">AI Asistan Bağlı</span>';
       } else {
         badge.classList.add('offline');
-        badge.innerHTML = '<i class="fas fa-wifi-slash"></i> <span id="workspace-status-text">Bağlantı Yok</span>';
+        badge.innerHTML = '<i class="fas fa-triangle-exclamation"></i> <span id="workspace-status-text">Bağlantı Yok</span>';
       }
     }
 
