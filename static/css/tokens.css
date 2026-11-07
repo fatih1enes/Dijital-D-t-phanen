@@ -1,10 +1,9 @@
 /**
  * 🎨 Dijital Kütüphane - 3-Tier Design System & CSS Cascade Layers
- * @layer tokens: Encapsulates primitives, semantic mappings, and dark mode tokens.
+ * Tokens: Primitives, semantic mappings, and dark mode tokens.
  */
 
-@layer tokens {
-  :root {
+:root {
     /* -------------------------------------------------------------
        TIER 1: PRIMITIVES (Raw Hues, Scales, Typographic Steps)
        ------------------------------------------------------------- */
@@ -136,5 +135,4 @@
     --shadow-md: rgba(0, 0, 0, 0.5);
     --shadow-lg: rgba(0, 0, 0, 0.7);
   }
-}
 
