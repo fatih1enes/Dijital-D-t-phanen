@@ -138,7 +138,8 @@
     }
 
     async function clearLogsUI() {
-      if (!confirm("Tüm sistem ve işlem loglarını temizlemek istediğinize emin misiniz?")) {
+      const ok = await (window.showAppConfirm ? window.showAppConfirm("Tüm sistem ve işlem loglarını temizlemek istediğinize emin misiniz?", "Logları Temizle", "Temizle", true) : Promise.resolve(confirm("Tüm logları temizlemek istediğinize emin misiniz?")));
+      if (!ok) {
         return;
       }
       try {

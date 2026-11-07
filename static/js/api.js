@@ -693,7 +693,8 @@
         showToast('Bu kayıt için silme kimliği bulunamadı.', 'warning');
         return;
       }
-      if (!confirm('Bu kitabı kalıcı olarak silmek istediğinize emin misiniz?')) return;
+      const ok = await (window.showAppConfirm ? window.showAppConfirm('Bu kitabı kalıcı olarak silmek istediğinize emin misiniz?', 'Kitabı Sil', 'Sil', true) : Promise.resolve(confirm('Bu kitabı kalıcı olarak silmek istediğinize emin misiniz?')));
+      if (!ok) return;
 
       try {
         const response = await apiFetch(`/api/books/${encodeURIComponent(hash)}`, { method: 'DELETE' });

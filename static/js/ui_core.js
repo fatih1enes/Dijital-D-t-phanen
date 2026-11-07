@@ -268,7 +268,8 @@
     }
 
     async function deleteCollection(colId) {
-      if (!confirm("Koleksiyonu silmek istediğinize emin misiniz? (İçindeki kitaplar silinmez, sadece liste silinir)")) return;
+      const ok = await (window.showAppConfirm ? window.showAppConfirm("Koleksiyonu silmek istediğinize emin misiniz? (İçindeki kitaplar silinmez, sadece liste silinir)", "Koleksiyonu Sil", "Sil", true) : Promise.resolve(confirm("Koleksiyonu silmek istediğinize emin misiniz?")));
+      if (!ok) return;
       try {
         const res = await apiFetch(`/api/collections/${colId}`, { method: 'DELETE' });
         if (res?.ok) {
@@ -1061,6 +1062,79 @@
       });
     }
 
+    // --- [D6: UYGULAMA İÇİ ŞIK ONAY DİYALOĞU (NATIVE CONFIRM YERİNE)] ---
+    function showAppConfirm(message, title = 'Onay Gerekiyor', confirmText = 'Onayla', isDanger = true) {
+      return new Promise((resolve) => {
+        let overlay = document.getElementById('app-confirm-modal');
+        if (!overlay) {
+          overlay = document.createElement('div');
+          overlay.id = 'app-confirm-modal';
+          overlay.className = 'modal-overlay';
+          overlay.innerHTML = `
+            <div class="modal app-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
+              <div class="confirm-dialog-header">
+                <h3 id="confirm-dialog-title" class="confirm-dialog-title"></h3>
+              </div>
+              <div class="confirm-dialog-body">
+                <p id="confirm-dialog-msg" class="confirm-dialog-msg"></p>
+              </div>
+              <div class="confirm-dialog-actions">
+                <button type="button" class="btn-modal-secondary" id="confirm-dialog-cancel">Vazgeç</button>
+                <button type="button" class="btn-modal-primary" id="confirm-dialog-ok">Onayla</button>
+              </div>
+            </div>
+          `;
+          document.body.appendChild(overlay);
+        }
+
+        const titleEl = overlay.querySelector('#confirm-dialog-title');
+        const msgEl = overlay.querySelector('#confirm-dialog-msg');
+        const okBtn = overlay.querySelector('#confirm-dialog-ok');
+        const cancelBtn = overlay.querySelector('#confirm-dialog-cancel');
+
+        titleEl.textContent = title;
+        msgEl.textContent = message;
+        okBtn.textContent = confirmText;
+
+        if (isDanger) {
+          okBtn.style.background = 'var(--danger, #b0473c)';
+          okBtn.style.color = '#ffffff';
+          okBtn.style.borderColor = 'var(--danger, #b0473c)';
+        } else {
+          okBtn.style.background = '';
+          okBtn.style.color = '';
+          okBtn.style.borderColor = '';
+        }
+
+        let isResolved = false;
+        const cleanup = (result) => {
+          if (isResolved) return;
+          isResolved = true;
+          window.removeEventListener('keydown', handleKey);
+          closeModalWithAnimation(overlay, () => resolve(result));
+        };
+
+        const handleKey = (e) => {
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            cleanup(false);
+          }
+        };
+
+        window.addEventListener('keydown', handleKey);
+        okBtn.onclick = () => cleanup(true);
+        cancelBtn.onclick = () => cleanup(false);
+        overlay.onclick = (e) => {
+          if (e.target === overlay) cleanup(false);
+        };
+
+        overlay.classList.add('open');
+        document.body.classList.add('modal-open');
+        setTimeout(() => cancelBtn.focus(), 60);
+      });
+    }
+    window.showAppConfirm = showAppConfirm;
+
     // --- BULK OPERATIONS ---
     function toggleSelectionMode() {
       window.isSelectionMode = !window.isSelectionMode;
@@ -1091,7 +1165,8 @@
 
     async function bulkDelete() {
       if (selectedBooks.size === 0) return;
-      if (!confirm(`${selectedBooks.size} kitabı silmek istediğinize emin misiniz?`)) return;
+      const ok = await (window.showAppConfirm ? window.showAppConfirm(`${selectedBooks.size} kitabı kalıcı olarak silmek istediğinize emin misiniz?`, 'Toplu Silme', 'Seçilenleri Sil', true) : Promise.resolve(confirm(`${selectedBooks.size} kitabı silmek istediğinize emin misiniz?`)));
+      if (!ok) return;
 
       const toDelete = Array.from(selectedBooks);
       let successCount = 0;
@@ -1649,7 +1724,8 @@
     // ── [Option C] In-Place PDF Compression / Size Reducer ──
     async function compressBook(fileHash) {
       if (!fileHash) return;
-      if (!confirm('Bu PDF dosyasını kayıpsız/hafif JPEG sıkıştırma ile optimize etmek istiyor musunuz? Orijinal dosya güvenlik amacıyla yedeklenerek optimize edilir.')) {
+      const ok = await (window.showAppConfirm ? window.showAppConfirm('Bu PDF dosyasını kayıpsız/hafif JPEG sıkıştırma ile optimize etmek istiyor musunuz? Orijinal dosya güvenlik amacıyla yedeklenerek optimize edilir.', 'PDF Optimize Et', 'Optimize Et', false) : Promise.resolve(confirm('Bu PDF dosyasını optimize etmek istiyor musunuz?')));
+      if (!ok) {
         return;
       }
 
@@ -1795,7 +1871,8 @@
     }
 
     async function deleteDuplicateBook(fileHash, btnEl, groupId) {
-      if (!confirm('Bu mükerrer kopyayı kalıcı olarak silmek istediğinize emin misiniz?')) return;
+      const ok = await (window.showAppConfirm ? window.showAppConfirm('Bu mükerrer kopyayı kalıcı olarak silmek istediğinize emin misiniz?', 'Kopyayı Sil', 'Sil', true) : Promise.resolve(confirm('Bu mükerrer kopyayı kalıcı olarak silmek istediğinize emin misiniz?')));
+      if (!ok) return;
 
       if (btnEl) {
         btnEl.disabled = true;

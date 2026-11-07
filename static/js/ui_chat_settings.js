@@ -692,7 +692,8 @@
     window.saveAccessPasswordDirect = saveAccessPasswordDirect;
 
     async function removeAccessPassword() {
-      if (!confirm('Erişim şifresini kaldırmak istediğinizden emin misiniz?\n(Uzaktan telefon bağlantısı için şifre gereklidir)')) {
+      const ok = await (window.showAppConfirm ? window.showAppConfirm('Erişim şifresini kaldırmak istediğinizden emin misiniz?\n(Uzaktan telefon bağlantısı için şifre gereklidir)', 'Şifreyi Kaldır', 'Kaldır', true) : Promise.resolve(confirm('Erişim şifresini kaldırmak istediğinizden emin misiniz?')));
+      if (!ok) {
         return;
       }
       try {

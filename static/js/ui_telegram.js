@@ -338,7 +338,8 @@ async function telegramTriggerSync() {
 
 // ── Step 3: Disconnect Account ──────────────────────────────
 async function telegramDisconnectAccount() {
-  if (!confirm("Telegram bağlantısını kesmek ve kayıtlı oturumu kaldırmak istediğinize emin misiniz?")) {
+  const ok = await (window.showAppConfirm ? window.showAppConfirm("Telegram bağlantısını kesmek ve kayıtlı oturumu kaldırmak istediğinize emin misiniz?", "Bağlantıyı Kes", "Bağlantıyı Kes", true) : Promise.resolve(confirm("Telegram bağlantısını kesmek istediğinize emin misiniz?")));
+  if (!ok) {
     return;
   }
 
