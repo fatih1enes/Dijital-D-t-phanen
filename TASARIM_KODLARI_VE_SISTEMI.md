@@ -128,20 +128,41 @@ Bu dosya, Dijital Kütüphane projesinin **tüm görsel tasarım sistemi, CSS ka
   --radius-xl: 20px;
   --radius-full: var(--r-full);
 
-  /* Motion & Physics (Single Motion Standard) */
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-out-smooth: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.2);
-  --t-fast: 150ms;
-  --t-base: 240ms;
-  --duration-instant: 100ms;
-  --duration-fast: 150ms;
-  --duration-normal: 240ms;
-  --duration-slow: 380ms;
+  /* ═══════════════ UNIFIED MOTION SYSTEM (Apple Books / Linear Standard) ═══════════════ */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);   /* Varsayılan akıcı çıkış */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* Büyük geçişler */
+  --ease-spring: linear(0, 0.402 7.4%, 0.711 15.3%, 0.929 23.7%, 1.008 33.3%,
+                        1.067 41.6%, 1.059 49.2%, 1.015 61.5%, 0.999 74%, 1);
+  --t-micro: 150ms;  /* Hover, renk, basma */
+  --t-ui:    280ms;  /* Dropdown, panel, kart, modal */
+  --t-page:  600ms;  /* Okuyucu, hero, büyük geçişler */
 
-  --transition-fast: var(--t-fast) var(--ease-out);
-  --transition-smooth: var(--t-base) var(--ease-out);
-  --transition-spring: 0.35s var(--ease-spring);
+  /* Aliases for System Backwards Compatibility */
+  --t-fast: var(--t-micro);
+  --t-base: var(--t-ui);
+  --duration-instant: 100ms;
+  --duration-fast: var(--t-micro);
+  --duration-normal: var(--t-ui);
+  --duration-slow: var(--t-page);
+  --ease-out-smooth: var(--ease-out);
+
+  --transition-fast: var(--t-micro) var(--ease-out);
+  --transition-smooth: var(--t-ui) var(--ease-out);
+  --transition-spring: var(--t-ui) var(--ease-spring);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t-page: 0ms;
+    --t-ui: 150ms;
+    --t-micro: 100ms;
+    --transition-fast: 100ms ease;
+    --transition-smooth: 150ms ease;
+    --transition-spring: 150ms ease;
+  }
+}
+
+:root {
 
   /* ═══════════════ 2. LIGHT MODE SEMANTIC COLORS ═══════════════ */
   /* Surfaces */
@@ -379,16 +400,16 @@ body {
 .theme-transitioning input,
 .theme-transitioning select,
 .theme-transitioning textarea {
-  transition: background-color 0.28s var(--ease-out),
-              border-color 0.28s var(--ease-out),
-              color 0.24s var(--ease-out),
-              box-shadow 0.28s var(--ease-out),
-              fill 0.24s ease;
+  transition: background-color var(--t-ui) var(--ease-out),
+              border-color var(--t-ui) var(--ease-out),
+              color var(--t-ui) var(--ease-out),
+              box-shadow var(--t-ui) var(--ease-out),
+              fill var(--t-ui) var(--ease-out);
 }
 
 .theme-icon-spin {
   display: inline-block;
-  animation: themeIconSpin 0.4s var(--ease-out) both;
+  animation: themeIconSpin var(--t-ui) var(--ease-out) both;
 }
 
 @keyframes themeIconSpin {
@@ -411,11 +432,11 @@ button,
   position: relative;
   cursor: pointer;
   user-select: none;
-  transition: transform 0.16s var(--ease-out),
-              background-color 0.2s var(--ease-out),
-              border-color 0.2s var(--ease-out),
-              box-shadow 0.22s var(--ease-out),
-              color 0.18s ease;
+  transition: transform var(--t-micro) var(--ease-out),
+              background-color var(--t-micro) var(--ease-out),
+              border-color var(--t-micro) var(--ease-out),
+              box-shadow var(--t-ui) var(--ease-out),
+              color var(--t-micro) var(--ease-out);
 }
 
 .modal-close {
@@ -434,9 +455,9 @@ button,
   cursor: pointer;
   z-index: 20;
   font-size: 0.95rem;
-  transition: transform 0.16s var(--ease-out),
-              background-color 0.2s var(--ease-out),
-              color 0.18s ease;
+  transition: transform var(--t-micro) var(--ease-out),
+              background-color var(--t-micro) var(--ease-out),
+              color var(--t-micro) var(--ease-out);
 }
 
 .modal-close:hover {
@@ -450,7 +471,7 @@ button,
 }
 
 .modal-close i {
-  transition: transform 0.25s var(--ease-out);
+  transition: transform var(--t-ui) var(--ease-out);
 }
 
 .modal-close:hover i {
@@ -550,7 +571,7 @@ button:active:not(:disabled),
   font-size: var(--fs-sm);
   letter-spacing: 0;
   text-transform: none;
-  transition: all 0.2s var(--ease-out);
+  transition: all var(--t-micro) var(--ease-out);
 }
 
 .btn-modal-danger:hover {
@@ -627,7 +648,7 @@ h1 em {
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  transition: transform 0.12s ease, box-shadow 0.15s ease, background 0.15s ease;
+  transition: transform var(--t-micro) var(--ease-out), box-shadow var(--t-micro) var(--ease-out), background var(--t-micro) var(--ease-out);
   white-space: nowrap;
 }
 
@@ -714,12 +735,22 @@ h1 em {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  animation: toolsMenuFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: toolsMenuFadeIn var(--t-micro) var(--ease-out);
 }
 
 @keyframes toolsMenuFadeIn {
   from { opacity: 0; transform: translateY(-6px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes toolsMenuFadeOut {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-4px); }
+}
+
+.header-tools-menu.closing {
+  pointer-events: none;
+  animation: toolsMenuFadeOut var(--t-micro) var(--ease-out) forwards;
 }
 
 .tools-menu-label {
@@ -745,7 +776,7 @@ h1 em {
   cursor: pointer;
   color: var(--ink);
   font-family: var(--font-ui);
-  transition: background 0.12s ease;
+  transition: background var(--t-micro) var(--ease-out);
 }
 
 .tools-menu-item:hover {
@@ -921,7 +952,18 @@ h1 em {
   border-color: var(--ink);
 }
 
-/* Akıcı Dropdown Animasyonu */
+/* Akıcı Dropdown Animasyonu (Standard Micro-Motion) */
+@keyframes dropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .dropdown-menu {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -930,16 +972,19 @@ h1 em {
   padding: var(--sp-1);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-6px) scale(0.98);
-  transition: opacity 0.2s var(--ease-out), transform 0.2s var(--ease-out), visibility 0.2s;
+  transform: translateY(-4px);
+  transition: opacity var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out), visibility var(--t-micro);
   pointer-events: none;
 }
 
-.custom-dropdown.open .dropdown-menu {
+.custom-dropdown.open .dropdown-menu,
+.dropdown.open .dropdown-menu,
+.open > .dropdown-menu {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0) scale(1);
+  transform: translateY(0);
   pointer-events: auto;
+  animation: dropdownIn var(--t-micro) var(--ease-out);
 }
 
 .dropdown-item {
@@ -1013,14 +1058,28 @@ h1 em {
   overflow: visible;
   display: flex;
   flex-direction: column;
-  transition: transform 0.25s var(--ease-out);
+  transition: transform var(--t-ui) var(--ease-out);
 }
 
 .book-card::before,
 .book-card::after { display: none !important; }
 
-.book-card:hover {
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  .book-card:hover {
+    transform: translateY(-4px);
+  }
+  .book-card:hover .card-cover {
+    box-shadow: inset 0 0 0 1px var(--line), var(--shadow-lg);
+  }
+  .book-card:hover .card-cover img,
+  .book-card:hover .card-cover-placeholder {
+    transform: scale(1.02);
+  }
+}
+
+.book-card:active {
+  transform: translateY(-2px) scale(0.99);
+  transition-duration: var(--t-micro);
 }
 
 .card-cover {
@@ -1028,7 +1087,7 @@ h1 em {
   border-radius: var(--r-xs);
   background: var(--sepia-pale);
   box-shadow: inset 0 0 0 1px var(--line), var(--shadow-sm);
-  transition: box-shadow 0.3s var(--ease-out);
+  transition: box-shadow var(--t-ui) var(--ease-out);
   position: relative;
   overflow: hidden;
 }
@@ -1056,7 +1115,7 @@ h1 em {
 }
 
 .card-cover img {
-  transition: transform 0.3s var(--ease-out);
+  transition: transform var(--t-ui) var(--ease-out);
 }
 
 .book-card:hover .card-cover img {
@@ -1078,7 +1137,7 @@ h1 em {
   box-shadow: var(--shadow-sm);
   opacity: 0;
   transform: translateY(4px);
-  transition: opacity 0.2s var(--ease-out), transform 0.2s var(--ease-out);
+  transition: opacity var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out);
 }
 
 .book-card:hover .card-cat-badge {
@@ -1097,7 +1156,7 @@ h1 em {
   backdrop-filter: none;
   box-shadow: var(--shadow-sm);
   opacity: 0;
-  transition: opacity 0.2s var(--ease-out), transform 0.2s var(--ease-out), background 0.2s;
+  transition: opacity var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out), background var(--t-micro);
 }
 
 .book-card:hover .btn-favorite-card,
@@ -1162,7 +1221,7 @@ h1 em {
 
 /* ═══════════════ 8. VIEW GEÇİŞ ANİMASYONU (PÜRÜZSÜZ & AKICI) ═══════════════ */
 .view-fade-in {
-  animation: smoothViewReveal 0.28s var(--ease-out) both;
+  animation: smoothViewReveal var(--t-ui) var(--ease-out) both;
 }
 
 @keyframes smoothViewReveal {
@@ -1181,7 +1240,7 @@ h1 em {
   background: rgba(22, 21, 19, 0.5);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  transition: opacity 0.25s var(--ease-out);
+  transition: opacity var(--t-ui) var(--ease-out);
 }
 
 .logs-panel {
@@ -1353,7 +1412,7 @@ h1 em {
   border-left: 3px solid var(--line-strong);
   border-radius: 0;
   padding: var(--sp-3) var(--sp-4);
-  transition: background 0.15s ease;
+  transition: background var(--t-micro) var(--ease-out);
 }
 
 .log-card:hover {
@@ -1456,10 +1515,72 @@ h1 em {
 }
 
 /* ═══════════════ 10. MODAL VE AYARLAR PENCERELERİ ═══════════════ */
+@keyframes modalOverlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalOverlayOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes modalPopIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modalPopOut {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.98) translateY(4px);
+  }
+}
+
 .modal-overlay {
   background: rgba(22, 21, 19, 0.5);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+}
+
+.modal-overlay.open {
+  display: flex;
+  animation: modalOverlayIn var(--t-ui) var(--ease-out) forwards;
+}
+
+.modal-overlay.open .modal {
+  animation: modalPopIn var(--t-ui) var(--ease-out) forwards;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-overlay.closing {
+  display: flex;
+  pointer-events: none;
+  animation: modalOverlayOut var(--t-micro) var(--ease-out) forwards;
+}
+
+.modal-overlay.closing .modal {
+  pointer-events: none;
+  animation: modalPopOut var(--t-micro) var(--ease-out) forwards;
 }
 
 .modal {
@@ -1547,6 +1668,19 @@ h1 em {
   color: var(--ink);
   left: 1.75rem;
   bottom: 4.8rem;
+  transform: translateY(8px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out), visibility var(--t-micro);
+}
+
+#ops-center.active {
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  animation: opsCenterIn var(--t-ui) var(--ease-out);
 }
 
 .ops-header {
@@ -1577,23 +1711,12 @@ h1 em {
   cursor: pointer;
   z-index: 2100;
   transform: none;
-  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-              box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-              background-color 0.18s ease,
-              border-color 0.18s ease;
+  transition: transform var(--t-ui) var(--ease-out),
+              box-shadow var(--t-ui) var(--ease-out),
+              background-color var(--t-micro) var(--ease-out),
+              border-color var(--t-micro) var(--ease-out);
 }
 
-.ops-toggle:hover {
-  background: var(--surface-hover);
-  border-color: var(--ink);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-}
-
-.ops-toggle:active {
-  transform: translateY(0px) scale(0.975);
-  box-shadow: var(--shadow-sm);
-}
 
 .ops-status-dot {
   width: 8px;
@@ -1602,7 +1725,7 @@ h1 em {
   background: var(--ok);
   box-shadow: 0 0 0 3px var(--ok-bg);
   flex-shrink: 0;
-  transition: all 0.3s ease;
+  transition: all var(--t-ui) var(--ease-out);
 }
 
 .ops-toggle.is-processing .ops-status-dot {
@@ -1652,22 +1775,12 @@ h1 em {
   background: var(--surface);
   border: 1px solid var(--line-strong);
   box-shadow: var(--shadow-md);
-  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-              box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-              border-color 0.18s ease,
-              background-color 0.18s ease;
+  transition: transform var(--t-ui) var(--ease-out),
+              box-shadow var(--t-ui) var(--ease-out),
+              border-color var(--t-micro) var(--ease-out),
+              background-color var(--t-micro) var(--ease-out);
 }
 
-#chat-panel:not(.active):hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--ink);
-  background: var(--surface-hover);
-}
-
-#chat-panel:not(.active):active {
-  transform: translateY(0px) scale(0.975);
-}
 
 #chat-panel:not(.active) .chat-body,
 #chat-panel:not(.active) .chat-input-area {
@@ -1722,7 +1835,7 @@ h1 em {
   color: var(--muted);
   display: inline-flex;
   align-items: center;
-  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform var(--t-ui) var(--ease-out);
 }
 
 /* Açık Durum: Yaylanarak Açılan Modern Sohbet Paneli */
@@ -1747,7 +1860,7 @@ h1 em {
   border: 1px solid var(--line-strong);
   box-shadow: var(--shadow-lg);
   overflow: hidden;
-  animation: chatPanelExpand 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: chatPanelExpand var(--t-ui) var(--ease-out) both;
 }
 
 #chat-panel.active .chat-header {
@@ -1809,13 +1922,6 @@ h1 em {
   border: 1px solid var(--line-strong);
   border-radius: var(--r-full);
   box-shadow: var(--shadow-md);
-}
-
-#scroll-top-btn:hover {
-  background: var(--paper-dark);
-  border-color: var(--ink);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
 }
 
 /* ═══════════════ 7. SIFIR DURUMU (ZERO STATE) & İÇE AKTARMA ═══════════════ */
@@ -2023,13 +2129,15 @@ h1 em {
   border: 1px solid var(--line);
   border-radius: var(--r-sm);
   cursor: pointer;
-  transition: all 140ms var(--ease-out);
+  transition: background-color var(--t-micro) var(--ease-out),
+              border-color var(--t-micro) var(--ease-out);
 }
 
-.shelf-item:hover {
-  background: var(--paper-dark);
-  border-color: var(--line-strong);
-  transform: translateY(-1.5px);
+@media (hover: hover) and (pointer: fine) {
+  .shelf-item:hover {
+    background: var(--paper-dark);
+    border-color: var(--line-strong);
+  }
 }
 
 .shelf-item:active {
@@ -2183,29 +2291,13 @@ h1 em {
   font-weight: 500;
   letter-spacing: 0;
   text-transform: none;
-  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-              box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-              background-color 0.18s ease,
-              border-color 0.18s ease,
-              color 0.18s ease;
+  transition: background-color var(--t-micro) var(--ease-out),
+              border-color var(--t-micro) var(--ease-out),
+              color var(--t-micro) var(--ease-out),
+              transform var(--t-micro) var(--ease-out);
 }
 
-.btn-import:hover:not(:disabled),
-.btn-modal-primary:hover:not(:disabled),
-.btn-modal-save:hover:not(:disabled),
-.btn-settings-save:hover:not(:disabled),
-.btn-empty-add:hover:not(:disabled),
-.btn-banner-load:hover:not(:disabled),
-.btn-primary-action:hover:not(:disabled),
-.btn-hero-primary:hover:not(:disabled) {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--on-accent);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-/* İkincil Butonlar — %100 İkiz Fizik ve Gölge Standardı (#btn-telegram ve #btn-sync dahil) */
+/* İkincil Butonlar */
 .btn-modal-secondary,
 .btn-modal-fav,
 .btn-settings-cancel,
@@ -2219,65 +2311,126 @@ h1 em {
   color: var(--ink);
   border: 1px solid var(--line-strong);
   border-radius: var(--r-sm);
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
   font-family: var(--font-ui);
   font-size: var(--fs-sm);
   font-weight: 500;
   letter-spacing: 0;
   text-transform: none;
-  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-              box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-              background-color 0.18s ease,
-              border-color 0.18s ease,
-              color 0.18s ease;
+  cursor: pointer;
+  transition: background-color var(--t-micro) var(--ease-out),
+              border-color var(--t-micro) var(--ease-out),
+              color var(--t-micro) var(--ease-out),
+              transform var(--t-micro) var(--ease-out);
 }
 
-.btn-modal-secondary:hover:not(:disabled),
-.btn-modal-fav:hover:not(:disabled),
-.btn-settings-cancel:hover:not(:disabled),
-.btn-empty-clear:hover:not(:disabled),
-.btn-cascade-reset:hover:not(:disabled),
-.btn-sync:hover:not(:disabled),
-.btn-hero-secondary:hover:not(:disabled),
-#btn-telegram:hover:not(:disabled),
-#btn-sync:hover:not(:disabled) {
-  background: var(--paper-dark);
-  border-color: var(--ink);
-  color: var(--ink);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+/* İkon Butonları */
+.header-icon-btn,
+.view-btn,
+.theme-toggle-btn,
+.ops-btn-icon,
+.ops-btn-close {
+  cursor: pointer;
+  transition: background-color var(--t-micro) var(--ease-out),
+              border-color var(--t-micro) var(--ease-out),
+              color var(--t-micro) var(--ease-out),
+              transform var(--t-micro) var(--ease-out);
 }
 
-/* Dokunsal Basılma (Tactile Press) */
+/* Yüzen Haplar (#ops-toggle ve #chat-panel kapalı hapı) */
+.ops-toggle,
+#chat-panel:not(.active) {
+  cursor: pointer;
+  transition: background-color var(--t-micro) var(--ease-out),
+              border-color var(--t-micro) var(--ease-out),
+              box-shadow var(--t-micro) var(--ease-out),
+              transform var(--t-micro) var(--ease-out);
+}
+
+/* ── MOUSE HOVER: Sadece fare/pointer cihazlarda çalışır, dokunmatik ekranda asla yapışmaz ── */
+@media (hover: hover) and (pointer: fine) {
+  .btn-import:hover:not(:disabled),
+  .btn-modal-primary:hover:not(:disabled),
+  .btn-modal-save:hover:not(:disabled),
+  .btn-settings-save:hover:not(:disabled),
+  .btn-empty-add:hover:not(:disabled),
+  .btn-banner-load:hover:not(:disabled),
+  .btn-primary-action:hover:not(:disabled),
+  .btn-hero-primary:hover:not(:disabled) {
+    background: var(--accent-soft);
+    border-color: var(--accent-soft);
+    color: var(--on-accent);
+    transform: none;
+  }
+
+  .btn-modal-secondary:hover:not(:disabled),
+  .btn-modal-fav:hover:not(:disabled),
+  .btn-settings-cancel:hover:not(:disabled),
+  .btn-empty-clear:hover:not(:disabled),
+  .btn-cascade-reset:hover:not(:disabled),
+  .btn-sync:hover:not(:disabled),
+  .btn-hero-secondary:hover:not(:disabled),
+  #btn-telegram:hover:not(:disabled),
+  #btn-sync:hover:not(:disabled) {
+    background: var(--surface-hover);
+    border-color: var(--ink);
+    color: var(--ink);
+    transform: none;
+  }
+
+  .header-icon-btn:hover:not(:disabled),
+  .view-btn:hover:not(:disabled),
+  .theme-toggle-btn:hover:not(:disabled),
+  .ops-btn-icon:hover:not(:disabled),
+  .ops-btn-close:hover:not(:disabled) {
+    background: var(--paper-dark);
+    color: var(--ink);
+    transform: none;
+  }
+
+  .ops-toggle:hover {
+    background: var(--surface-hover);
+    border-color: var(--ink);
+    transform: none;
+  }
+
+  #chat-panel:not(.active):hover {
+    background: var(--surface-hover);
+    border-color: var(--ink);
+    transform: none;
+  }
+
+  #scroll-top-btn:hover {
+    background: var(--paper-dark);
+    border-color: var(--ink);
+    transform: none;
+  }
+}
+
+/* ── BASMA GERİ BİLDİRİMİ: Hem fare hem dokunmatik ekranda çalışır ── */
 button:active:not(:disabled),
+[class*="btn-"]:active:not(:disabled),
 .btn-primary-action:active:not(:disabled),
 .btn-hero-primary:active:not(:disabled),
 .btn-hero-secondary:active:not(:disabled),
 #btn-telegram:active:not(:disabled),
 #btn-sync:active:not(:disabled),
 .btn-modal-primary:active:not(:disabled),
-.btn-modal-secondary:active:not(:disabled),
-.header-icon-btn:active:not(:disabled) {
-  transform: translateY(0px) scale(0.975);
-  box-shadow: var(--shadow-sm);
-  transition-duration: 0.08s;
+.btn-modal-secondary:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
-/* Header İkon Butonları Akıcı Hover */
-.header-icon-btn {
-  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
-              box-shadow 0.2s cubic-bezier(0.22, 1, 0.36, 1),
-              background-color 0.18s ease,
-              border-color 0.18s ease,
-              color 0.18s ease;
+.header-icon-btn:active:not(:disabled),
+.view-btn:active:not(:disabled),
+.theme-toggle-btn:active:not(:disabled),
+.ops-btn-icon:active:not(:disabled),
+.ops-btn-close:active:not(:disabled) {
+  transform: scale(0.94);
 }
 
-.header-icon-btn:hover {
-  background: var(--paper-dark);
-  color: var(--ink);
-  border-color: var(--line-strong);
-  transform: translateY(-1.5px);
-  box-shadow: var(--shadow-md);
+.ops-toggle:active,
+#chat-panel:not(.active):active {
+  transform: scale(0.96);
 }
 
 /* Zero-State Hero Giriş Animasyonu ve Derinliği */
@@ -2293,11 +2446,11 @@ button:active:not(:disabled),
 }
 
 .zero-state-hero {
-  animation: heroCardReveal 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: heroCardReveal var(--t-page) var(--ease-out) both;
   box-shadow: var(--shadow-md);
-  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
-              box-shadow 0.28s cubic-bezier(0.22, 1, 0.36, 1),
-              border-color 0.2s ease;
+  transition: transform var(--t-ui) var(--ease-out),
+              box-shadow var(--t-ui) var(--ease-out),
+              border-color var(--t-micro) var(--ease-out);
 }
 
 .zero-state-hero:hover,
@@ -2308,7 +2461,7 @@ button:active:not(:disabled),
 
 /* Kitap Kartları İpeksi Hover */
 .book-card {
-  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform var(--t-ui) var(--ease-out);
 }
 
 .book-card:hover {
@@ -2316,7 +2469,7 @@ button:active:not(:disabled),
 }
 
 .card-cover img {
-  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform var(--t-page) var(--ease-out);
 }
 
 .book-card:hover .card-cover img {
@@ -2393,7 +2546,7 @@ button:active:not(:disabled),
 .workspace-chat-pane {
   background: var(--surface);
   border-left: 1px solid var(--line);
-  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), min-width 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+  transition: width var(--t-ui) var(--ease-out), min-width var(--t-ui) var(--ease-out), opacity var(--t-ui) var(--ease-out);
 }
 
 .workspace-chat-pane.collapsed {
@@ -2473,11 +2626,95 @@ button:active:not(:disabled),
 
 /* ═══════════════ 12. ERİŞİLEBİLİRLİK (REDUCED MOTION) ═══════════════ */
 @media (prefers-reduced-motion: reduce) {
+  /* Hareketi sıfırla, yumuşak geçişi (opacity, color) koru */
   *, *::before, *::after {
-    animation-duration: 0.01ms;
-    animation-delay: 0ms;
-    transition-duration: 0.01ms;
-    scroll-behavior: auto;
+    scroll-behavior: auto !important;
+  }
+
+  /* Sonsuz dönen, yanıp sönen ve nabız gibi atan döngüleri durdur */
+  .fa-spin,
+  .ops-status-dot,
+  .is-processing .ops-status-dot,
+  [class*="pulse"],
+  [class*="spin"],
+  [class*="shimmer"],
+  [class*="radar"] {
+    animation: none !important;
+  }
+
+  /* Butonlar, kartlar ve interaktif elemanlarda zıplamayı ve büyümeyi durdur */
+  button,
+  [class*="btn-"],
+  .book-card,
+  .card-cover img,
+  .card-cover-placeholder,
+  .header-icon-btn,
+  .ops-toggle,
+  #chat-panel,
+  #ops-center,
+  .dropdown-menu,
+  .modal-close,
+  .shelf-item {
+    transform: none !important;
+    transition-property: opacity, background-color, border-color, color !important;
+  }
+
+  /* Modallar: Transform kalkar, sadece sakin ve zarif opacity geçişi (150ms) */
+  @keyframes modalPopIn {
+    from { opacity: 0; transform: none; }
+    to { opacity: 1; transform: none; }
+  }
+
+  @keyframes modalPopOut {
+    from { opacity: 1; transform: none; }
+    to { opacity: 0; transform: none; }
+  }
+
+  @keyframes modalOverlayIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes modalOverlayOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  /* Dropdown & Ops Panel: Transformsuz, sadece opacity */
+  @keyframes dropdownIn {
+    from { opacity: 0; transform: none; }
+    to { opacity: 1; transform: none; }
+  }
+
+  @keyframes toolsMenuFadeIn {
+    from { opacity: 0; transform: none; }
+    to { opacity: 1; transform: none; }
+  }
+
+  @keyframes toolsMenuFadeOut {
+    from { opacity: 1; transform: none; }
+    to { opacity: 0; transform: none; }
+  }
+
+  @keyframes opsCenterIn {
+    from { opacity: 0; transform: none; }
+    to { opacity: 1; transform: none; }
+  }
+
+  @keyframes chatPanelExpand {
+    from { opacity: 0; transform: none; }
+    to { opacity: 1; transform: none; }
+  }
+
+  @keyframes chatPanelCollapse {
+    from { opacity: 1; transform: none; }
+    to { opacity: 0; transform: none; }
+  }
+
+  /* Kartlarda stagger zıplamasını durdur, sadece hızlı sakin beliriş */
+  .book-card.stagger-in,
+  #table-body tr.stagger-in {
+    animation: none !important;
   }
 }
 ```
@@ -3874,7 +4111,7 @@ button:active:not(:disabled),
     </div>
 
   <!-- Shortcuts Help Modal -->
-  <div class="modal-overlay" id="shortcuts-modal" aria-modal="true" tabindex="-1" style="display:none; z-index:8000;">
+  <div class="modal-overlay" id="shortcuts-modal" aria-modal="true" tabindex="-1" style="z-index:8000;">
     <div class="modal" style="max-width: 480px; padding: 2rem; border-radius: var(--r-md); background: var(--paper); border: 1px solid var(--line); box-shadow: var(--shadow-lg);">
       <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
         <h2 style="font-family:'Instrument Serif',serif; font-size:1.35rem; color:var(--ink); margin:0; display:flex; align-items:center; gap:0.6rem;">
@@ -3928,7 +4165,7 @@ button:active:not(:disabled),
   </div>
 
   <!-- Instant LAN Handoff (QR Code) Modal -->
-  <div class="modal-overlay" id="handoff-modal" aria-modal="true" tabindex="-1" style="display:none; z-index:99999;">
+  <div class="modal-overlay" id="handoff-modal" aria-modal="true" tabindex="-1" style="z-index:99999;">
     <div class="modal" style="max-width:440px; text-align:center; padding:2rem; border-radius:18px; background:var(--paper); border:1px solid var(--line); box-shadow:0 25px 50px rgba(0,0,0,0.5);">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
         <h3 style="font-size:1.15rem; color:var(--ink); margin:0; display:flex; align-items:center; gap:0.5rem;">
@@ -3948,7 +4185,7 @@ button:active:not(:disabled),
   </div>
 
   <!-- Duplicate Books Modal -->
-  <div class="modal-overlay" id="duplicates-modal" aria-modal="true" tabindex="-1" style="display:none; z-index:3600;">
+  <div class="modal-overlay" id="duplicates-modal" aria-modal="true" tabindex="-1" style="z-index:3600;">
     <div class="modal" style="max-width:680px; padding:2rem; border-radius:20px; background:var(--paper); border:1px solid var(--line); box-shadow:0 25px 50px rgba(0,0,0,0.5);">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; border-bottom:1px solid var(--line); padding-bottom:0.8rem;">
         <h3 style="font-family:'Instrument Serif',serif; font-size:1.35rem; color:var(--ink); margin:0; display:flex; align-items:center; gap:0.6rem;">
@@ -4550,7 +4787,7 @@ button:active:not(:disabled),
       font-size: 0.7rem;
       color: var(--sepia);
       opacity: 0.6;
-      transition: opacity 0.2s;
+      transition: opacity var(--t-micro);
     }
 
     .tooltip-wrap:hover .info-icon {
@@ -4572,7 +4809,7 @@ button:active:not(:disabled),
       pointer-events: none;
       opacity: 0;
       visibility: hidden;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all var(--t-ui) var(--ease-out);
       box-shadow: 0 10px 30px rgba(0,0,0,0.4);
       z-index: 9999;
       font-family: 'Geist', sans-serif;
@@ -4733,7 +4970,7 @@ button:active:not(:disabled),
       border-radius: 6px;
       padding: 0.15rem 0.6rem;
       border: 1.5px solid var(--line);
-      transition: max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+      transition: max-width var(--t-ui) var(--ease-out), border-color var(--t-ui) var(--ease-out), box-shadow var(--t-ui) var(--ease-out), background-color var(--t-ui) var(--ease-out);
       display: flex;
       align-items: center;
       box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
@@ -4749,7 +4986,7 @@ button:active:not(:disabled),
       margin: 0 0.6rem;
       color: var(--muted);
       font-size: 0.85rem;
-      transition: color var(--transition-fast), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: color var(--transition-fast), transform var(--t-ui) var(--ease-out);
     }
 
     .search-wrap:focus-within i {
@@ -4811,7 +5048,7 @@ button:active:not(:disabled),
 
     .dropdown-trigger:active {
       transform: scale(0.97);
-      transition-duration: 0.08s;
+      transition-duration: var(--t-micro);
     }
 
     .dropdown-trigger::after {
@@ -4825,7 +5062,7 @@ button:active:not(:disabled),
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%238a7355' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 5 4 4 4-4'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: center;
-      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: transform var(--t-ui) var(--ease-out);
     }
 
     .custom-dropdown.open .dropdown-trigger::after {
@@ -4858,7 +5095,7 @@ button:active:not(:disabled),
       visibility: hidden;
       transform: translateY(-6px) scale(0.97);
       transform-origin: top center;
-      transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1), transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.24s;
+      transition: opacity var(--t-ui) var(--ease-out), transform var(--t-ui) var(--ease-out), visibility var(--t-ui);
       padding: 0.5rem;
       max-height: 350px;
       overflow-y: auto;
@@ -4876,7 +5113,7 @@ button:active:not(:disabled),
       font-size: 0.82rem;
       color: var(--ink);
       cursor: pointer;
-      transition: background 0.18s ease, color 0.18s ease, transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: background var(--t-micro) var(--ease-out), color var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out);
       display: flex;
       align-items: center;
       gap: 0.6rem;
@@ -4890,7 +5127,7 @@ button:active:not(:disabled),
 
     .dropdown-item:active {
       transform: translateX(4px) scale(0.98);
-      transition-duration: 0.08s;
+      transition-duration: var(--t-micro);
     }
 
     .dropdown-item.active {
@@ -4938,12 +5175,12 @@ button:active:not(:disabled),
 
     .view-btn:active {
       transform: scale(0.94);
-      transition-duration: 0.08s;
+      transition-duration: var(--t-micro);
     }
 
     .view-btn i {
       font-size: 0.8rem;
-      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: transform var(--t-ui) var(--ease-out);
     }
 
     .view-btn:hover i {
@@ -4982,10 +5219,9 @@ button:active:not(:disabled),
     }
 
     .tag:hover {
-      border-color: var(--sepia);
-      color: var(--sepia);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 10px var(--shadow-color);
+      border-color: var(--ink);
+      color: var(--ink);
+      background: var(--paper-dark);
     }
 
     .tag.active {
@@ -5035,7 +5271,7 @@ button:active:not(:disabled),
       background-image:
         radial-gradient(ellipse at 15% 0%, rgba(110,97,76, 0.04) 0%, transparent 55%),
         radial-gradient(ellipse at 85% 100%, rgba(130,116,94, 0.05) 0%, transparent 55%);
-      transition: background-color 0.4s ease, color 0.4s ease;
+      transition: background-color var(--t-ui) var(--ease-out), color var(--t-ui) var(--ease-out);
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
@@ -5063,7 +5299,7 @@ button:active:not(:disabled),
       border-radius: 999px;
       border: 2px solid transparent;
       background-clip: content-box;
-      transition: background 0.2s ease;
+      transition: background var(--t-micro) var(--ease-out);
     }
 
     *::-webkit-scrollbar-thumb:hover {
@@ -5124,7 +5360,7 @@ button:active:not(:disabled),
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
       z-index: 2000;
       transform: translateY(-101%);
-      transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: transform var(--t-ui) var(--ease-out);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -5204,7 +5440,7 @@ button:active:not(:disabled),
       background: rgba(0, 0, 0, 0.4);
       backdrop-filter: blur(4px);
       border: 1px solid rgba(255, 255, 255, 0.1);
-      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: all var(--t-ui) var(--ease-spring);
     }
 
     .btn-favorite-card:hover {
@@ -5213,7 +5449,7 @@ button:active:not(:disabled),
     }
 
     .btn-favorite-card i {
-      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: transform var(--t-micro) var(--ease-spring);
     }
 
     .btn-favorite-card:active i {
@@ -5234,7 +5470,7 @@ button:active:not(:disabled),
       gap: 1.5rem;
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
       z-index: 2500;
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: all var(--t-ui) var(--ease-spring);
       backdrop-filter: blur(16px);
     }
 
@@ -5343,7 +5579,7 @@ button:active:not(:disabled),
     }
 
     .view-fade-in {
-      animation: viewFadeSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation: viewFadeSlide var(--t-ui) var(--ease-out) both;
     }
 
     /* ── GRID ── */
@@ -5359,14 +5595,18 @@ button:active:not(:disabled),
       border-radius: var(--radius);
       overflow: hidden;
       cursor: pointer;
-      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease;
-      animation: fadeSlideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
-      animation-delay: calc(var(--card-index, 0) * 28ms);
+      transition: transform var(--t-ui) var(--ease-out), box-shadow var(--t-ui) var(--ease-out), border-color var(--t-ui) var(--ease-out);
       display: flex;
       flex-direction: column;
       position: relative;
       box-shadow: 0 1px 3px var(--shadow-color), 0 4px 12px rgba(0, 0, 0, 0.02);
       will-change: transform, box-shadow;
+    }
+
+    .book-card.stagger-in,
+    #table-body tr.stagger-in {
+      animation: fadeSlideUp var(--t-page) var(--ease-out);
+      animation-delay: calc(var(--card-index, 0) * 30ms);
     }
 
     .book-card::before {
@@ -5383,7 +5623,7 @@ button:active:not(:disabled),
     @keyframes fadeSlideUp {
       from {
         opacity: 0;
-        transform: translateY(18px) scale(0.98);
+        transform: translateY(12px) scale(0.98);
       }
 
       to {
@@ -5400,7 +5640,7 @@ button:active:not(:disabled),
 
     .book-card:active {
       transform: translateY(-2px) scale(0.99);
-      transition-duration: 0.1s;
+      transition-duration: var(--t-micro);
     }
 
     .book-card.selected {
@@ -5427,7 +5667,7 @@ button:active:not(:disabled),
       justify-content: center;
       z-index: 10;
       backdrop-filter: blur(4px);
-      transition: all 0.2s;
+      transition: all var(--t-micro);
     }
 
     .is-selection-mode .selection-indicator {
@@ -5503,7 +5743,7 @@ button:active:not(:disabled),
       width: 18%;
       background: var(--accent);
       border-radius: 999px;
-      transition: width 0.25s ease;
+      transition: width var(--t-ui) var(--ease-out);
     }
 
     .uploading .progress-label {
@@ -5538,7 +5778,7 @@ button:active:not(:disabled),
       height: 100%;
       object-fit: cover;
       display: block;
-      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform var(--t-page) var(--ease-out);
     }
 
     .book-card:hover .card-cover img {
@@ -5673,7 +5913,7 @@ button:active:not(:disabled),
     }
 
     .fadeOut {
-      animation: fadeOutScale 0.4s forwards;
+      animation: fadeOutScale var(--t-ui) forwards;
     }
 
     @keyframes fadeOutScale {
@@ -5701,7 +5941,7 @@ button:active:not(:disabled),
       cursor: pointer;
       font-size: 0.8rem;
       padding: 0.2rem;
-      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, color 0.2s;
+      transition: background-color var(--t-ui) var(--ease-out), color var(--t-ui) var(--ease-out), border-color var(--t-ui) var(--ease-out), box-shadow var(--t-ui) var(--ease-out), color var(--t-micro);
     }
 
     .btn-delete-card:hover {
@@ -5720,7 +5960,7 @@ button:active:not(:disabled),
     .surface-btn {
       padding: 0.4rem 0.6rem;
       border-radius: 6px;
-      transition: all 0.2s ease;
+      transition: all var(--t-micro) var(--ease-out);
     }
     .surface-btn.active {
       background: var(--accent);
@@ -5802,7 +6042,7 @@ button:active:not(:disabled),
     th .sort-arrow {
       margin-left: 0.3rem;
       opacity: 0.4;
-      transition: opacity 0.2s;
+      transition: opacity var(--t-micro);
     }
 
     th.sorted .sort-arrow {
@@ -5813,8 +6053,8 @@ button:active:not(:disabled),
     tbody tr {
       border-bottom: 1px solid var(--line);
       cursor: pointer;
-      transition: background var(--transition-fast), transform 0.15s ease;
-      animation: fadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+      transition: background var(--transition-fast), transform var(--t-micro) var(--ease-out);
+      animation: fadeUp var(--t-ui) var(--ease-out) both;
       animation-delay: calc(var(--card-index, 0) * 20ms);
     }
 
@@ -5824,7 +6064,7 @@ button:active:not(:disabled),
 
     tbody tr:active {
       transform: scale(0.995);
-      transition-duration: 0.08s;
+      transition-duration: var(--t-micro);
     }
 
     td {
@@ -5844,7 +6084,7 @@ button:active:not(:disabled),
       border-radius: 3px;
       display: block;
       box-shadow: 0 3px 8px var(--shadow-color);
-      transition: transform 0.3s;
+      transition: transform var(--t-ui);
     }
 
     tbody tr:hover .td-cover img {
@@ -5897,28 +6137,44 @@ button:active:not(:disabled),
       overflow: hidden;
     }
 
-    /* ── MODAL ANIMATIONS & OVERLAY ── */
+    /* ── MODAL ANIMATIONS & OVERLAY (STANDARD MOTION SYSTEM) ── */
     @keyframes modalOverlayIn {
       from {
         opacity: 0;
-        backdrop-filter: blur(0px);
-        -webkit-backdrop-filter: blur(0px);
       }
       to {
         opacity: 1;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
+      }
+    }
+
+    @keyframes modalOverlayOut {
+      from {
+        opacity: 1;
+      }
+      to {
+        opacity: 0;
       }
     }
 
     @keyframes modalPopIn {
       from {
         opacity: 0;
-        transform: scale(0.93) translateY(16px);
+        transform: scale(0.96) translateY(8px);
       }
       to {
         opacity: 1;
         transform: scale(1) translateY(0);
+      }
+    }
+
+    @keyframes modalPopOut {
+      from {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+      to {
+        opacity: 0;
+        transform: scale(0.98) translateY(4px);
       }
     }
 
@@ -5937,13 +6193,24 @@ button:active:not(:disabled),
 
     .modal-overlay.open {
       display: flex;
-      animation: modalOverlayIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation: modalOverlayIn var(--t-ui) var(--ease-out) forwards;
     }
 
     .modal-overlay.open .modal {
-      animation: modalPopIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation: modalPopIn var(--t-ui) var(--ease-out) forwards;
       opacity: 1;
       pointer-events: auto;
+    }
+
+    .modal-overlay.closing {
+      display: flex;
+      pointer-events: none;
+      animation: modalOverlayOut var(--t-micro) var(--ease-out) forwards;
+    }
+
+    .modal-overlay.closing .modal {
+      pointer-events: none;
+      animation: modalPopOut var(--t-micro) var(--ease-out) forwards;
     }
 
     .modal {
@@ -6077,7 +6344,7 @@ button:active:not(:disabled),
       display: flex;
       align-items: center;
       gap: 0.45rem;
-      transition: all 0.2s ease;
+      transition: all var(--t-micro) var(--ease-out);
       white-space: nowrap;
       flex-shrink: 0;
     }
@@ -6106,7 +6373,7 @@ button:active:not(:disabled),
 
     .settings-tab-btn:active {
       transform: scale(0.96);
-      transition-duration: 0.08s;
+      transition-duration: var(--t-micro);
     }
 
     /* Modal Body: THE ONLY SCROLLABLE CONTAINER */
@@ -6142,7 +6409,7 @@ button:active:not(:disabled),
 
     .settings-tab-pane.active {
       display: flex;
-      animation: tabSlideIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation: tabSlideIn var(--t-ui) var(--ease-out) both;
     }
 
     .settings-section-card {
@@ -6196,7 +6463,7 @@ button:active:not(:disabled),
       font-family: 'Geist', sans-serif;
       font-size: 0.84rem;
       box-sizing: border-box;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      transition: border-color var(--t-micro), box-shadow var(--t-micro);
     }
 
     .settings-input:focus, .settings-select:focus {
@@ -6229,7 +6496,7 @@ button:active:not(:disabled),
       inset: 0;
       background-color: var(--line);
       border-radius: 22px;
-      transition: background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+      transition: background-color var(--t-ui) var(--ease-out), box-shadow var(--t-ui) var(--ease-out);
     }
 
     .ui-toggle-slider::before {
@@ -6242,7 +6509,7 @@ button:active:not(:disabled),
       background-color: #ffffff;
       border-radius: 50%;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
-      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: transform var(--t-ui) var(--ease-out);
     }
 
     .ui-toggle-switch input:checked + .ui-toggle-slider {
@@ -6284,7 +6551,7 @@ button:active:not(:disabled),
       border-radius: 8px;
       width: 100%;
       box-sizing: border-box;
-      transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+      transition: border-color var(--t-micro), box-shadow var(--t-micro), background-color var(--t-micro);
     }
 
     .cascade-slot-row:focus-within {
@@ -6333,7 +6600,7 @@ button:active:not(:disabled),
       background: var(--paper-dark);
       color: var(--ink);
       box-sizing: border-box;
-      transition: border-color 0.2s, background-color 0.2s;
+      transition: border-color var(--t-micro), background-color var(--t-micro);
     }
 
     .cascade-model-input:focus {
@@ -6482,7 +6749,7 @@ button:active:not(:disabled),
       display: inline-flex;
       align-items: center;
       gap: 0.4rem;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all var(--t-micro) var(--ease-out);
     }
 
     .btn-cascade-reset:hover {
@@ -6525,7 +6792,7 @@ button:active:not(:disabled),
       font-size: 0.82rem;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all var(--t-micro);
     }
 
     .btn-settings-cancel:hover {
@@ -6546,7 +6813,7 @@ button:active:not(:disabled),
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      transition: all 0.2s;
+      transition: all var(--t-micro);
       box-shadow: 0 4px 14px rgba(110,97,76, 0.25);
     }
 
@@ -6750,7 +7017,7 @@ button:active:not(:disabled),
     }
 
     .btn-modal-primary i {
-      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: transform var(--t-ui) var(--ease-out);
     }
 
     .btn-modal-primary:hover {
@@ -6765,7 +7032,7 @@ button:active:not(:disabled),
 
     .btn-modal-primary:active {
       transform: translateY(0) scale(0.96);
-      transition-duration: 0.08s;
+      transition-duration: var(--t-micro);
     }
 
     .btn-modal-fav {
@@ -6793,7 +7060,7 @@ button:active:not(:disabled),
 
     .btn-modal-fav:active {
       transform: translateY(0) scale(0.96);
-      transition-duration: 0.08s;
+      transition-duration: var(--t-micro);
     }
 
     .btn-modal-fav.is-fav {
@@ -6828,7 +7095,7 @@ button:active:not(:disabled),
 
     .btn-modal-secondary:active {
       transform: translateY(0) scale(0.96);
-      transition-duration: 0.08s;
+      transition-duration: var(--t-micro);
     }
 
     .btn-modal-danger {
@@ -6855,7 +7122,7 @@ button:active:not(:disabled),
 
     .btn-modal-danger:active {
       transform: scale(0.96);
-      transition-duration: 0.08s;
+      transition-duration: var(--t-micro);
     }
 
     /* Edit Form Elements */
@@ -6910,7 +7177,7 @@ button:active:not(:disabled),
 
     .btn-modal-save:active {
       transform: translateY(0) scale(0.96);
-      transition-duration: 0.08s;
+      transition-duration: var(--t-micro);
     }
 
     .header-stats {
@@ -6931,7 +7198,7 @@ button:active:not(:disabled),
       justify-content: center;
       cursor: pointer;
       color: var(--muted);
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: all var(--t-ui) var(--ease-spring);
       box-shadow: 0 4px 15px var(--shadow-color);
       font-size: 1.15rem;
       position: relative;
@@ -6941,10 +7208,8 @@ button:active:not(:disabled),
 
     .theme-toggle:hover,
     #settings-btn:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-      transform: translateY(-3px) scale(1.08);
-      box-shadow: 0 10px 25px rgba(110,97,76, 0.15);
+      border-color: var(--line-strong);
+      color: var(--ink);
       background: var(--paper-dark);
     }
 
@@ -6952,7 +7217,7 @@ button:active:not(:disabled),
     .theme-toggle[onclick*="openSettings"] i {
       display: inline-block;
       transform-origin: center center;
-      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: transform var(--t-page) var(--ease-out);
     }
 
     #settings-btn:hover i,
@@ -6963,7 +7228,7 @@ button:active:not(:disabled),
     #settings-btn:active,
     .theme-toggle:active {
       transform: scale(0.92);
-      transition-duration: 0.08s;
+      transition-duration: var(--t-micro);
     }
 
     /* Ã¢â€â‚¬Ã¢â€â‚¬ EMPTY Ã¢â€â‚¬Ã¢â€â‚¬ */
@@ -7005,7 +7270,7 @@ button:active:not(:disabled),
       z-index: 2040;
       opacity: 0;
       transform: translateY(20px) scale(0.8);
-      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: all var(--t-page) var(--ease-spring);
       box-shadow: 0 8px 25px var(--shadow-color);
       pointer-events: none;
       --shift-y: 0px;
@@ -7332,8 +7597,19 @@ button:active:not(:disabled),
         font-size: 0.84rem;
       }
 
-      /* â€” Ops Center â€” */
-      #ops-center {
+    @keyframes opsCenterIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* — Ops Center — */
+    #ops-center {
       position: fixed;
       left: 2rem;
       bottom: 5.75rem;
@@ -7348,18 +7624,21 @@ button:active:not(:disabled),
       z-index: 2100;
       display: flex;
       flex-direction: column;
-      transition: all var(--transition-spring);
       font-family: var(--font-mono);
-      transform: translateY(20px) scale(0.96);
+      transform: translateY(8px);
       opacity: 0;
+      visibility: hidden;
       pointer-events: none;
       overflow: hidden;
+      transition: opacity var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out), visibility var(--t-micro);
     }
 
     #ops-center.active {
-      transform: translateY(0) scale(1);
+      transform: translateY(0);
       opacity: 1;
+      visibility: visible;
       pointer-events: auto;
+      animation: opsCenterIn var(--t-ui) var(--ease-out);
     }
 
     .ops-header {
@@ -7400,7 +7679,7 @@ button:active:not(:disabled),
       border-radius: 50%;
       display: inline-block;
       flex-shrink: 0;
-      transition: all 0.3s;
+      transition: all var(--t-ui);
     }
 
     .ops-live-pulse.pulse-idle {
@@ -7454,7 +7733,7 @@ button:active:not(:disabled),
       align-items: center;
       justify-content: center;
       font-size: 0.8rem;
-      transition: all 0.2s;
+      transition: all var(--t-micro);
     }
 
     .ops-btn-icon:hover, .ops-btn-close:hover {
@@ -7475,7 +7754,7 @@ button:active:not(:disabled),
       display: flex;
       align-items: center;
       gap: 0.35rem;
-      transition: all 0.2s;
+      transition: all var(--t-micro);
     }
 
     .ops-archive-btn:hover {
@@ -7506,7 +7785,7 @@ button:active:not(:disabled),
       display: flex;
       align-items: center;
       gap: 0.35rem;
-      transition: all 0.2s;
+      transition: all var(--t-micro);
     }
 
     .ops-tab-btn:hover {
@@ -7608,7 +7887,7 @@ button:active:not(:disabled),
       display: flex;
       flex-direction: column;
       gap: 0.55rem;
-      transition: all 0.25s ease;
+      transition: all var(--t-ui) var(--ease-out);
     }
 
     .ops-task-card:hover {
@@ -7771,7 +8050,7 @@ button:active:not(:disabled),
       justify-content: center;
       font-size: 0.58rem;
       font-weight: 700;
-      transition: all 0.3s;
+      transition: all var(--t-ui);
     }
 
     .ops-step.active .step-num {
@@ -7802,7 +8081,7 @@ button:active:not(:disabled),
       height: 2px;
       background: var(--line);
       margin: 0 4px -10px 4px;
-      transition: background 0.3s;
+      transition: background var(--t-ui);
     }
 
     .ops-step-line.done {
@@ -7822,7 +8101,7 @@ button:active:not(:disabled),
       height: 100%;
       border-radius: var(--r-xs);
       background: var(--ok);
-      transition: width 0.4s ease;
+      transition: width var(--t-ui) var(--ease-out);
     }
 
     .ops-progress-bar.animated {
@@ -7865,7 +8144,7 @@ button:active:not(:disabled),
     .ops-terminal-cursor {
       color: var(--ok);
       font-weight: 700;
-      animation: blinkCursor 0.8s infinite;
+      animation: blinkCursor var(--t-page) infinite;
     }
 
     /* Log Details Dropdown */
@@ -7963,7 +8242,7 @@ button:active:not(:disabled),
       display: inline-flex;
       align-items: center;
       gap: 0.3rem;
-      transition: all 0.2s;
+      transition: all var(--t-micro);
     }
 
     .ops-btn-action:hover {
@@ -8078,7 +8357,7 @@ button:active:not(:disabled),
       align-items: center;
       justify-content: center;
       gap: 0.35rem;
-      transition: all 0.2s;
+      transition: all var(--t-micro);
     }
 
     .ops-quick-action:hover {
@@ -8114,7 +8393,7 @@ button:active:not(:disabled),
       justify-content: center;
       z-index: 3000;
       backdrop-filter: blur(14px) saturate(180%);
-      transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: opacity var(--t-micro) var(--ease-out);
       padding: 1.2rem;
     }
 
@@ -8245,7 +8524,7 @@ button:active:not(:disabled),
       font-size: 0.72rem;
       font-family: 'Geist Mono', monospace;
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: all var(--t-micro) var(--ease-out);
     }
 
     .logs-action-btn:hover {
@@ -8278,7 +8557,7 @@ button:active:not(:disabled),
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.15s ease;
+      transition: all var(--t-micro) var(--ease-out);
       margin-left: 0.3rem;
     }
 
@@ -8331,7 +8610,7 @@ button:active:not(:disabled),
       align-items: center;
       justify-content: space-between;
       cursor: pointer;
-      transition: all 0.12s ease;
+      transition: all var(--t-micro) var(--ease-out);
     }
 
     .logs-filter-btn span {
@@ -8349,7 +8628,7 @@ button:active:not(:disabled),
       font-weight: 600;
       min-width: 22px;
       text-align: center;
-      transition: all 0.12s ease;
+      transition: all var(--t-micro) var(--ease-out);
     }
 
     .logs-filter-btn:hover:not(.active) {
@@ -8416,7 +8695,7 @@ button:active:not(:disabled),
       font-family: 'Geist Mono', monospace;
       font-size: 0.75rem;
       outline: none;
-      transition: all 0.15s ease;
+      transition: all var(--t-micro) var(--ease-out);
     }
 
     .logs-search-wrap input:focus {
@@ -8454,7 +8733,7 @@ button:active:not(:disabled),
       background: #1f1e1b;
       color: #8f8a80;
       cursor: pointer;
-      transition: all 0.12s ease;
+      transition: all var(--t-micro) var(--ease-out);
     }
 
     .logs-level-btn .lvl-indicator {
@@ -8531,7 +8810,7 @@ button:active:not(:disabled),
       border-left: 3px solid #5f7a4f;
       border-radius: 8px;
       padding: 0.65rem 0.9rem;
-      transition: background 0.12s ease, border-color 0.12s ease;
+      transition: background var(--t-micro) var(--ease-out), border-color var(--t-micro) var(--ease-out);
     }
 
     .log-card:hover {
@@ -8611,7 +8890,7 @@ button:active:not(:disabled),
       cursor: pointer;
       padding: 2px 6px;
       border-radius: 4px;
-      transition: all 0.12s ease;
+      transition: all var(--t-micro) var(--ease-out);
       display: flex;
       align-items: center;
       gap: 3px;
@@ -8712,7 +8991,7 @@ button:active:not(:disabled),
       padding: 3px 8px;
       cursor: pointer;
       font-size: 0.7rem;
-      transition: all 0.12s ease;
+      transition: all var(--t-micro) var(--ease-out);
     }
     .logs-nav-btn:hover { background: #272521; color: #fff; }
 
@@ -8883,7 +9162,7 @@ button:active:not(:disabled),
       min-width: 28px;
       background: linear-gradient(180deg, var(--accent), var(--accent-soft));
       border-radius: 6px 6px 0 0;
-      transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: height var(--t-page) var(--ease-out);
       box-shadow: 0 -2px 10px var(--accent-glow);
     }
 
@@ -8949,7 +9228,7 @@ button:active:not(:disabled),
       flex-direction: column;
       background: var(--paper);
       transform: translateY(100%);
-      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: transform var(--t-page) var(--ease-out);
       overflow: hidden;
       color: var(--ink);
     }
@@ -8999,7 +9278,7 @@ button:active:not(:disabled),
       font-size: 0.8rem;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.25s ease;
+      transition: all var(--t-ui) var(--ease-out);
       white-space: nowrap;
     }
 
@@ -9116,7 +9395,7 @@ button:active:not(:disabled),
       user-select: none;
       border-left: 1px solid var(--line);
       border-right: 1px solid var(--line);
-      transition: all 0.25s ease;
+      transition: all var(--t-ui) var(--ease-out);
     }
 
     .workspace-resize-handle:hover,
@@ -9132,7 +9411,7 @@ button:active:not(:disabled),
       background: var(--accent);
       border-radius: 4px;
       opacity: 0.3;
-      transition: all 0.2s ease;
+      transition: all var(--t-micro) var(--ease-out);
     }
 
     .workspace-resize-handle:hover .resize-dot,
@@ -9165,7 +9444,7 @@ button:active:not(:disabled),
       background: var(--paper);
       border-bottom: 1px solid var(--line);
       flex-shrink: 0;
-      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all var(--t-ui) var(--ease-out);
       position: relative;
       overflow: hidden;
     }
@@ -9175,7 +9454,7 @@ button:active:not(:disabled),
       position: absolute;
       inset: 0;
       opacity: 0;
-      transition: opacity 0.4s;
+      transition: opacity var(--t-ui);
     }
 
     .workspace-book-banner.loading {
@@ -9211,7 +9490,7 @@ button:active:not(:disabled),
       font-size: 0.9rem;
       background: var(--accent-glow);
       color: var(--accent);
-      transition: all 0.3s ease;
+      transition: all var(--t-ui) var(--ease-out);
     }
 
     .workspace-book-banner.loaded .banner-icon {
@@ -9268,7 +9547,7 @@ button:active:not(:disabled),
       font-size: 0.72rem;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all var(--t-micro) var(--ease-out);
       white-space: nowrap;
       flex-shrink: 0;
     }
@@ -9403,7 +9682,7 @@ button:active:not(:disabled),
       font-weight: 600;
       font-family: 'Geist', sans-serif;
       cursor: pointer;
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all var(--t-ui) var(--ease-out);
       box-shadow: 0 1px 3px rgba(0,0,0,0.03);
       position: relative;
       overflow: hidden;
@@ -9424,11 +9703,11 @@ button:active:not(:disabled),
       background: #eef2e6;
       border-color: rgba(95,122,79, 0.4);
       color: #3a4d2f;
-      animation: copySuccessPulse 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: copySuccessPulse var(--t-ui) var(--ease-out);
     }
 
     .btn-copy-chat .btn-copy-text {
-      transition: opacity 0.2s ease, transform 0.2s ease;
+      transition: opacity var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out);
     }
 
     @keyframes copySuccessPulse {
@@ -9475,7 +9754,7 @@ button:active:not(:disabled),
       gap: 0.95rem;
       max-width: 85%;
       margin: 0;
-      animation: wsFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation: wsFadeIn var(--t-ui) var(--ease-out) forwards;
       opacity: 0;
       transform: translateY(10px);
     }
@@ -9508,7 +9787,7 @@ button:active:not(:disabled),
       flex-shrink: 0;
       font-size: 0.8rem;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      transition: transform 0.2s ease;
+      transition: transform var(--t-micro) var(--ease-out);
     }
 
     .chat-msg-avatar:hover {
@@ -9581,13 +9860,12 @@ button:active:not(:disabled),
       font-size: 0.72rem;
       margin-top: 0.5rem;
       font-family: 'Geist Mono', monospace;
-      transition: all 0.2s ease;
+      transition: all var(--t-micro) var(--ease-out);
     }
 
     .source-capsule:hover {
       background: rgba(110,97,76, 0.15);
       border-color: var(--accent);
-      transform: translateY(-1px);
     }
 
     .chat-user .source-capsule {
@@ -9667,7 +9945,7 @@ button:active:not(:disabled),
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 0.4rem 0.5rem;
-      transition: all 0.25s ease;
+      transition: all var(--t-ui) var(--ease-out);
       box-shadow: 0 4px 20px rgba(0,0,0,0.02);
     }
 
@@ -9707,7 +9985,7 @@ button:active:not(:disabled),
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all var(--t-micro) var(--ease-out);
       flex-shrink: 0;
       box-shadow: 0 2px 6px var(--accent-glow);
     }
@@ -9788,7 +10066,7 @@ button:active:not(:disabled),
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all var(--t-micro) var(--ease-out);
       font-size: 0.85rem;
     }
 
@@ -9876,7 +10154,7 @@ button:active:not(:disabled),
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all var(--t-ui) var(--ease-out);
       flex-shrink: 0;
       z-index: 5;
     }
@@ -9894,7 +10172,7 @@ button:active:not(:disabled),
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all var(--t-ui) var(--ease-out);
       flex-shrink: 0;
       z-index: 5;
     }
@@ -9923,7 +10201,7 @@ button:active:not(:disabled),
       cursor: pointer;
       font-size: 0.82rem;
       color: var(--ink);
-      transition: all 0.18s ease;
+      transition: all var(--t-micro) var(--ease-out);
       text-decoration: none;
       user-select: none;
       border: 1px solid transparent;
@@ -9948,7 +10226,7 @@ button:active:not(:disabled),
       border-radius: 8px;
       cursor: pointer;
       white-space: nowrap;
-      transition: all 0.2s ease;
+      transition: all var(--t-micro) var(--ease-out);
       font-family: 'Geist', sans-serif;
     }
 
@@ -9996,7 +10274,7 @@ button:active:not(:disabled),
       border-radius: 6px;
       padding: 0.8rem;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all var(--t-micro) var(--ease-out);
       position: relative;
       overflow: hidden;
     }
@@ -10061,7 +10339,7 @@ button:active:not(:disabled),
       gap: 0.4rem;
       margin-top: 0.4rem;
       opacity: 0;
-      transition: opacity 0.2s ease;
+      transition: opacity var(--t-micro) var(--ease-out);
     }
 
     .pdf-note-item:hover .pdf-note-item-actions {
@@ -10108,7 +10386,7 @@ button:active:not(:disabled),
       background: #fff;
       border-radius: 4px;
       overflow: visible;
-      transition: box-shadow 0.3s ease;
+      transition: box-shadow var(--t-ui) var(--ease-out);
     }
 
     [data-theme="dark"] .pdf-page-wrapper {
@@ -10135,7 +10413,7 @@ button:active:not(:disabled),
       opacity: 0;
       pointer-events: none;
       transform: scale(0.9) translateY(10px);
-      transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: opacity var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out);
     }
 
     [data-theme="dark"] .pdf-floating-bar {
@@ -10156,7 +10434,7 @@ button:active:not(:disabled),
       border-radius: 50%;
       border: 2px solid transparent;
       cursor: pointer;
-      transition: transform 0.15s ease, border-color 0.15s ease;
+      transition: transform var(--t-micro) var(--ease-out), border-color var(--t-micro) var(--ease-out);
     }
 
     .hl-color-btn.active {
@@ -10187,7 +10465,7 @@ button:active:not(:disabled),
       align-items: center;
       gap: 0.3rem;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all var(--t-micro) var(--ease-out);
     }
 
     .hl-action-btn:hover {
@@ -10296,7 +10574,7 @@ button:active:not(:disabled),
       mix-blend-mode: multiply;
       opacity: 0.45;
       border-radius: 2px;
-      transition: opacity 0.2s ease;
+      transition: opacity var(--t-micro) var(--ease-out);
     }
 
     #custom-pdf-viewer[data-surface-mode="chromaguard"] .rendered-highlight {
@@ -10324,7 +10602,7 @@ button:active:not(:disabled),
       cursor: pointer;
       box-shadow: 0 4px 10px var(--accent-glow);
       z-index: 10;
-      transition: all 0.2s ease;
+      transition: all var(--t-micro) var(--ease-out);
       animation: notePulse 2s infinite;
     }
 
@@ -10355,7 +10633,7 @@ button:active:not(:disabled),
       max-width: calc(100% - 40px);
       overflow: hidden;
       font-family: 'Geist', sans-serif;
-      animation: pdfSearchSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: pdfSearchSlideDown var(--t-ui) var(--ease-out);
       backdrop-filter: blur(12px);
     }
 
@@ -10408,7 +10686,7 @@ button:active:not(:disabled),
       font-size: 0.82rem;
       font-family: 'Geist', sans-serif;
       outline: none;
-      transition: all 0.2s ease;
+      transition: all var(--t-micro) var(--ease-out);
     }
 
     #pdf-search-input:focus {
@@ -10430,7 +10708,7 @@ button:active:not(:disabled),
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: color 0.15s ease;
+      transition: color var(--t-micro) var(--ease-out);
     }
 
     .pdf-search-icon-btn.clear:hover {
@@ -10474,7 +10752,7 @@ button:active:not(:disabled),
       justify-content: center;
       cursor: pointer;
       font-size: 0.78rem;
-      transition: all 0.15s ease;
+      transition: all var(--t-micro) var(--ease-out);
     }
 
     .pdf-search-nav-btn:hover:not(:disabled) {
@@ -10527,7 +10805,7 @@ button:active:not(:disabled),
       padding: 0.55rem 0.85rem;
       border-bottom: 1px solid var(--line);
       cursor: pointer;
-      transition: background 0.15s ease;
+      transition: background var(--t-micro) var(--ease-out);
       font-size: 0.78rem;
       line-height: 1.45;
       color: var(--ink);
@@ -10577,7 +10855,7 @@ button:active:not(:disabled),
       border-radius: 2px;
       mix-blend-mode: multiply;
       pointer-events: none;
-      transition: all 0.2s ease;
+      transition: all var(--t-micro) var(--ease-out);
       z-index: 4;
     }
 
@@ -10611,10 +10889,10 @@ button:active:not(:disabled),
     .theme-transitioning *,
     .theme-transitioning *::before,
     .theme-transitioning *::after {
-      transition: background-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-                  border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-                  color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-                  box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: background-color var(--t-ui) var(--ease-out),
+                  border-color var(--t-ui) var(--ease-out),
+                  color var(--t-ui) var(--ease-out),
+                  box-shadow var(--t-ui) var(--ease-out);
       transition-delay: 0s;
     }
 
@@ -10630,18 +10908,8 @@ button:active:not(:disabled),
     }
 
     .theme-icon-spin {
-      animation: themeIconSpin 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+      animation: themeIconSpin var(--t-ui) var(--ease-spring) both;
       display: inline-block;
-    }
-
-    /* ═══════════ Accessibility / Motion Preference ═══════════ */
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms;
-        animation-iteration-count: 1;
-        transition-duration: 0.01ms;
-        scroll-behavior: auto;
-      }
     }
 
     /* ═══════════ Toast Notification Stack ═══════════ */
@@ -10676,7 +10944,7 @@ button:active:not(:disabled),
       line-height: 1.45;
       opacity: 0;
       transform: translateX(45px) scale(0.95);
-      transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all var(--t-ui) var(--ease-out);
     }
 
     .toast-item.show {
@@ -10724,7 +10992,7 @@ button:active:not(:disabled),
       font-size: 1.25rem;
       padding: 0 4px;
       line-height: 1;
-      transition: color 0.15s;
+      transition: color var(--t-micro);
     }
 
     .toast-close:hover {
@@ -10839,13 +11107,13 @@ button:active:not(:disabled),
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      transition: all 0.2s ease;
+      transition: all var(--t-micro) var(--ease-out);
     }
 
     .btn-empty-clear:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-      transform: translateY(-1px);
+      border-color: var(--ink);
+      color: var(--ink);
+      background: var(--paper-dark);
     }
 
     .btn-empty-add {
@@ -10860,7 +11128,7 @@ button:active:not(:disabled),
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      transition: all 0.2s ease;
+      transition: all var(--t-micro) var(--ease-out);
       box-shadow: 0 4px 14px var(--accent-glow);
     }
 
@@ -10912,19 +11180,17 @@ button:active:not(:disabled),
       cursor: pointer;
       text-decoration: none;
       vertical-align: baseline;
-      transition: all 0.2s ease;
+      transition: all var(--t-micro) var(--ease-out);
     }
 
     .chat-page-cite:hover {
       background: var(--accent);
       color: #fff;
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px var(--accent-glow);
     }
 
     .pdf-page-wrapper.page-pulse {
       box-shadow: 0 0 0 6px var(--accent), 0 12px 36px rgba(110,97,76, 0.4);
-      transition: box-shadow 0.3s ease;
+      transition: box-shadow var(--t-ui) var(--ease-out);
     }
 
     /* ═══════════ AI Chat Stop Generation Button ═══════════ */
@@ -10942,13 +11208,12 @@ button:active:not(:disabled),
       font-weight: 600;
       cursor: pointer;
       margin-bottom: 8px;
-      transition: all 0.2s ease;
+      transition: all var(--t-micro) var(--ease-out);
     }
 
     .btn-stop-chat:hover {
       background: #8f3228;
       color: #fff;
-      transform: translateY(-1px);
     }
 
     /* ═══════════ Mobile Responsive Workspace ═══════════ */
@@ -10992,7 +11257,7 @@ button:active:not(:disabled),
 
     .pdf-spread-row .pdf-page-wrapper {
       margin-bottom: 0;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      transition: transform var(--t-micro) var(--ease-out), box-shadow var(--t-micro) var(--ease-out);
     }
 
     .pdf-spread-row .pdf-page-wrapper.spread-left {
@@ -11027,6 +11292,7 @@ button:active:not(:disabled),
 
 ```javascript
 /* ═══════════ ui_core.js — UI Rendering, Grid, Table & Collections ═══════════ */
+    window.shouldStagger = true;
     // --- CATEGORY LABELS ---
     function buildCategoryTags() {
       const books = window.allBooks || [];
@@ -11395,6 +11661,7 @@ button:active:not(:disabled),
       } else if (window.currentView === 'table') {
         renderTable(books);
       }
+      window.shouldStagger = false;
     }
 
     function renderRecentShelf() {
@@ -11461,12 +11728,25 @@ button:active:not(:disabled),
       });
       grid.innerHTML = '';
       activeUploads.forEach(node => grid.appendChild(node));
+
+      const isSearchingOrFiltering = Boolean(document.getElementById('search-input')?.value?.trim()) ||
+        (window.activeCategory && window.activeCategory !== 'all') ||
+        (window.activeCollection && window.activeCollection !== 'all') ||
+        Boolean(window.showOnlyFav);
+
+      const doStagger = Boolean(window.shouldStagger) && !isSearchingOrFiltering;
+
       books.forEach((b, i) => {
         const card = document.createElement('div');
         card.className = 'book-card';
-        const staggerIdx = Math.min(i, 35);
-        card.style.setProperty('--card-index', staggerIdx);
-        card.style.animationDelay = `${staggerIdx * 0.028}s`;
+        if (doStagger) {
+          card.classList.add('stagger-in');
+          const staggerIdx = i < 12 ? i : 0;
+          card.style.setProperty('--card-index', staggerIdx);
+          card.style.animationDelay = i < 12 ? `${i * 30}ms` : '0ms';
+        } else {
+          card.style.animation = 'none';
+        }
 
         const coverInner = b.has_cover
           ? `<img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" loading="lazy">`
@@ -11532,11 +11812,24 @@ button:active:not(:disabled),
       const tbody = document.getElementById('table-body');
       if (!tbody) return;
       tbody.innerHTML = '';
+
+      const isSearchingOrFiltering = Boolean(document.getElementById('search-input')?.value?.trim()) ||
+        (window.activeCategory && window.activeCategory !== 'all') ||
+        (window.activeCollection && window.activeCollection !== 'all') ||
+        Boolean(window.showOnlyFav);
+
+      const doStagger = Boolean(window.shouldStagger) && !isSearchingOrFiltering;
+
       books.forEach((b, i) => {
         const tr = document.createElement('tr');
-        const staggerIdx = Math.min(i, 40);
-        tr.style.setProperty('--card-index', staggerIdx);
-        tr.style.animationDelay = `${staggerIdx * 0.02}s`;
+        if (doStagger) {
+          tr.classList.add('stagger-in');
+          const staggerIdx = i < 12 ? i : 0;
+          tr.style.setProperty('--card-index', staggerIdx);
+          tr.style.animationDelay = i < 12 ? `${i * 30}ms` : '0ms';
+        } else {
+          tr.style.animation = 'none';
+        }
         tr.id = `book-${b.hash}`;
         tr.dataset.hash = b.hash;
         if (selectedBooks.has(b.hash)) tr.classList.add('selected');
@@ -11741,12 +12034,41 @@ button:active:not(:disabled),
       document.body.classList.add('modal-open');
       document.body.classList.add('modal-open');
     }
+
+    // ── Unified Modal Exit Animation (Apple/Tesla Standard) ──
+    function closeModalWithAnimation(modalRef, callback) {
+      let modal = modalRef;
+      if (typeof modalRef === 'string') {
+        modal = document.getElementById(modalRef);
+      }
+      if (!modal || modal.classList.contains('closing')) return;
+
+      const isOpen = modal.classList.contains('open') || (modal.style.display && modal.style.display !== 'none');
+      if (!isOpen) {
+        if (typeof callback === 'function') callback();
+        return;
+      }
+
+      modal.classList.add('closing');
+      modal.classList.remove('open');
+
+      setTimeout(() => {
+        modal.classList.remove('closing');
+        modal.style.display = '';
+        const anyModal = document.querySelector('.modal-overlay.open, .modal-overlay.closing');
+        if (!anyModal) {
+          document.body.classList.remove('modal-open');
+        }
+        if (typeof callback === 'function') callback();
+      }, 150);
+    }
+    window.closeModalWithAnimation = closeModalWithAnimation;
+
     function closeModal(e) { if (e.target === document.getElementById('modal')) closeModalDirect(); }
     function closeModalDirect() {
-      document.getElementById('modal').classList.remove('open');
-      document.body.classList.remove('modal-open');
-      document.body.classList.remove('modal-open');
-      window.currentModalHash = null;
+      closeModalWithAnimation('modal', () => {
+        window.currentModalHash = null;
+      });
     }
 
     // --- BULK OPERATIONS ---
@@ -11829,18 +12151,14 @@ button:active:not(:disabled),
     function openShortcutsModal() {
       const m = document.getElementById('shortcuts-modal');
       if (m) {
+        m.classList.remove('closing');
         m.style.display = 'flex';
         m.classList.add('open');
         document.body.classList.add('modal-open');
       }
     }
     function closeShortcutsModal() {
-      const m = document.getElementById('shortcuts-modal');
-      if (m) {
-        m.classList.remove('open');
-        m.style.display = 'none';
-        document.body.classList.remove('modal-open');
-      }
+      closeModalWithAnimation('shortcuts-modal');
     }
     window.openShortcutsModal = openShortcutsModal;
     window.closeShortcutsModal = closeShortcutsModal;
@@ -12013,12 +12331,14 @@ button:active:not(:disabled),
       if (btnTable) btnTable.classList.toggle('active', v === 'table');
       if (btnStats) btnStats.classList.toggle('active', v === 'stats');
 
+      window.shouldStagger = true;
       if (v === 'table') {
         renderTable(getFiltered());
       } else if (v === 'grid') {
         renderGrid(getFiltered());
         setTimeout(enableDragSort, 100);
       }
+      window.shouldStagger = false;
       if (v === 'stats' && typeof loadStats === 'function') void loadStats();
     }
 
@@ -12379,6 +12699,7 @@ button:active:not(:disabled),
       const container = document.getElementById('duplicates-container');
       if (!modal || !container) return;
 
+      modal.classList.remove('closing');
       modal.style.display = 'flex';
       modal.classList.add('open');
       document.body.classList.add('modal-open');
@@ -12405,12 +12726,7 @@ button:active:not(:disabled),
     window.openDuplicatesModal = openDuplicatesModal;
 
     function closeDuplicatesModal() {
-      const modal = document.getElementById('duplicates-modal');
-      if (modal) {
-        modal.style.display = 'none';
-        modal.classList.remove('open');
-      }
-      document.body.classList.remove('modal-open');
+      closeModalWithAnimation('duplicates-modal');
     }
     window.closeDuplicatesModal = closeDuplicatesModal;
 
@@ -12566,13 +12882,23 @@ button:active:not(:disabled),
       const menu = document.getElementById('header-tools-menu');
       if (!menu) return;
       const isHidden = menu.style.display === 'none' || !menu.style.display;
-      menu.style.display = isHidden ? 'flex' : 'none';
+      if (isHidden) {
+        menu.classList.remove('closing');
+        menu.style.display = 'flex';
+      } else {
+        closeToolsMenu();
+      }
     }
     window.toggleToolsMenu = toggleToolsMenu;
 
     function closeToolsMenu() {
       const menu = document.getElementById('header-tools-menu');
-      if (menu) menu.style.display = 'none';
+      if (!menu || menu.style.display === 'none' || menu.classList.contains('closing')) return;
+      menu.classList.add('closing');
+      setTimeout(() => {
+        menu.classList.remove('closing');
+        menu.style.display = 'none';
+      }, 150);
     }
     window.closeToolsMenu = closeToolsMenu;
 
@@ -14794,18 +15120,27 @@ button:active:not(:disabled),
       document.getElementById('pdf-note-textarea').value = "";
       
       // Show Modal
-      document.getElementById('pdf-note-modal').classList.add('open');
+      const noteModal = document.getElementById('pdf-note-modal');
+      if (noteModal) {
+        noteModal.classList.remove('closing');
+        noteModal.classList.add('open');
+      }
       document.body.classList.add('modal-open');
-      document.body.classList.add('modal-open');
-      setTimeout(() => document.getElementById('pdf-note-textarea').focus(), 150);
+      setTimeout(() => document.getElementById('pdf-note-textarea')?.focus(), 150);
     }
 
     function closePdfNoteModalDirect() {
-      document.getElementById('pdf-note-modal').classList.remove('open');
-      document.body.classList.remove('modal-open');
-      document.body.classList.remove('modal-open');
-      pdfActiveHighlightIdForNote = null;
-      clearSelection();
+      if (typeof window.closeModalWithAnimation === 'function') {
+        window.closeModalWithAnimation('pdf-note-modal', () => {
+          pdfActiveHighlightIdForNote = null;
+          clearSelection();
+        });
+      } else {
+        document.getElementById('pdf-note-modal')?.classList.remove('open');
+        document.body.classList.remove('modal-open');
+        pdfActiveHighlightIdForNote = null;
+        clearSelection();
+      }
     }
 
     function closePdfNoteModal(e) {
@@ -15948,8 +16283,10 @@ button:active:not(:disabled),
       const timerEl = document.getElementById('handoff-timer');
       if (!modal || !qrContainer) return;
 
+      modal.classList.remove('closing');
       modal.style.display = 'flex';
       modal.classList.add('open');
+      document.body.classList.add('modal-open');
       qrContainer.innerHTML = '<div style="padding:3rem 1rem; color:#888;"><i class="fas fa-spinner fa-spin"></i> QR Kod Üretiliyor...</div>';
       if (urlText) urlText.textContent = '';
 
@@ -15989,14 +16326,19 @@ button:active:not(:disabled),
     window.openHandoffModal = openHandoffModal;
 
     function closeHandoffModal() {
-      const modal = document.getElementById('handoff-modal');
-      if (modal) {
-        modal.style.display = 'none';
-        modal.classList.remove('open');
-      }
       if (handoffCountdownTimer) {
         clearInterval(handoffCountdownTimer);
         handoffCountdownTimer = null;
+      }
+      if (typeof window.closeModalWithAnimation === 'function') {
+        window.closeModalWithAnimation('handoff-modal');
+      } else {
+        const modal = document.getElementById('handoff-modal');
+        if (modal) {
+          modal.style.display = 'none';
+          modal.classList.remove('open');
+        }
+        document.body.classList.remove('modal-open');
       }
     }
     window.closeHandoffModal = closeHandoffModal;
