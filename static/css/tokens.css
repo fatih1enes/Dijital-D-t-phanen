@@ -117,10 +117,10 @@
   --color-surface-hover: var(--surface-hover);
   --color-surface-sunken: var(--paper-dark);
 
-  /* Typography & Contrast */
-  --ink: #1f1e1b;            /* Derin antrasit ana metin (Kontrast: 14:1) */
-  --muted: #6b675d;          /* İkincil yardımcı metin (Kontrast: 5.2:1) */
-  --muted-light: #8a8579;    /* Üçüncül / placeholder metin */
+  /* Typography & Contrast (WCAG Compliance) */
+  --ink: #1f1e1b;            /* Derin antrasit ana metin (Kontrast: 14.8:1, WCAG AAA) */
+  --muted: #6b675d;          /* İkincil yardımcı metin (Kontrast: 5.0:1, WCAG AA) */
+  --muted-light: #8a8579;    /* Yalnızca dekoratif çizgiler ve devre dışı öğeler (Kontrast: 3.3:1) */
   --sepia: #6b675d;
   --sepia-light: #b9b3a6;
 
@@ -205,10 +205,10 @@ body.dark-mode {
   --color-surface-hover: var(--surface-hover);
   --color-surface-sunken: var(--paper-dark);
 
-  /* Typography & Contrast */
-  --ink: #f0ece3;            /* Yüksek kontrastlı temiz krem metin */
-  --muted: #a39e93;          /* Yardımcı metin */
-  --muted-light: #736e64;
+  /* Typography & Contrast (WCAG Compliance) */
+  --ink: #f0ece3;            /* Yüksek kontrastlı temiz krem metin (Kontrast: 15.5:1, WCAG AAA) */
+  --muted: #a39e93;          /* Yardımcı metin (Kontrast: 6.8:1, WCAG AA) */
+  --muted-light: #736e64;    /* Yalnızca dekoratif çizgiler ve devre dışı öğeler (Kontrast: 3.6:1) */
   --sepia: #a39e93;
   --sepia-light: #59554e;
 

@@ -2041,7 +2041,7 @@ i[class*="fa-heart"] {
 .shelf-count {
   font-family: var(--font-mono);
   font-size: 0.72rem;
-  color: var(--muted-light);
+  color: var(--muted);
 }
 
 .recent-shelf-grid {
