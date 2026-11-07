@@ -79,6 +79,20 @@
   --transition-fast: var(--t-micro) var(--ease-out);
   --transition-smooth: var(--t-ui) var(--ease-out);
   --transition-spring: var(--t-ui) var(--ease-spring);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t-page: 0ms;
+    --t-ui: 150ms;
+    --t-micro: 100ms;
+    --transition-fast: 100ms ease;
+    --transition-smooth: 150ms ease;
+    --transition-spring: 150ms ease;
+  }
+}
+
+:root {
 
   /* ═══════════════ 2. LIGHT MODE SEMANTIC COLORS ═══════════════ */
   /* Surfaces */

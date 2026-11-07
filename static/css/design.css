@@ -2291,10 +2291,94 @@ button:active:not(:disabled),
 
 /* ═══════════════ 12. ERİŞİLEBİLİRLİK (REDUCED MOTION) ═══════════════ */
 @media (prefers-reduced-motion: reduce) {
+  /* Hareketi sıfırla, yumuşak geçişi (opacity, color) koru */
   *, *::before, *::after {
-    animation-duration: 0.01ms;
-    animation-delay: 0ms;
-    transition-duration: 0.01ms;
-    scroll-behavior: auto;
+    scroll-behavior: auto !important;
+  }
+
+  /* Sonsuz dönen, yanıp sönen ve nabız gibi atan döngüleri durdur */
+  .fa-spin,
+  .ops-status-dot,
+  .is-processing .ops-status-dot,
+  [class*="pulse"],
+  [class*="spin"],
+  [class*="shimmer"],
+  [class*="radar"] {
+    animation: none !important;
+  }
+
+  /* Butonlar, kartlar ve interaktif elemanlarda zıplamayı ve büyümeyi durdur */
+  button,
+  [class*="btn-"],
+  .book-card,
+  .card-cover img,
+  .card-cover-placeholder,
+  .header-icon-btn,
+  .ops-toggle,
+  #chat-panel,
+  #ops-center,
+  .dropdown-menu,
+  .modal-close,
+  .shelf-item {
+    transform: none !important;
+    transition-property: opacity, background-color, border-color, color !important;
+  }
+
+  /* Modallar: Transform kalkar, sadece sakin ve zarif opacity geçişi (150ms) */
+  @keyframes modalPopIn {
+    from { opacity: 0; transform: none; }
+    to { opacity: 1; transform: none; }
+  }
+
+  @keyframes modalPopOut {
+    from { opacity: 1; transform: none; }
+    to { opacity: 0; transform: none; }
+  }
+
+  @keyframes modalOverlayIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes modalOverlayOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  /* Dropdown & Ops Panel: Transformsuz, sadece opacity */
+  @keyframes dropdownIn {
+    from { opacity: 0; transform: none; }
+    to { opacity: 1; transform: none; }
+  }
+
+  @keyframes toolsMenuFadeIn {
+    from { opacity: 0; transform: none; }
+    to { opacity: 1; transform: none; }
+  }
+
+  @keyframes toolsMenuFadeOut {
+    from { opacity: 1; transform: none; }
+    to { opacity: 0; transform: none; }
+  }
+
+  @keyframes opsCenterIn {
+    from { opacity: 0; transform: none; }
+    to { opacity: 1; transform: none; }
+  }
+
+  @keyframes chatPanelExpand {
+    from { opacity: 0; transform: none; }
+    to { opacity: 1; transform: none; }
+  }
+
+  @keyframes chatPanelCollapse {
+    from { opacity: 1; transform: none; }
+    to { opacity: 0; transform: none; }
+  }
+
+  /* Kartlarda stagger zıplamasını durdur, sadece hızlı sakin beliriş */
+  .book-card.stagger-in,
+  #table-body tr.stagger-in {
+    animation: none !important;
   }
 }

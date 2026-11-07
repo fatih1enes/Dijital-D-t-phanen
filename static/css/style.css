@@ -6137,16 +6137,6 @@
       display: inline-block;
     }
 
-    /* ═══════════ Accessibility / Motion Preference ═══════════ */
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms;
-        animation-iteration-count: 1;
-        transition-duration: 0.01ms;
-        scroll-behavior: auto;
-      }
-    }
-
     /* ═══════════ Toast Notification Stack ═══════════ */
     .toast-container {
       position: fixed;
