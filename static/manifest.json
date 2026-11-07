@@ -1,0 +1,21 @@
+{
+  "id": "/?source=pwa",
+  "name": "Dijital Kütüphane",
+  "short_name": "Kütüphane",
+  "description": "Kişisel Dijital PDF ve EPUB Kütüphanesi",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fbfaf8",
+  "theme_color": "#c0522e",
+  "categories": ["books", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/static/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

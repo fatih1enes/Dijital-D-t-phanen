@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f4f1eb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1b1a17" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Kütüphanem</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', path='/favicon.svg') }}">
+  <link rel="manifest" href="{{ url_for('static', path='/manifest.json') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', path='/favicon.svg') }}">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/static/sw.js').catch(function(err) {
+          console.debug('PWA ServiceWorker note:', err);
+        });
+      });
+    }
+  </script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uo0qcPxh4Plq7G5tGm0rU+1SPhVotteLpBERwTkw==" crossorigin="anonymous" referrerpolicy="no-referrer">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha512-q+4liFwdPC/bNdhUpZx6aXDx/h77yEQtn4I1slHydcbZK34nLaR3cAeYSJshoxIOq3mjEf7xJE8YWIUHMn+oCQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js" integrity="sha512-tjg8I2d6Fi0OBGz1csmr7RfI4uupYaCfL/RqhVRTS42RMGwfBsjwBGmhzhI+e2dPmyew8cFkoxnVkGvADDLvbg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js" integrity="sha512-9+ilAOeXY8qy2bw/h51MmliNNHvdyhTpLIlqDmVpD26z8VjVJsUJtk5rhbDIUvYiD+EpGoAu0xTa7MhZohFQjA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/tokens.css') }}?v=2026110804">
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}?v=2026110804">
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/design.css') }}?v=2026110804">
+</head>
+
+<body>
+  <div id="drop-overlay" class="drop-overlay">
+    <div class="drop-box">
+      <h3>Belgeleri sürükleyip bırak</h3>
+      <p>İlk sayfayı önizle, yapay zekâ özetini hazırlarken yükleme çubuğunu izle.</p>
+      <div class="pill"><i class="fas fa-file-alt"></i> PDF, EPUB, TXT desteklenir</div>
+    </div>
+  </div>
+
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-label">Dijital Koleksiyon</div>
+        <div class="brand-title-row">
+          <h1><em>Kütüphanem</em></h1>
+          <div class="stat-pill" id="header-stat-pill" title="Kütüphanedeki Toplam Eser">
+            <i class="fas fa-book" style="margin-right: 5px; color: var(--accent);"></i>
+            <span id="stat-total" style="font-weight: 600;">—</span> <span style="margin-left: 3px;">Eser</span>
+          </div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <!-- Primary Action: + Kitap Ekle (Visible when library has items) -->
+        <button type="button" class="btn-primary-action" id="header-add-book-btn" style="display:none;" onclick="document.getElementById('file-input').click()" title="Yeni Kitap Ekle (PDF, EPUB, TXT)">
+          <i class="fas fa-plus"></i>
+          <span>Kitap Ekle</span>
+        </button>
+
+        <div class="header-action-divider"></div>
+
+        <!-- Quick Theme Toggle -->
+        <button type="button" class="header-icon-btn" id="theme-toggle" onclick="toggleTheme()" title="Aydınlık / Karanlık Mod (d)" aria-label="Aydınlık veya Karanlık Mod">
+          <i class="fas fa-moon"></i>
+        </button>
+
+        <!-- Tools Dropdown (Organized Utilities: Logs, Telegram, Sync, Duplicates, Shortcuts, PWA) -->
+        <div class="header-tools-wrapper" id="header-tools-wrapper">
+          <button type="button" class="header-icon-btn" id="header-tools-btn" onclick="toggleToolsMenu(event)" title="Araçlar &amp; Sistem Menüsü" aria-label="Araçlar ve Sistem Menüsü">
+            <i class="fas fa-sliders-h"></i>
+            <span class="header-logs-badge" id="header-logs-badge" style="display:none;"></span>
+          </button>
+          <div class="header-tools-menu" id="header-tools-menu" style="display:none;">
+            <div class="tools-menu-label">Araçlar &amp; Sistem</div>
+            <button type="button" class="tools-menu-item" id="header-logs-btn" onclick="openLogsModal(); closeToolsMenu();">
+              <i class="fas fa-terminal"></i>
+              <div class="tools-item-content">
+                <span class="tools-item-title">Canlı İşlem Logları</span>
+                <span class="tools-item-desc">Arka plan görevleri ve sistem akışı</span>
+              </div>
+            </button>
+            <button type="button" class="tools-menu-item" id="header-telegram-btn" onclick="openTelegramModal(); closeToolsMenu();">
+              <i class="fab fa-telegram-plane"></i>
+              <div class="tools-item-content">
+                <span class="tools-item-title">Telegram'dan Aktar</span>
+                <span class="tools-item-desc">Kanal veya bot üzerinden kitap çek</span>
+              </div>
+            </button>
+            <button type="button" class="tools-menu-item" onclick="syncLibrary(); closeToolsMenu();">
+              <i class="fas fa-sync-alt"></i>
+              <div class="tools-item-content">
+                <span class="tools-item-title">Kütüphaneyi Eşitle</span>
+                <span class="tools-item-desc">Klasördeki yeni belgeleri tara</span>
+              </div>
+            </button>
+            <button type="button" class="tools-menu-item" onclick="openDuplicatesModal(); closeToolsMenu();">
+              <i class="fas fa-copy"></i>
+              <div class="tools-item-content">
+                <span class="tools-item-title">Çift Kitap Avcısı</span>
+                <span class="tools-item-desc">Mükerrer dosyaları tespit et</span>
+              </div>
+            </button>
+            <button type="button" class="tools-menu-item" id="header-shortcuts-btn" onclick="openShortcutsModal(); closeToolsMenu();">
+              <i class="fas fa-keyboard"></i>
+              <div class="tools-item-content">
+                <span class="tools-item-title">Klavye Kısayolları</span>
+                <span class="tools-item-desc">Hızlı erişim kombinasyonları (?)</span>
+              </div>
+            </button>
+            <button type="button" class="tools-menu-item" id="btn-pwa-install" onclick="triggerPwaInstall(); closeToolsMenu();" style="display:none;">
+              <i class="fas fa-download"></i>
+              <div class="tools-item-content">
+                <span class="tools-item-title">Uygulamayı Yükle</span>
+                <span class="tools-item-desc">Masaüstü/Mobil PWA</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Settings Cog -->
+        <button type="button" class="header-icon-btn" id="settings-btn" onclick="openSettings()" title="Ayarlar" aria-label="Ayarlar">
+          <i class="fas fa-cog"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="compact-nav" id="compact-nav">
+    <div class="compact-brand">
+      <span class="compact-brand-sub">Dijital Koleksiyon</span>
+      <span class="compact-brand-title"><em>Kütüphanem</em></span>
+    </div>
+    <div class="compact-actions">
+      <div class="stat-pill" style="font-size:0.75rem;">
+        <i class="fas fa-book" style="margin-right:5px; color:var(--accent);"></i>
+        <span class="stat-total-val">—</span>
+      </div>
+      <button type="button" class="btn-primary-action compact" id="compact-add-book-btn" style="display:none;" onclick="document.getElementById('file-input').click()" title="Yeni Kitap Ekle">
+        <i class="fas fa-plus"></i>
+        <span>Kitap Ekle</span>
+      </button>
+      <button type="button" class="header-icon-btn compact-icon" id="compact-theme-btn" onclick="toggleTheme()" title="Aydınlık / Karanlık Mod">
+        <i class="fas fa-moon"></i>
+      </button>
+      <button type="button" class="header-icon-btn compact-icon" id="compact-logs-btn" onclick="openLogsModal()" title="İşlem Logları" style="position:relative;">
+        <i class="fas fa-terminal"></i>
+        <span class="header-logs-badge compact-logs-badge" id="compact-logs-badge" style="display:none;"></span>
+      </button>
+      <button type="button" class="header-icon-btn compact-icon" id="compact-pwa-install" onclick="triggerPwaInstall()" title="Masaüstü/Mobil Uygulama Olarak Yükle" style="display:none;">
+        <i class="fas fa-download"></i>
+      </button>
+      <button type="button" class="header-icon-btn compact-icon" onclick="openSettings()" title="Ayarlar">
+        <i class="fas fa-cog"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="controls-panel" style="display:none;">
+    <div class="search-wrap" style="position:relative; display:flex; align-items:center;">
+      <i class="fas fa-search"></i>
+      <input type="search" id="search-input" placeholder="Kitap, yazar, konu ara… (Kısayol: /)" aria-label="Kitap, yazar veya konu ara">
+      <button type="button" id="btn-deep-search-toggle" class="btn-deep-search-toggle" onclick="toggleDeepSearchMode()" title="Global Derin Arama: Tüm kitapların sayfalarında ara">
+        <i class="fas fa-layer-group"></i> <span id="deep-search-label">Derin Arama</span>
+      </button>
+    </div>
+
+    <div class="control-group dropdowns-group">
+      <div class="custom-dropdown" id="dropdown-category">
+        <button type="button" class="dropdown-trigger" id="category-trigger" onclick="toggleDropdown('dropdown-category')">Tüm Kategoriler</button>
+        <div class="dropdown-menu" id="category-menu"></div>
+      </div>
+
+      <div class="custom-dropdown" id="dropdown-collection">
+        <button type="button" class="dropdown-trigger" id="collection-trigger" onclick="toggleDropdown('dropdown-collection')">Tüm Koleksiyonlar</button>
+        <div class="dropdown-menu" id="collection-menu"></div>
+      </div>
+    </div>
+
+    <div class="view-toggle">
+      <button type="button" class="view-btn active" id="btn-grid" onclick="setView('grid')" title="Kart Görünümü (g)">
+        <i class="fas fa-th-large"></i> <span class="btn-label">Kart</span>
+      </button>
+      <button type="button" class="view-btn" id="btn-table" onclick="setView('table')" title="Liste Görünümü (t)">
+        <i class="fas fa-list"></i> <span class="btn-label">Liste</span>
+      </button>
+      <button type="button" class="view-btn" id="btn-stats" onclick="setView('stats')" title="İstatistikler (s)">
+        <i class="fas fa-chart-pie"></i> <span class="btn-label">İstatistik</span>
+      </button>
+    </div>
+
+    <div class="control-group actions-group">
+      <button type="button" class="view-btn" id="btn-fav-filter" onclick="toggleFavFilter()" title="Favorilerim (f)">
+        <i class="fas fa-heart"></i> <span class="btn-label">Favoriler</span>
+      </button>
+      <div class="manage-sep"></div>
+      <button type="button" class="view-btn" id="btn-manage" onclick="toggleSelectionMode()" title="Toplu Yönetim (m)">
+        <i class="fas fa-tasks"></i> <span class="btn-label">Yönet</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="import-zone" id="import-zone">
+    <div class="zero-state-hero" id="drop-box">
+      <div class="hero-kicker">ARŞİV &amp; OKUMA ALANI</div>
+      <h2 class="hero-title">Kişisel Arşiviniz.</h2>
+      <p class="hero-subtitle">Çalışmaya başlamak için PDF, EPUB veya TXT belgelerinizi bu alana sürükleyin ya da bilgisayarınızdan seçin.</p>
+      
+      <div class="hero-primary-actions">
+        <button type="button" class="btn-hero-primary" onclick="document.getElementById('file-input').click()">
+          <i class="fas fa-plus"></i>
+          <span>Kitap Dosyası Seç</span>
+        </button>
+      </div>
+
+      <div class="hero-secondary-actions">
+        <button type="button" class="btn-hero-secondary" id="btn-telegram" onclick="openTelegramModal()">
+          <i class="fab fa-telegram-plane"></i>
+          <span>Telegram'dan Çek</span>
+        </button>
+        <button type="button" class="btn-hero-secondary" id="btn-sync" onclick="syncLibrary()">
+          <i class="fas fa-sync-alt" id="sync-icon"></i>
+          <span>Klasörü Eşitle</span>
+        </button>
+      </div>
+
+      <div class="hero-formats">
+        <span class="hero-formats-note">PDF · EPUB · TXT · Sürükleyip bırakın</span>
+      </div>
+
+      <input type="file" id="file-input" accept=".pdf,.epub,.txt" multiple onchange="handleFiles(this.files)" aria-label="Kütüphaneye eklenecek PDF veya EPUB dosyaları">
+    </div>
+  </div>
+
+  <main id="main-content" style="display:none">
+    <div class="result-info" id="result-info">— kitap gösteriliyor</div>
+    <div id="empty-state" class="empty-state" style="display: none;">
+      <div class="empty-state-card">
+        <div class="empty-state-icon">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            <path d="M12 6v6"></path>
+            <path d="M12 16h.01"></path>
+          </svg>
+        </div>
+        <h3 id="empty-state-title">Kitap Bulunamadı</h3>
+        <p id="empty-state-desc">Arama veya filtre kriterlerinize uygun kitap bulunamadı.</p>
+        <div class="empty-state-actions">
+          <button class="btn-empty-clear" id="btn-empty-clear" onclick="clearFiltersAndSearch()">
+            <i class="fas fa-times-circle"></i> Filtreleri Temizle
+          </button>
+          <button class="btn-empty-add" onclick="document.getElementById('file-input').click()">
+            <i class="fas fa-plus"></i> Yeni Kitap Yükle
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="deep-search-results" style="display:none; padding:1.2rem; background:transparent; border:1px solid var(--line); border-radius:14px; margin-bottom:1.5rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--line); padding-bottom:0.75rem;">
+        <h3 style="font-size:1.05rem; color:var(--ink); margin:0; display:flex; align-items:center; gap:0.5rem;">
+          <i class="fas fa-search-location" style="color:var(--accent);"></i>
+          <span>Sayfa Düzeyinde Eşleşmeler</span>
+          <span class="badge" id="deep-search-count" style="font-size:0.75rem; background:var(--accent-glow); color:var(--accent); padding:2px 8px; border-radius:12px;">0 sonuç</span>
+        </h3>
+        <button class="btn-empty-clear" onclick="closeDeepSearch()" style="padding:0.35rem 0.75rem; font-size:0.8rem; cursor:pointer;"><i class="fas fa-times"></i> Kapat</button>
+      </div>
+      <div id="deep-search-list" style="display:flex; flex-direction:column; gap:0.75rem;"></div>
+    </div>
+    <div id="recent-shelf-container" style="display:none;" class="recent-shelf-container"></div>
+    <div id="grid-view"></div>
+    <div id="table-view" style="display: none;">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:58px;cursor:default"></th>
+            <th><button type="button" class="th-sort-btn" onclick="sortTable(0)">Kitap Adı <span class="sort-arrow">↕</span></button></th>
+            <th><button type="button" class="th-sort-btn" onclick="sortTable(1)">Yazar <span class="sort-arrow">↕</span></button></th>
+            <th><button type="button" class="th-sort-btn" onclick="sortTable(2)">Kategori <span class="sort-arrow">↕</span></button></th>
+            <th><button type="button" class="th-sort-btn" onclick="sortTable(3)">Alt Kategori <span class="sort-arrow">↕</span></button></th>
+            <th><button type="button" class="th-sort-btn" onclick="sortTable(4)">Açıklama <span class="sort-arrow">↕</span></button></th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+
+    <div id="stats-view" style="display: none;">
+      <div class="stats-grid" id="stats-cards"></div>
+      <div class="stats-charts">
+        <div class="stats-chart-box">
+          <div class="stats-chart-title">Kategori Dağılımı</div>
+          <div class="donut-wrap" id="donut-chart"></div>
+        </div>
+        <div class="stats-chart-box">
+          <div class="stats-chart-title">Aylık Eklenen Kitaplar</div>
+          <div class="bar-chart" id="bar-chart"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="modal-overlay" id="modal" aria-modal="true" tabindex="-1">
+    <div class="modal" id="modal-box">
+      <div class="modal-top"></div>
+      <button type="button" class="modal-close" onclick="closeModalDirect()" aria-label="Kapat" title="Kapat"><i class="fas fa-times"></i></button>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <div id="ops-center">
+    <div class="ops-header">
+      <div class="ops-title-wrap">
+        <span class="ops-live-pulse pulse-idle" id="ops-live-pulse" title="Sistem Canlı Bağlantı Durumu"></span>
+        <h3><i class="fas fa-terminal"></i> İşlem merkezi</h3>
+        <span class="ops-count-pill" id="ops-active-pill">Hazır</span>
+      </div>
+      <div class="ops-header-actions">
+        <button class="ops-btn-icon" onclick="fetchTasksFromAPI()" title="Yenile / Güncelle">
+          <i class="fas fa-sync-alt" id="ops-refresh-icon"></i>
+        </button>
+        <button id="archive-toggle" class="ops-archive-btn" onclick="openLogsModal()" title="Tüm Sistem ve Arka Plan Logları">
+          <i class="fas fa-scroll"></i> Loglar
+        </button>
+        <button class="ops-btn-close" onclick="toggleOps()" title="Kapat">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter Tabs (Tümü / Aktif / Tamamlanan) -->
+    <div class="ops-tabs">
+      <button class="ops-tab-btn active" id="ops-tab-all" onclick="setOpsTab('all')">
+        Tümü <span class="ops-tab-badge" id="ops-tab-badge-all">0</span>
+      </button>
+      <button class="ops-tab-btn" id="ops-tab-active" onclick="setOpsTab('active')">
+        ⚡ Aktif <span class="ops-tab-badge active-tag" id="ops-tab-badge-active">0</span>
+      </button>
+      <button class="ops-tab-btn" id="ops-tab-completed" onclick="setOpsTab('completed')">
+        ✓ Tamamlanan <span class="ops-tab-badge" id="ops-tab-badge-completed">0</span>
+      </button>
+    </div>
+
+    <!-- Live System Banner (Quick heartbeat strip) -->
+    <div class="ops-system-strip" id="ops-system-strip">
+      <div class="ops-strip-item"><i class="fas fa-brain"></i> <span id="ops-engine-label">Gemini 3.5 Flash-Lite</span></div>
+      <div class="ops-strip-item"><i class="fas fa-wifi"></i> <span id="ops-ws-status">Canlı</span></div>
+      <div class="ops-strip-item"><i class="fas fa-tasks"></i> <span id="ops-queue-label">0 Sırada</span></div>
+    </div>
+
+    <div class="ops-body" id="ops-body">
+      <div style="opacity:0.5; text-align:center; padding:2rem;">Yükleniyor...</div>
+    </div>
+  </div>
+
+  <div class="logs-modal" id="logs-modal" aria-modal="true" tabindex="-1">
+    <div class="logs-panel">
+      <!-- Top Bar: Header & Actions -->
+      <div class="logs-header">
+        <div class="logs-header-left">
+          <div class="logs-title-wrap">
+            <i class="fas fa-terminal logs-title-icon"></i>
+            <h4>Sistem ve işlem logları</h4>
+          </div>
+          <div class="logs-status-pill status-online" id="logs-status-indicator" title="WebSocket Canlı Bağlantı Durumu">
+            <span class="status-dot"></span>
+            <span id="logs-status-text">Canlı</span>
+          </div>
+        </div>
+
+        <div class="logs-header-actions">
+          <button type="button" class="logs-action-btn" id="logs-toggle-pause" onclick="toggleLogPause()" title="Canlı akışı duraklat veya devam ettir">
+            <i class="fas fa-pause"></i> <span id="logs-pause-text">Duraklat</span>
+          </button>
+          <button type="button" class="logs-action-btn" onclick="exportLogs('json')" title="Logları JSON olarak indir">
+            <i class="fas fa-file-code"></i> <span>JSON</span>
+          </button>
+          <button type="button" class="logs-action-btn" onclick="exportLogs('log')" title="Logları TXT/LOG olarak indir">
+            <i class="fas fa-file-lines"></i> <span>TXT</span>
+          </button>
+          <button type="button" class="logs-action-btn logs-btn-danger" onclick="clearLogsUI()" title="Ekrandaki ve bellekteki logları temizle">
+            <i class="fas fa-trash-alt"></i> <span>Temizle</span>
+          </button>
+          <button type="button" class="logs-close" onclick="closeLogsModalDirect()" title="Kapat">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Layout: Sidebar & Log Viewport -->
+      <div class="logs-body">
+        <aside class="logs-sidebar">
+          <div class="logs-section-title">Kategoriler</div>
+          <button type="button" class="logs-filter-btn active" data-cat="all" onclick="setLogCategory('all', this)">
+            <span>Tümü</span><small id="logs-count-all">0</small>
+          </button>
+          <button type="button" class="logs-filter-btn" data-cat="upload" onclick="setLogCategory('upload', this)">
+            <span>Yükleme &amp; Görev</span><small id="logs-count-upload">0</small>
+          </button>
+          <button type="button" class="logs-filter-btn" data-cat="ai_analyze" onclick="setLogCategory('ai_analyze', this)">
+            <span>AI Analiz</span><small id="logs-count-ai_analyze">0</small>
+          </button>
+          <button type="button" class="logs-filter-btn" data-cat="ai_raw" onclick="setLogCategory('ai_raw', this)">
+            <span>AI Ham Yanıt</span><small id="logs-count-ai_raw">0</small>
+          </button>
+          <button type="button" class="logs-filter-btn" data-cat="ai_chat" onclick="setLogCategory('ai_chat', this)">
+            <span>AI Sohbet</span><small id="logs-count-ai_chat">0</small>
+          </button>
+          <button type="button" class="logs-filter-btn" data-cat="pdf" onclick="setLogCategory('pdf', this)">
+            <span>PDF &amp; OCR</span><small id="logs-count-pdf">0</small>
+          </button>
+          <button type="button" class="logs-filter-btn" data-cat="filesystem" onclick="setLogCategory('filesystem', this)">
+            <span>Dosya &amp; Arşiv</span><small id="logs-count-filesystem">0</small>
+          </button>
+          <button type="button" class="logs-filter-btn" data-cat="security" onclick="setLogCategory('security', this)">
+            <span>Güvenlik &amp; Erişim</span><small id="logs-count-security">0</small>
+          </button>
+          <button type="button" class="logs-filter-btn" data-cat="system" onclick="setLogCategory('system', this)">
+            <span>Sistem</span><small id="logs-count-system">0</small>
+          </button>
+        </aside>
+
+        <section class="logs-content-area">
+          <!-- Toolbar: Search Bar + Level Pills -->
+          <div class="logs-toolbar">
+            <div class="logs-search-wrap">
+              <i class="fas fa-search logs-search-icon"></i>
+              <input type="text" id="logs-search-input" placeholder="Loglarda ara (mesaj, dosya, hata kodu, ip...)" aria-label="Loglarda ara" oninput="handleLogSearchInput(this.value)">
+              <button type="button" id="logs-search-clear" onclick="clearLogSearch()" style="display:none;" title="Aramayı temizle"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="logs-level-filters">
+              <button class="logs-level-btn active" data-lvl="all" onclick="setLogLevel('all', this)">Tümü</button>
+              <button class="logs-level-btn lvl-error" data-lvl="ERROR" onclick="setLogLevel('ERROR', this)">
+                <span class="lvl-indicator"></span> Hata <small id="logs-lvl-count-error">0</small>
+              </button>
+              <button class="logs-level-btn lvl-warning" data-lvl="WARNING" onclick="setLogLevel('WARNING', this)">
+                <span class="lvl-indicator"></span> Uyarı <small id="logs-lvl-count-warning">0</small>
+              </button>
+              <button class="logs-level-btn lvl-info" data-lvl="INFO" onclick="setLogLevel('INFO', this)">
+                <span class="lvl-indicator"></span> Bilgi <small id="logs-lvl-count-info">0</small>
+              </button>
+              <button class="logs-level-btn lvl-debug" data-lvl="DEBUG" onclick="setLogLevel('DEBUG', this)">
+                <span class="lvl-indicator"></span> Debug
+              </button>
+            </div>
+          </div>
+
+          <!-- Logs Feed Body -->
+          <div class="logs-main" id="logs-body">
+            <div class="logs-loading-state"><i class="fas fa-spinner fa-spin"></i> Loglar yükleniyor...</div>
+          </div>
+
+          <!-- Bottom Footer Bar -->
+          <div class="logs-footer">
+            <div class="logs-footer-left">
+              <label class="logs-autoscroll-toggle" title="Yeni log geldiğinde otomatik olarak en son satıra kaydır">
+                <input type="checkbox" id="logs-autoscroll-check" checked onchange="toggleAutoScroll(this.checked)">
+                <span class="custom-toggle-slider"></span>
+                <span>Otomatik Kaydırma</span>
+              </label>
+              <span id="logs-paused-banner" class="logs-paused-banner" style="display:none;">
+                <i class="fas fa-pause-circle"></i> Canlı Akış Duraklatıldı
+              </span>
+            </div>
+            <div class="logs-footer-right">
+              <span id="logs-counter-info" class="logs-counter-info">0 log</span>
+              <button class="logs-nav-btn" onclick="scrollLogsToTop()" title="En Başa Git"><i class="fas fa-arrow-up"></i></button>
+              <button class="logs-nav-btn" onclick="scrollLogsToBottom()" title="En Sona Git"><i class="fas fa-arrow-down"></i></button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div id="chat-panel">
+    <button type="button" class="chat-header" onclick="toggleAssistant()">
+      <div class="chat-header-title">
+        <span class="chat-ai-dot"><i class="fas fa-sparkles"></i></span>
+        <h3>Kütüphane Asistanı</h3>
+      </div>
+      <span class="chat-chevron"><i class="fas fa-chevron-up"></i></span>
+    </button>
+    <div class="chat-body" id="chat-body">
+      <div class="chat-msg chat-ai">Merhaba! Kütüphanendeki kitaplar hakkında sana nasıl yardımcı olabilirim?</div>
+    </div>
+    <div class="chat-input-area">
+      <input type="text" id="chat-input" placeholder="Bir şey sor..." aria-label="Asistana soru sor" maxlength="1000"
+        onkeydown="if(event.key==='Enter') sendMessage()">
+      <div class="chat-counter-wrap">
+        <svg class="chat-progress-svg">
+          <circle class="chat-progress-bg" cx="12" cy="12" r="10"></circle>
+          <circle id="chat-progress-fill" class="chat-progress-fill" cx="12" cy="12" r="10"></circle>
+        </svg>
+        <span id="chat-char-count">1000</span>
+      </div>
+      <button type="button" class="btn-send" onclick="sendMessage()" aria-label="Mesaj Gönder"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
+
+  <button type="button" class="ops-toggle" id="ops-toggle" onclick="toggleOps()" title="Canlı İşlem Merkezi ve Görev Kuyruğu">
+    <span class="ops-status-dot"></span>
+    <span class="ops-label">İşlem Merkezi</span>
+    <span class="ops-badge" id="ops-badge">0</span>
+  </button>
+
+  <button type="button" id="scroll-top-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Yukarı Çık" aria-label="Yukarı Çık">
+    <i class="fas fa-chevron-up"></i>
+  </button>
+
+  <!-- Modern Workspace Reader Overlay (Split-Pane PDF Reader + Chat) -->
+  <div id="workspace-reader" class="workspace-reader">
+    <header class="workspace-header">
+      <div class="workspace-header-left">
+        <button type="button" class="btn-workspace-back" onclick="closeWorkspace()">
+          <i class="fas fa-arrow-left"></i> Kütüphaneye Dön
+        </button>
+        <span class="workspace-book-divider">|</span>
+        <div class="workspace-book-meta">
+          <span id="workspace-book-cat" class="workspace-book-cat">—</span>
+          <h2 id="workspace-book-title" class="workspace-book-title">—</h2>
+        </div>
+      </div>
+      <div class="workspace-header-right" style="display: flex; align-items: center; gap: 1rem;">
+        <!-- Compact Workspace Book Loading Banner -->
+        <button type="button" class="workspace-book-banner" id="workspace-book-banner" onclick="loadFullBookToAI()" title="Kitabı AI hafızasına yükle">
+          <span class="banner-icon" id="banner-icon"><i class="fas fa-book-open"></i></span>
+          <span class="banner-content">
+            <span class="banner-title" id="banner-title">AI Hafızasına Yükle</span>
+            <span class="banner-subtitle" id="banner-subtitle" style="display:none;"></span>
+          </span>
+          <span class="btn-banner-load" id="btn-banner-load" style="display:none;"></span>
+        </button>
+
+        <!-- Workspace PKM Export Dropdown -->
+        <div class="workspace-export-wrapper" style="position:relative;">
+          <button type="button" class="btn-workspace-action" id="workspace-export-btn" onclick="toggleWorkspaceExportMenu()" title="Kitap ve Notları Dışa Aktar (Obsidian, Anki, BibTeX)">
+            <i class="fas fa-file-export"></i> <span>Dışa Aktar</span>
+          </button>
+          <div id="workspace-export-menu" class="export-menu" style="display:none; position:absolute; top:120%; right:0; width:180px; background:var(--color-surface, #fff); border:1px solid var(--line); border-radius:8px; box-shadow:0 8px 16px rgba(0,0,0,0.12); z-index:1000; overflow:hidden;">
+            <button type="button" class="export-menu-item" style="display:flex; width:100%; border:none; background:none; cursor:pointer; align-items:center; gap:0.5rem; padding:0.6rem 0.8rem; font-size:0.75rem; color:var(--ink); text-decoration:none;" onclick="exportCurrentWorkspaceBook('obsidian')">
+              <i class="fas fa-gem" style="color:#7c3aed;"></i> Obsidian (.md)
+            </button>
+            <button type="button" class="export-menu-item" style="display:flex; width:100%; border:none; background:none; cursor:pointer; align-items:center; gap:0.5rem; padding:0.6rem 0.8rem; font-size:0.75rem; color:var(--ink); text-decoration:none; border-top:1px solid var(--line);" onclick="exportCurrentWorkspaceBook('anki')">
+              <i class="fas fa-clone" style="color:#2563eb;"></i> Anki Kartları (.tsv)
+            </button>
+            <button type="button" class="export-menu-item" style="display:flex; width:100%; border:none; background:none; cursor:pointer; align-items:center; gap:0.5rem; padding:0.6rem 0.8rem; font-size:0.75rem; color:var(--ink); text-decoration:none; border-top:1px solid var(--line);" onclick="exportCurrentWorkspaceBook('bibtex')">
+              <i class="fas fa-graduation-cap" style="color:#059669;"></i> BibTeX (.bib)
+            </button>
+          </div>
+        </div>
+
+        <!-- Toggle AI Chat Pane (Distraction-Free Reading Mode) -->
+        <button type="button" class="btn-toggle-workspace-chat" id="btn-toggle-workspace-chat" onclick="toggleWorkspaceChatPane()" title="AI Asistan Panelini Gizle / Göster (Odaklı Okuma)">
+          <i class="fas fa-sparkles"></i> <span id="workspace-chat-toggle-label">AI Paneli</span>
+        </button>
+
+        <div class="workspace-status-badge" id="workspace-status-badge">
+          <i class="fas fa-robot"></i> <span id="workspace-status-text">AI Asistan Bağlı</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="workspace-content">
+      <!-- Left Panel: PDF Viewer (Custom PDF.js Interactive Reader) -->
+      <div class="workspace-pdf-pane" id="workspace-pdf-pane" style="flex: 1;">
+        <div class="custom-pdf-viewer" id="custom-pdf-viewer">
+          <!-- Toolbar -->
+          <div class="pdf-toolbar">
+            <div class="pdf-toolbar-group">
+              <button type="button" id="pdf-prev-btn" class="pdf-btn" onclick="pdfPrevPage()" aria-label="Önceki Sayfa"><i class="fas fa-chevron-left"></i></button>
+              <span class="pdf-page-indicator">
+                Sayfa <input type="number" id="pdf-page-num" value="1" min="1" aria-label="Sayfa numarası" onchange="pdfGoToPageFromInput()"> / <span id="pdf-page-count">-</span>
+              </span>
+              <button type="button" id="pdf-next-btn" class="pdf-btn" onclick="pdfNextPage()" aria-label="Sonraki Sayfa"><i class="fas fa-chevron-right"></i></button>
+            </div>
+            <div class="pdf-toolbar-divider"></div>
+            <div class="pdf-toolbar-group">
+              <button type="button" class="pdf-btn" onclick="pdfZoomOut()" aria-label="Uzaklaştır"><i class="fas fa-search-minus"></i></button>
+              <span id="pdf-zoom-percent" class="pdf-zoom-label">100%</span>
+              <button type="button" class="pdf-btn" onclick="pdfZoomIn()" aria-label="Yakınlaştır"><i class="fas fa-search-plus"></i></button>
+              <button type="button" class="pdf-btn text-btn" id="pdf-fit-width-btn" onclick="pdfFitWidth()"><i class="fas fa-arrows-left-right"></i> Genişliğe Sığdır</button>
+              <button type="button" class="pdf-btn text-btn" id="pdf-fit-height-btn" onclick="pdfFitHeight()"><i class="fas fa-arrows-up-down"></i> Yükseklik Sığdır</button>
+              <button type="button" class="pdf-btn toggle-btn" id="pdf-spread-btn" onclick="togglePdfSpreadMode()" title="Çift Sayfa Kitap Modu (İki sayfa yan yana)"><i class="fas fa-book-open"></i> Çift Sayfa</button>
+            </div>
+            <div class="pdf-toolbar-divider"></div>
+            <div class="pdf-toolbar-group">
+              <button type="button" class="pdf-btn toggle-btn" id="pdf-toc-sidebar-btn" onclick="toggleTocSidebar()" title="İçindekiler Tablosu"><i class="fas fa-list-ol"></i> İçindekiler</button>
+              <button type="button" class="pdf-btn toggle-btn" id="pdf-search-btn" onclick="togglePdfSearch()" title="Belgede Ara (Ctrl + F)"><i class="fas fa-search"></i> Ara</button>
+              <button type="button" class="pdf-btn toggle-btn" id="pdf-notes-sidebar-btn" onclick="toggleNotesSidebar()" title="Notlarım"><i class="fas fa-pen-nib"></i> Notlarım</button>
+              <button type="button" class="pdf-btn toggle-btn" id="pdf-tts-btn" onclick="togglePdfTTS()" title="Kitabı Seslendir / Durdur"><i class="fas fa-volume-high"></i> Dinle</button>
+            </div>
+            <div class="pdf-toolbar-divider"></div>
+            <div class="pdf-toolbar-group" id="reader-surface-group" title="ChromaGuard™ Okuma Yüzeyi">
+              <button type="button" class="pdf-btn surface-btn active" id="btn-surface-normal" onclick="setReaderSurfaceMode('normal')" title="Normal Gündüz" aria-label="Normal Gündüz Modu"><i class="fas fa-sun"></i></button>
+              <button type="button" class="pdf-btn surface-btn" id="btn-surface-sepia" onclick="setReaderSurfaceMode('sepia')" title="Sepya Kağıt Dokusu" aria-label="Sepya Kağıt Dokusu"><i class="fas fa-scroll"></i></button>
+              <button type="button" class="pdf-btn surface-btn" id="btn-surface-eink" onclick="setReaderSurfaceMode('eink')" title="E-Ink Monokrom" aria-label="E-Ink Monokrom"><i class="fas fa-newspaper"></i></button>
+              <button type="button" class="pdf-btn surface-btn" id="btn-surface-chromaguard" onclick="setReaderSurfaceMode('chromaguard')" title="ChromaGuard™ Akıllı Gece (Görseller Bozulmaz)" aria-label="ChromaGuard Akıllı Gece"><i class="fas fa-moon"></i></button>
+            </div>
+            <div class="pdf-toolbar-divider"></div>
+            <div class="pdf-toolbar-group">
+              <button type="button" class="pdf-btn text-btn" id="btn-lan-handoff" onclick="openHandoffModal()" title="Telefonda Okumaya Devam Et (QR Kod)"><i class="fas fa-mobile-alt"></i> Telefonda Devam Et</button>
+            </div>
+          </div>
+
+          <!-- Floating In-Document Search Bar -->
+          <div class="pdf-search-bar" id="pdf-search-bar" style="display: none;">
+            <div class="pdf-search-main-row">
+              <div class="pdf-search-input-wrap">
+                <i class="fas fa-search pdf-search-input-icon"></i>
+                <input type="text" id="pdf-search-input" placeholder="Belgede ara... (Enter ile sonraki)" aria-label="Belgede ara" autocomplete="off" spellcheck="false" oninput="onPdfSearchInput(this.value)" onkeydown="onPdfSearchKeydown(event)">
+                <button type="button" class="pdf-search-icon-btn clear" id="pdf-search-clear-btn" onclick="clearPdfSearch()" style="display: none;" title="Aramayı Temizle" aria-label="Aramayı Temizle"><i class="fas fa-times"></i></button>
+              </div>
+              <div class="pdf-search-counter" id="pdf-search-counter">0 / 0</div>
+              <div class="pdf-search-actions">
+                <button type="button" class="pdf-search-nav-btn" id="pdf-search-prev-btn" onclick="pdfSearchPrev()" title="Önceki Eşleşme (Shift + Enter)" aria-label="Önceki Eşleşme" disabled><i class="fas fa-chevron-up"></i></button>
+                <button type="button" class="pdf-search-nav-btn" id="pdf-search-next-btn" onclick="pdfSearchNext()" title="Sonraki Eşleşme (Enter)" aria-label="Sonraki Eşleşme" disabled><i class="fas fa-chevron-down"></i></button>
+                <button type="button" class="pdf-search-nav-btn" id="pdf-search-list-btn" onclick="togglePdfSearchResultsDrawer()" title="Sonuç Listesi" aria-label="Sonuç Listesi"><i class="fas fa-list-ul"></i></button>
+                <button type="button" class="pdf-search-nav-btn close" onclick="closePdfSearch()" title="Kapat (Esc)" aria-label="Aramayı Kapat"><i class="fas fa-times"></i></button>
+              </div>
+            </div>
+            <!-- Collapsible Results Drawer -->
+            <div class="pdf-search-results-drawer" id="pdf-search-results-drawer" style="display: none;">
+              <div class="pdf-search-drawer-header">
+                <span id="pdf-search-drawer-title">Arama Sonuçları</span>
+              </div>
+              <div class="pdf-search-drawer-list" id="pdf-search-drawer-list">
+                <!-- Dynamically populated: page groups and snippets -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Viewer Body -->
+          <div class="pdf-viewer-body">
+            <!-- Notes Sidebar -->
+            <div class="pdf-notes-sidebar" id="pdf-notes-sidebar">
+              <div class="pdf-notes-sidebar-header">
+                <h3>Notlar & İşaretlemeler</h3>
+              </div>
+              <div id="pdf-notes-list" class="pdf-notes-list">
+                <div class="pdf-notes-empty">Bu kitapta henüz hiç işaretleme yapmadınız. Sayfa üzerinde metin seçerek fosforlu kalemle çizebilir veya not alabilirsiniz.</div>
+              </div>
+            </div>
+
+            <!-- Table of Contents (TOC) Sidebar -->
+            <div class="pdf-toc-sidebar" id="pdf-toc-sidebar">
+              <div class="pdf-notes-sidebar-header">
+                <h3><i class="fas fa-list-ol" style="color:var(--accent); margin-right:6px;"></i> İçindekiler</h3>
+              </div>
+              <div id="pdf-toc-list" class="pdf-toc-list">
+                <div class="pdf-notes-empty">Bu belgede içindekiler tablosu bulunamadı.</div>
+              </div>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="pdf-canvas-container" id="pdf-canvas-container" onscroll="onPdfContainerScroll()">
+              <div class="pdf-page-wrapper" id="pdf-page-wrapper">
+                <canvas id="pdf-render-canvas"></canvas>
+                <div class="textLayer" id="pdf-text-layer"></div>
+                <div class="pdf-highlight-layer" id="pdf-highlight-layer"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Floating Action Bar -->
+          <div class="pdf-floating-bar" id="pdf-floating-bar">
+            <button class="hl-color-btn yellow" onclick="applyHighlight('#e8dca0', 'yellow')" title="Sarı"></button>
+            <button class="hl-color-btn green" onclick="applyHighlight('#d3dfc3', 'green')" title="Yeşil"></button>
+            <button class="hl-color-btn blue" onclick="applyHighlight('#d8d1c3', 'blue')" title="Mavi"></button>
+            <button class="hl-color-btn pink" onclick="applyHighlight('#e4d6cd', 'pink')" title="Pembe"></button>
+            <button class="hl-action-btn" onclick="openNoteModalForSelection()"><i class="fas fa-sticky-note"></i> Not Ekle</button>
+            <button class="hl-action-btn close" onclick="clearSelection()"><i class="fas fa-times"></i></button>
+          </div>
+        </div>
+        <!-- Keep iframe hidden for background fallback download/printing in needed cases -->
+        <iframe id="workspace-pdf-frame" src="" title="PDF Belge Önizleme Çerçevesi" class="workspace-pdf-iframe" style="display: none;"></iframe>
+      </div>
+
+      <!-- Interactive Drag Resize Handle -->
+      <div class="workspace-resize-handle" id="workspace-resize-handle">
+        <div class="resize-dot"></div>
+      </div>
+
+      <!-- Right Panel: AI Chat Panel -->
+      <div class="workspace-chat-pane" id="workspace-chat-pane" style="flex: 0 0 380px; width: 380px;">
+        <!-- Chat Header with Copy Button -->
+        <div class="workspace-chat-header" id="workspace-chat-header">
+          <div class="workspace-chat-title">
+            <i class="fas fa-sparkles" style="color: var(--accent);"></i>
+            <span>AI Asistanı</span>
+          </div>
+          <button type="button" class="btn-copy-chat" id="btn-copy-chat" onclick="copyWorkspaceChat()" title="Tüm konuşmayı panoya kopyala">
+            <i class="fas fa-copy"></i>
+            <span class="btn-copy-text">Konuşmayı Kopyala</span>
+          </button>
+        </div>
+
+        <!-- Chat messages occupy the full vertical pane height now -->
+        <div class="workspace-chat-messages" id="workspace-chat-messages">
+          <!-- Initial Welcome message -->
+        </div>
+
+        <div class="workspace-chat-input-area">
+          <div id="workspace-stop-wrap" style="display:none; margin-bottom:8px;">
+            <button type="button" id="btn-stop-chat" class="btn-stop-chat" onclick="stopChatGeneration()">
+              <i class="fas fa-stop-circle"></i> Yanıtı Durdur
+            </button>
+          </div>
+          <div class="workspace-prompt-chips" id="workspace-prompt-chips" style="display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; margin-bottom:6px;">
+            <button type="button" class="prompt-chip" onclick="insertPromptChip('Bu kitabı ana hatlarıyla özetler misin?')">📝 Özetle</button>
+            <button type="button" class="prompt-chip" onclick="insertPromptChip('Kitabın ana fikirleri ve kilit temaları nelerdir?')">💡 Ana Temalar</button>
+            <button type="button" class="prompt-chip" onclick="insertPromptChip('Bu kitabın ana mesajını 5 yaşındaki birine anlatır gibi basitçe açıkla.')">👶 Basitçe Açıkla</button>
+            <button type="button" class="prompt-chip" onclick="insertPromptChip('Bu kitaptan akılda kalıcı en çarpıcı 3 alıntıyı sayfa referansıyla listele.')">✨ Çarpıcı Alıntılar</button>
+          </div>
+          <div class="workspace-input-wrapper">
+            <textarea id="workspace-chat-input" placeholder="Bu kitap hakkında soru sor..." aria-label="Kitap hakkında soru sor" rows="1" onkeydown="handleWorkspaceChatKey(event)"></textarea>
+            <button type="button" class="btn-workspace-send" id="btn-workspace-send" onclick="sendWorkspaceMessage()" aria-label="Mesajı Gönder">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ayarlar Modalı -->
+  <div class="modal-overlay" id="settings-modal" aria-modal="true" tabindex="-1">
+    <div class="modal">
+      <div class="modal-top"></div>
+      
+      <!-- Modal Header -->
+      <div class="settings-header">
+        <div class="settings-header-left">
+          <div class="settings-header-icon">
+            <i class="fas fa-sliders-h"></i>
+          </div>
+          <div>
+            <h2>Kütüphane Ayarları</h2>
+            <p>AI modelleri, analiz limitleri ve sistem tercihleri</p>
+          </div>
+        </div>
+        <button type="button" class="modal-close" style="position: static;" onclick="closeSettingsDirect()" title="Kapat" aria-label="Kapat"><i class="fas fa-times"></i></button>
+      </div>
+
+      <!-- Settings Tabs Bar -->
+      <div class="settings-tabs">
+        <button type="button" class="settings-tab-btn active" id="tab-btn-ai" onclick="switchSettingsTab('ai')">
+          <i class="fas fa-brain"></i> Yapay Zeka
+        </button>
+        <button type="button" class="settings-tab-btn" id="tab-btn-analysis" onclick="switchSettingsTab('analysis')">
+          <i class="fas fa-microscope"></i> Analiz &amp; Görsel
+        </button>
+        <button type="button" class="settings-tab-btn" id="tab-btn-security" onclick="switchSettingsTab('security')">
+          <i class="fas fa-shield-alt"></i> Güvenlik &amp; Telefon
+        </button>
+        <button type="button" class="settings-tab-btn" id="tab-btn-system" onclick="switchSettingsTab('system')">
+          <i class="fas fa-cog"></i> Sistem &amp; Veri
+        </button>
+      </div>
+
+      <!-- Modal Body (The ONLY scrollable container) -->
+      <div class="settings-body">
+        <!-- TAB 1: Yapay Zeka & Modeller -->
+        <div class="settings-tab-pane active" id="tab-pane-ai">
+          <div class="settings-section-card">
+            <span class="settings-section-label">AI sağlayıcı ve erişim</span>
+            
+            <div class="settings-field-group">
+              <label for="set-ai-provider">Sağlayıcı</label>
+              <select id="set-ai-provider" class="settings-select" onchange="updateAIUI()">
+                <option value="gemini">Google Gemini</option>
+                <option value="ollama">Ollama (Local)</option>
+                <option value="lmstudio">LM Studio (Local)</option>
+              </select>
+              <div id="ai-local-warning" style="display:none; color: #881337; font-size: 0.72rem; margin-top: 0.4rem; line-height: 1.4; background: #fff1f2; padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px dashed rgba(176,71,60, 0.25);">
+                <i class="fas fa-exclamation-triangle" style="margin-right: 0.3rem;"></i> <strong>Uyarı:</strong> Yerel modda sohbet asistanı kullanılamaz.
+              </div>
+            </div>
+
+            <div id="ai-url-container" class="settings-field-group" style="display:none;">
+              <label for="set-ai-base-url">Base URL</label>
+              <input type="text" id="set-ai-base-url" class="settings-input" placeholder="http://localhost:11434/v1"
+                onkeydown="if(event.key==='Enter') saveSettings()">
+            </div>
+
+            <div id="ai-cloud-inputs" class="settings-field-group">
+              <label for="set-api-key">API Anahtarı</label>
+              <input type="password" id="set-api-key" class="settings-input" placeholder="API anahtarı..."
+                onkeydown="if(event.key==='Enter') saveSettings()">
+            </div>
+
+            <div id="ai-model-container" class="settings-field-group">
+              <label id="ai-model-name-label" for="set-ai-model-name">
+                <span>Model Adı (Varsayılan veya Tekil Mod)</span>
+                <span id="ai-model-status-badge" style="font-size: 0.68rem; color: var(--muted); font-weight: 500;"></span>
+              </label>
+              <input type="text" id="set-ai-model-name" class="settings-input" value="gemini-3.8-flash" placeholder="gemini-3.8-flash"
+                onkeydown="if(event.key==='Enter') saveSettings()">
+              <small id="ai-model-hint" style="font-size: 0.68rem; color: var(--muted); display: block; margin-top: 0.2rem;">
+                Kademeli model zinciri kapalıyken tüm işlemler için bu tekil model kullanılır.
+              </small>
+            </div>
+          </div>
+
+          <!-- Kademeli Model Zinciri (Cascade Engine) -->
+          <div id="ai-cascade-container" class="settings-section-card">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <label for="set-gemini-cascade-mode" style="font-size: 0.82rem; font-weight: 700; cursor: pointer; user-select: none; display: flex; align-items: center; gap: 0.5rem; color: var(--ink); margin: 0;">
+                <i class="fas fa-layer-group" style="color: var(--accent);"></i>
+                Kademeli Model Zinciri (Cascade Engine)
+                <span class="tooltip-wrap tooltip-right"><i class="fas fa-info-circle info-icon"></i><span class="tooltip">İstekler ilk modelden başlar. Model yoğunsa (503) veya kotası dolarsa bekleme yapmadan sıradaki modele aktarılır.</span></span>
+              </label>
+              <label class="ui-toggle-switch" title="Kademeli zinciri aç/kapat">
+                <input type="checkbox" id="set-gemini-cascade-mode" checked onchange="updateAIUI()">
+                <span class="ui-toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="cascade-info-box">
+              <i class="fas fa-info-circle" style="color: var(--accent); margin-top: 1px; flex-shrink: 0;"></i>
+              <div>
+                <strong>Nasıl Çalışır?</strong> İstekler sırasıyla aşağıdaki modellere gider. Meşgul veya kotası biten model otomatik olarak sonrakine devredilir.
+              </div>
+            </div>
+
+            <div id="cascade-slots-list" style="display: flex; flex-direction: column; gap: 0.35rem; width: 100%; box-sizing: border-box;">
+              <!-- 1. Kademe -->
+              <div class="cascade-slot-row">
+                <span class="cascade-level-pill lvl-1">1. Kademe</span>
+                <input type="text" id="cascade-model-0" value="gemini-3.8-flash" placeholder="Örn: gemini-3.8-flash" aria-label="1. Kademe Model" class="cascade-model-input" onkeydown="if(event.key==='Enter') saveSettings()">
+                <span class="cascade-role-badge role-primary">İlk Tercih</span>
+              </div>
+
+              <div class="cascade-flow-connector">
+                <div class="cascade-flow-line"></div>
+                <div class="cascade-flow-pill">
+                  <i class="fas fa-arrow-down"></i>
+                  <span>meşgulse devret</span>
+                </div>
+                <div class="cascade-flow-line"></div>
+              </div>
+
+              <!-- 2. Kademe -->
+              <div class="cascade-slot-row">
+                <span class="cascade-level-pill lvl-2">2. Kademe</span>
+                <input type="text" id="cascade-model-1" value="gemini-3.7-flash" placeholder="Örn: gemini-3.7-flash" aria-label="2. Kademe Model" class="cascade-model-input" onkeydown="if(event.key==='Enter') saveSettings()">
+                <span class="cascade-role-badge role-thinking">Düşünce</span>
+              </div>
+
+              <div class="cascade-flow-connector">
+                <div class="cascade-flow-line"></div>
+                <div class="cascade-flow-pill">
+                  <i class="fas fa-arrow-down"></i>
+                  <span>meşgulse devret</span>
+                </div>
+                <div class="cascade-flow-line"></div>
+              </div>
+
+              <!-- 3. Kademe -->
+              <div class="cascade-slot-row">
+                <span class="cascade-level-pill lvl-3">3. Kademe</span>
+                <input type="text" id="cascade-model-2" value="gemini-3.6-flash" placeholder="Örn: gemini-3.6-flash" aria-label="3. Kademe Model" class="cascade-model-input" onkeydown="if(event.key==='Enter') saveSettings()">
+                <span class="cascade-role-badge role-flagship">Amiral</span>
+              </div>
+
+              <div class="cascade-flow-connector">
+                <div class="cascade-flow-line"></div>
+                <div class="cascade-flow-pill">
+                  <i class="fas fa-arrow-down"></i>
+                  <span>meşgulse devret</span>
+                </div>
+                <div class="cascade-flow-line"></div>
+              </div>
+
+              <!-- 4. Kademe -->
+              <div class="cascade-slot-row">
+                <span class="cascade-level-pill lvl-4">4. Kademe</span>
+                <input type="text" id="cascade-model-3" value="gemini-3.5-flash" placeholder="Örn: gemini-3.5-flash (isteğe bağlı)" aria-label="4. Kademe Model" class="cascade-model-input" onkeydown="if(event.key==='Enter') saveSettings()">
+                <span class="cascade-role-badge role-standard">Standart</span>
+              </div>
+
+              <div class="cascade-flow-connector">
+                <div class="cascade-flow-line"></div>
+                <div class="cascade-flow-pill">
+                  <i class="fas fa-arrow-down"></i>
+                  <span>meşgulse devret</span>
+                </div>
+                <div class="cascade-flow-line"></div>
+              </div>
+
+              <!-- 5. Kademe -->
+              <div class="cascade-slot-row">
+                <span class="cascade-level-pill lvl-5">5. Kademe</span>
+                <input type="text" id="cascade-model-4" value="gemini-3.5-flash-lite" placeholder="Örn: gemini-3.5-flash-lite (isteğe bağlı)" aria-label="5. Kademe Model" class="cascade-model-input" onkeydown="if(event.key==='Enter') saveSettings()">
+                <span class="cascade-role-badge role-fallback">Son Yedek</span>
+              </div>
+            </div>
+
+            <div class="cascade-footer-bar">
+              <span class="cascade-footer-note">
+                <i class="fas fa-info-circle" style="opacity: 0.7;"></i> İsteğe bağlı kademeler boş bırakılabilir.
+              </span>
+              <button type="button" class="btn-cascade-reset" onclick="resetCascadeModelsToDefault()">
+                <i class="fas fa-undo"></i> Varsayılana Sıfırla
+              </button>
+            </div>
+          </div>
+
+          <div class="settings-section-card">
+            <div class="settings-field-group">
+              <label for="set-ai-max-chars">
+                <span>Analiz Karakter Sınırı <small style="color:var(--muted); font-weight:400;">(1000-250000)</small></span>
+                <span id="ai-max-chars-val" style="font-family:'Geist Mono',monospace; color:var(--accent); font-weight:700;">50000</span>
+              </label>
+              <input type="range" id="set-ai-max-chars" min="1000" max="250000" step="1000" value="50000" 
+                style="width:100%; accent-color: var(--accent); cursor: pointer;"
+                oninput="document.getElementById('ai-max-chars-val').innerText = this.value">
+              <small style="font-size: 0.68rem; color: var(--muted); display: block; margin-top: 0.2rem;">Gemini için 50k-100k, Local modeller için 3k-10k önerilir.</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: Analiz Limitleri ve Vision Ayarları -->
+        <div class="settings-tab-pane" id="tab-pane-analysis">
+          <div class="settings-section-card">
+            <span class="settings-section-label">Analiz limitleri</span>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="settings-field-group">
+                <label for="set-pages">
+                  <span>Max Sayfa <small style="color:var(--muted); font-weight:400;">(1-100)</small></span>
+                  <span class="tooltip-wrap tooltip-right"><i class="fas fa-info-circle info-icon"></i><span class="tooltip">Yapay zekanın kitabın toplamda kaç sayfasını incelemesini istiyorsunuz? 1 ile 100 sayfa arasında bir değer seçebilirsiniz.</span></span>
+                </label>
+                <input type="number" id="set-pages" class="settings-input" min="1" max="100">
+              </div>
+              <div class="settings-field-group">
+                <label for="set-ocr-pages">
+                  <span>OCR Sayfa <small style="color:var(--muted); font-weight:400;">(0-60)</small></span>
+                  <span class="tooltip-wrap tooltip-left"><i class="fas fa-info-circle info-icon"></i><span class="tooltip">Eğer kitap taranmış resim formatındaysa, kaç sayfanın yazılarının okunacağını belirler. 0 ile 60 sayfa arası sınır koyabilirsiniz.</span></span>
+                </label>
+                <input type="number" id="set-ocr-pages" class="settings-input" min="0" max="60">
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section-card">
+            <span class="settings-section-label" style="color:var(--accent);">Görüntü / Vision ayarları</span>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="settings-field-group">
+                <label for="set-vision-pages">
+                  <span>Vision Sayfa <small style="color:var(--muted); font-weight:400;">(0-60)</small></span>
+                  <span class="tooltip-wrap tooltip-right"><i class="fas fa-info-circle info-icon"></i><span class="tooltip">Yapay zekanın kitap kapaklarını ve içindeki görselleri görerek analiz edeceği sayfa sayısıdır.</span></span>
+                </label>
+                <input type="number" id="set-vision-pages" class="settings-input" min="0" max="60">
+              </div>
+              <div class="settings-field-group">
+                <label for="set-vision-quality">
+                  <span>JPEG Kalite <small style="color:var(--muted); font-weight:400;">(40-95)</small></span>
+                  <span class="tooltip-wrap tooltip-left"><i class="fas fa-info-circle info-icon"></i><span class="tooltip">İncelenen resimlerin netlik kalitesidir. 82 değeri ideal hız ve netlik dengesidir.</span></span>
+                </label>
+                <input type="number" id="set-vision-quality" class="settings-input" min="40" max="95">
+              </div>
+            </div>
+            <div class="settings-field-group" style="margin-top: 0.3rem;">
+              <label for="set-vision-dim">
+                <span>Çözünürlük Sınırı <small style="color:var(--muted); font-weight:400;">(256-2400)</small></span>
+                <span class="tooltip-wrap tooltip-right"><i class="fas fa-info-circle info-icon"></i><span class="tooltip">Gönderilen resimlerin büyüklüğünü belirler. 1200 piksel çoğu kitap için en iyi sonuçtur.</span></span>
+              </label>
+              <input type="number" id="set-vision-dim" class="settings-input" min="256" max="2400">
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: Güvenlik & Telefon Bağlantısı -->
+        <div class="settings-tab-pane" id="tab-pane-security">
+          <!-- Kart 1: Giriş ve Erişim Şifresi -->
+          <div class="settings-section-card">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 0.2rem;">
+              <span class="settings-section-label" style="margin-bottom:0;">Uzaktan ve yerel erişim şifresi</span>
+              <span id="sec-pwd-status-badge" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; border-radius: 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(156, 163, 175, 0.15); color: var(--muted);">
+                <i class="fas fa-circle" style="font-size:0.5rem;"></i> Kontrol ediliyor...
+              </span>
+            </div>
+
+            <p style="font-size: 0.78rem; color: var(--muted); margin: 0; line-height: 1.45;">
+              Aynı Wi-Fi ağındaki telefon veya tabletinizden kütüphanenize güvenle erişebilmek için bir erişim şifresi belirleyin.
+            </p>
+
+            <div class="settings-field-group">
+              <label for="set-access-password">
+                <span>Erişim Şifresi</span>
+                <span class="tooltip-wrap tooltip-left"><i class="fas fa-info-circle info-icon"></i><span class="tooltip">Şifre belirlendiğinde harici cihazlar kütüphaneye girmeden önce bu şifreyi girmek zorundadır.</span></span>
+              </label>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <div style="position: relative; flex: 1; display: flex; align-items: center;">
+                  <input type="password" id="set-access-password" class="settings-input" placeholder="Şifre belirlenmemiş" style="padding-right: 2.5rem;" autocomplete="new-password" onkeydown="if(event.key==='Enter'){event.preventDefault();saveAccessPasswordDirect();}">
+                  <button type="button" onclick="toggleAccessPasswordVisibility()" title="Şifreyi Göster/Gizle" style="position: absolute; right: 0.6rem; background: transparent; border: none; color: var(--muted); cursor: pointer; padding: 0.4rem; font-size: 0.9rem; display: flex; align-items: center; justify-content: center;">
+                    <i id="btn-toggle-pwd-icon" class="fas fa-eye"></i>
+                  </button>
+                </div>
+                <button type="button" id="btn-save-access-pwd" onclick="saveAccessPasswordDirect()" class="btn-settings-save" style="padding: 0.65rem 1.1rem; font-size: 0.8rem; white-space: nowrap; border-radius: var(--radius-xs);">
+                  <i class="fas fa-save"></i> <span>Şifreyi Kaydet</span>
+                </button>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 0.6rem; align-items: center; justify-content: space-between; margin-top: 0.2rem;">
+              <small id="sec-pwd-hint" style="font-size: 0.72rem; color: var(--muted);">Şifreyi yazdıktan sonra "Şifreyi Kaydet" butonuna veya Enter'a basabilirsiniz.</small>
+              <button type="button" id="btn-remove-access-pwd" onclick="removeAccessPassword()" class="btn-settings-cancel" style="display: none; color: #b0473c; border-color: rgba(176,71,60, 0.3); font-size: 0.76rem; padding: 0.4rem 0.8rem;">
+                <i class="fas fa-trash-alt" style="margin-right: 0.3rem;"></i> Şifreyi Kaldır
+              </button>
+            </div>
+          </div>
+
+          <!-- Kart 2: Telefonda Nasıl Açılır? (Bağlantı Rehberi) -->
+          <div class="settings-section-card">
+            <span class="settings-section-label">Telefondan veya tabletten bağlanma</span>
+            
+            <div style="background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-xs); padding: 0.85rem 1rem;">
+              <div style="font-size: 0.76rem; font-weight: 600; color: var(--ink); margin-bottom: 0.4rem; display: flex; align-items: center; justify-content: space-between;">
+                <span>Telefon Tarayıcısına Yazılacak Adres:</span>
+                <span style="font-size: 0.7rem; color: #5f7a4f; font-weight: 500;"><i class="fas fa-wifi"></i> Aynı Wi-Fi</span>
+              </div>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <code id="phone-connection-url-display" style="flex: 1; padding: 0.55rem 0.8rem; background: var(--paper-dark); border-radius: 6px; font-size: 0.88rem; font-weight: 600; color: var(--accent); border: 1px dashed var(--line); word-break: break-all;">
+                  http://...
+                </code>
+                <button type="button" onclick="copyPhoneConnectionUrl()" class="btn-modal-secondary" style="padding: 0.55rem 0.85rem; font-size: 0.78rem; display: flex; align-items: center; gap: 0.35rem; white-space: nowrap;">
+                  <i class="fas fa-copy"></i> Kopyala
+                </button>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.78rem; color: var(--muted); line-height: 1.45;">
+              <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
+                <span style="background: var(--accent); color: #fff; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700; flex-shrink: 0; margin-top: 2px;">1</span>
+                <span>Bilgisayarınız ve telefonunuzun <strong>aynı Wi-Fi ağına</strong> bağlı olduğundan emin olun.</span>
+              </div>
+              <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
+                <span style="background: var(--accent); color: #fff; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700; flex-shrink: 0; margin-top: 2px;">2</span>
+                <span>Yukarıdaki adresi telefonunuzun Chrome, Safari veya tarayıcısına girin.</span>
+              </div>
+              <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
+                <span style="background: var(--accent); color: #fff; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700; flex-shrink: 0; margin-top: 2px;">3</span>
+                <span>Ekrana gelen şifre kutusuna yukarıda belirlediğiniz erişim şifresini yazıp kütüphanenizi kullanın.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Kart 3: E-Kitap Okuyucular İçin OPDS 1.2 Kataloğu -->
+          <div class="settings-section-card">
+            <span class="settings-section-label" style="color: #6e614c;"><i class="fas fa-rss" style="margin-right: 4px;"></i> E-KİTAP OKUYUCU (OPDS 1.2 KATALOĞU)</span>
+            <p style="font-size: 0.78rem; color: var(--muted); margin: 0; line-height: 1.45;">
+              Moon+ Reader, Apple Books, Kobo, KOReader veya Aldiko gibi e-okuyucu uygulamalarına aşağıdaki OPDS kataloğu adresini ekleyerek kütüphanenizdeki kitapları doğrudan e-okuyucunuzdan indirebilirsiniz:
+            </p>
+            <div style="background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-xs); padding: 0.85rem 1rem; margin-top: 0.6rem;">
+              <div style="font-size: 0.76rem; font-weight: 600; color: var(--ink); margin-bottom: 0.4rem; display: flex; align-items: center; justify-content: space-between;">
+                <span>OPDS Katalog Bağlantı Adresi:</span>
+                <span style="font-size: 0.7rem; color: #6e614c; font-weight: 500;"><i class="fas fa-book-reader"></i> OPDS 1.2</span>
+              </div>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <code id="opds-connection-url-display" style="flex: 1; padding: 0.55rem 0.8rem; background: var(--paper-dark); border-radius: 6px; font-size: 0.88rem; font-weight: 600; color: #6e614c; border: 1px dashed var(--line); word-break: break-all;">
+                  http://.../opds
+                </code>
+                <button type="button" onclick="copyOpdsConnectionUrl()" class="btn-modal-secondary" style="padding: 0.55rem 0.85rem; font-size: 0.78rem; display: flex; align-items: center; gap: 0.35rem; white-space: nowrap;">
+                  <i class="fas fa-copy"></i> Kopyala
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: Sistem & Veri Yönetimi -->
+        <div class="settings-tab-pane" id="tab-pane-system">
+          <div class="settings-section-card">
+            <span class="settings-section-label">Tesseract OCR sistemi</span>
+            <div class="settings-field-group">
+              <label for="set-tesseract-cmd">Tesseract Yürütülebilir Dosya Yolu</label>
+              <input type="text" id="set-tesseract-cmd" class="settings-input" placeholder="C:\Program Files\Tesseract-OCR\tesseract.exe">
+              <div id="tesseract-status" style="font-size: 0.7rem; margin-top: 0.3rem; color: var(--muted);"></div>
+            </div>
+          </div>
+
+          <div class="settings-section-card">
+            <span class="settings-section-label">Gölge kütüphaneci (otomatik izleme klasörü)</span>
+            <div class="settings-field-group">
+              <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                <input type="checkbox" id="set-watchfolder-enabled">
+                <span>İndirilenleri Otomatik Ekle (Auto-Watchfolder)</span>
+              </label>
+              <div style="font-size:0.75rem; color:var(--muted); margin-top:0.3rem;">
+                Belirlediğiniz klasöre inen PDF ve EPUB dosyaları tespit edilip indirme tamamlandığında otomatik kütüphaneye eklenir.
+              </div>
+            </div>
+            <div class="settings-field-group" style="margin-top:0.6rem;">
+              <label for="set-watchfolder-path">İzlenecek Klasör Yolu</label>
+              <input type="text" id="set-watchfolder-path" class="settings-input" placeholder="Örn: C:\Users\fatih\Downloads">
+            </div>
+          </div>
+
+          <div class="settings-section-card">
+            <span class="settings-section-label">Veri ve sistem araçları</span>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+              <button type="button" class="btn-modal-secondary" style="width:100%; padding: 0.8rem 1rem; border-radius: var(--radius-xs); display: flex; align-items: center; justify-content: center; gap: 0.6rem;" onclick="exportToExcel()">
+                <i class="fas fa-file-excel" style="color: #5f7a4f; font-size: 1.05rem;"></i> Kütüphaneyi Excel'e Aktar (.xlsx)
+              </button>
+              <button type="button" class="btn-modal-secondary" style="width:100%; padding: 0.8rem 1rem; border-radius: var(--radius-xs); display: flex; align-items: center; justify-content: center; gap: 0.6rem;" onclick="openDuplicatesModal()">
+                <i class="fas fa-copy" style="color: #ea580c; font-size: 1.05rem;"></i> Mükerrer / Çift Kitapları Tara ve Temizle
+              </button>
+              <button type="button" class="btn-modal-secondary" style="width:100%; padding: 0.8rem 1rem; border-radius: var(--radius-xs); display: flex; align-items: center; justify-content: center; gap: 0.6rem;" onclick="exportFullLibraryZip()">
+                <i class="fas fa-file-archive" style="color: var(--accent); font-size: 1.05rem;"></i> Taşınabilir Tam Kütüphane Yedeği (.zip)
+              </button>
+              <button type="button" class="btn-modal-secondary" style="width:100%; padding: 0.8rem 1rem; border-radius: var(--radius-xs); display:flex; align-items:center; justify-content:center; gap:0.6rem;" onclick="closeSettingsDirect(); openLogsModal();">
+                <i class="fas fa-terminal" style="color: var(--accent); font-size: 1.05rem;"></i> Sistem &amp; İşlem Günlüklerini (Log) Görüntüle
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer (Sticky, Clean & Prominent) -->
+      <div class="settings-footer">
+        <button type="button" class="btn-settings-cancel" onclick="closeSettingsDirect()">Vazgeç</button>
+        <button type="button" class="btn-settings-save" id="btn-save-settings" onclick="saveSettings()">
+          <i class="fas fa-check"></i> <span>Ayarları Kaydet</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ÖZELLİK: Toplu İşlem Barı -->
+  <div class="bulk-bar" id="bulk-bar">
+    <div style="font-size: 0.9rem; color: var(--muted);"><span id="bulk-count">0</span> kitap seçildi</div>
+    <div style="display:flex; gap: 1rem;">
+      <button class="btn-modal-danger" id="bulk-delete-btn" onclick="bulkDelete()"
+        style="padding: 0.6rem 1.2rem; border-radius: var(--r-sm);">
+        <i class="fas fa-trash-alt" style="margin-right: 0.4rem;"></i> Seçilenleri Sil
+      </button>
+      <button class="btn-modal-secondary" onclick="toggleSelectionMode()"
+        style="padding: 0.6rem 1.2rem; border-radius: var(--r-sm);">Vazgeç</button>
+    </div>
+  </div>
+
+  <!-- Koleksiyon Yönetim Modalı -->
+  <div class="modal-overlay" id="col-modal" aria-modal="true" tabindex="-1" style="z-index: 3500;">
+    <div class="modal"
+      style="max-width: 480px; padding: 2.5rem; background: var(--paper); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow-lg);">
+      <div class="modal-top"
+        style="background: var(--sepia); height: 6px; top: 0; left: 0; right: 0; position: absolute; border-radius: 6px 6px 0 0;">
+      </div>
+      <button type="button" class="modal-close" onclick="closeColModalDirect()" title="Kapat" aria-label="Kapat"><i class="fas fa-times"></i></button>
+
+      <div style="text-align: center; margin-bottom: 2rem;">
+        <div
+          style="width: 64px; height: 64px; margin: 0 auto 1rem; background: rgba(110,97,76, 0.1); border-radius: 50%; display:flex; align-items:center; justify-content:center; color: var(--accent); font-size: 1.8rem;">
+          <i class="fas fa-layer-group"></i>
+        </div>
+        <h3 style="font-family:'Instrument Serif',serif; color:var(--ink); font-size:1.8rem; font-weight: 700;">
+          Koleksiyon Yönetimi</h3>
+        <p style="color:var(--muted); font-size:0.9rem; margin-top: 0.5rem; font-family:'Geist', sans-serif;">Bu kitabı
+          okuma listelerinize dahil edin</p>
+      </div>
+
+      <div style="margin-bottom: 2rem;">
+        <div id="col-list"
+          style="max-height: 250px; overflow-y:auto; border: 1px solid var(--line); border-radius: 8px; background: var(--paper-dark); padding: 0.8rem; display:flex; flex-direction:column; gap:0.5rem; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);">
+          <!-- Koleksiyonlar buraya yüklenecek -->
+        </div>
+      </div>
+
+      <div
+        style="background: var(--paper-dark); padding: 1.5rem; border-radius: 8px; border: 1px dashed var(--sepia-light);">
+        <h4
+          style="font-family:'Geist Mono', monospace; color:var(--sepia); font-size:0.75rem; letter-spacing:0.1em; margin-bottom: 1rem; text-transform:uppercase; font-weight:600;">
+          Yeni Liste Oluştur</h4>
+        <div style="display:flex; gap: 0.8rem; align-items: center;">
+          <input type="text" id="new-col-name" placeholder="Koleksiyon Adı..." aria-label="Yeni Koleksiyon Adı"
+            style="flex:1; padding:0.8rem 1rem; border:1px solid var(--line); border-radius:var(--r-sm); font-family:'Geist', sans-serif; font-size:0.95rem; background: var(--paper); color: var(--ink); outline: none;"
+            onkeydown="if(event.key === 'Enter') createCollection()">
+          <button type="button" class="btn-modal-primary" onclick="createCollection()" style="padding: 0.8rem 1.4rem;">
+            <i class="fas fa-plus"></i> Ekle
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PDF Not Ekleme / Düzenleme Modalı -->
+  <div class="modal-overlay" id="pdf-note-modal" aria-modal="true" tabindex="-1" style="z-index: 7000;">
+    <div class="modal" style="max-width: 480px; padding: 2.5rem; background: var(--paper); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow-lg); position: relative;">
+      <div class="modal-top" style="background: var(--accent); height: 6px; top: 0; left: 0; right: 0; position: absolute; border-radius: 6px 6px 0 0;"></div>
+      <button type="button" class="modal-close" onclick="closePdfNoteModalDirect()" title="Kapat" aria-label="Kapat"><i class="fas fa-times"></i></button>
+
+      <div style="text-align: center; margin-bottom: 1.5rem;">
+        <div style="width: 54px; height: 54px; margin: 0 auto 1rem; background: rgba(110,97,76, 0.1); border-radius: 50%; display:flex; align-items:center; justify-content:center; color: var(--accent); font-size: 1.5rem;">
+          <i class="fas fa-pen-fancy"></i>
+        </div>
+        <h3 style="font-family:'Instrument Serif',serif; color:var(--ink); font-size:1.6rem; font-weight: 700;">Okuma Notu Ekle</h3>
+        <p style="color:var(--muted); font-size:0.85rem; margin-top: 0.3rem; font-family:'Geist', sans-serif;">Seçtiğiniz metne kişisel yorumlarınızı veya özetlerinizi ekleyin.</p>
+      </div>
+
+      <div style="margin-bottom: 1.5rem;">
+        <div class="pdf-selected-text-preview" id="pdf-selected-text-preview" style="max-height: 80px; overflow-y: auto; background: var(--paper-dark); border-left: 3px solid var(--accent); padding: 0.6rem 0.8rem; font-style: italic; font-size: 0.85rem; border-radius: 4px; margin-bottom: 1rem; color: var(--muted);"></div>
+        <textarea id="pdf-note-textarea" placeholder="Notunuzu buraya yazın..." aria-label="Not Metni" style="width: 100%; min-height: 120px; padding: 0.8rem; border: 1px solid var(--line); border-radius: 8px; font-family:'Geist', sans-serif; font-size: 0.95rem; background: var(--paper); color: var(--ink); box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); outline: none; resize: vertical;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--line)'"></textarea>
+      </div>
+
+      <!-- Vurgu Rengi Seçici -->
+      <div style="margin-bottom: 1.5rem; text-align: left;">
+        <span style="display: block; font-family:'Geist', sans-serif; font-size: 0.8rem; font-weight: 600; color: var(--muted); margin-bottom: 0.5rem;">Vurgu Rengi:</span>
+        <div style="display: flex; gap: 0.6rem; align-items: center;">
+          <button type="button" class="hl-color-btn yellow" id="modal-color-yellow" onclick="selectModalNoteColor('#e8dca0', 'yellow')" style="width: 28px; height: 28px; border: 2px solid transparent;" title="Sarı" aria-label="Sarı"></button>
+          <button type="button" class="hl-color-btn green" id="modal-color-green" onclick="selectModalNoteColor('#d3dfc3', 'green')" style="width: 28px; height: 28px; border: 2px solid transparent;" title="Yeşil" aria-label="Yeşil"></button>
+          <button type="button" class="hl-color-btn blue" id="modal-color-blue" onclick="selectModalNoteColor('#d8d1c3', 'blue')" style="width: 28px; height: 28px; border: 2px solid transparent;" title="Mavi" aria-label="Mavi"></button>
+          <button type="button" class="hl-color-btn pink" id="modal-color-pink" onclick="selectModalNoteColor('#e4d6cd', 'pink')" style="width: 28px; height: 28px; border: 2px solid transparent;" title="Pembe" aria-label="Pembe"></button>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 0.8rem; justify-content: flex-end;">
+        <button type="button" class="btn-modal-secondary" onclick="closePdfNoteModalDirect()" style="padding: 0.6rem 1.2rem; border-radius: var(--r-sm);">Vazgeç</button>
+        <button type="button" onclick="savePdfNote()" style="padding: 0.6rem 1.5rem; background: var(--accent); color: #fff; border: none; border-radius: var(--r-sm); font-family:'Geist', sans-serif; font-weight:600; cursor: pointer; transition: all 0.2s;">Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Telegram Senkronizasyon Modalı -->
+  <div class="modal-overlay" id="telegram-modal" aria-modal="true" tabindex="-1" style="z-index: 7500;">
+    <div class="modal" style="max-width: 520px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; padding: 0; border-radius: var(--r-md);">
+      <div class="modal-top" style="background: linear-gradient(90deg, #6e614c, #9a8d77);"></div>
+      <button type="button" class="modal-close" style="top: 1.2rem; right: 1.2rem;" onclick="closeTelegramModal()" title="Kapat" aria-label="Kapat"><i class="fas fa-times"></i></button>
+
+      <!-- Modal Header -->
+      <div style="padding: 1.5rem 2rem 1.2rem; border-bottom: 1px solid var(--line); display:flex; align-items:center; gap: 0.9rem;">
+        <div style="width: 44px; height: 44px; border-radius: 12px; background: #ece7dc; color: #292825; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
+          <i class="fab fa-telegram-plane"></i>
+        </div>
+        <div>
+          <h2 style="font-family:'Instrument Serif',serif; font-size: 1.6rem; color: var(--ink); margin: 0;">Telegram Senkronizasyonu</h2>
+          <p style="font-family:'Geist',sans-serif; font-size: 0.8rem; color: var(--muted); margin-top: 0.2rem;">Kitaplarınızı Telegram'dan kütüphaneye otomatik aktarın</p>
+        </div>
+      </div>
+
+      <!-- Error banner -->
+      <div id="tg-modal-error" style="display:none; margin: 1rem 2rem 0; padding: 0.75rem 1rem; border-radius: 8px; background: #f3e1de; border: 1px solid rgba(220, 38, 38, 0.3); color: #7a2b23; font-size: 0.82rem; font-family:'Geist', sans-serif;"></div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div style="flex: 1; overflow-y: auto; padding: 1.5rem 2rem;">
+
+        <!-- STEP 1: API Bilgileri & Telefon No -->
+        <div id="tg-step-1" style="display: block;">
+          <div style="display:flex; flex-direction:column; gap: 1.2rem;">
+            <div style="background: var(--paper-dark); padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid var(--line); font-size: 0.8rem; color: var(--muted); line-height: 1.5;">
+              <i class="fas fa-info-circle" style="color: #4a4740; margin-right: 4px;"></i>
+              Telegram API ID ve Hash bilgilerinizi almak için <a href="https://my.telegram.org" target="_blank" rel="noopener noreferrer" style="color:#4a4740; font-weight:600; text-decoration:underline;">my.telegram.org</a> adresine giriş yapıp <em>API development tools</em> bölümünü ziyaret edebilirsiniz.
+            </div>
+
+            <div>
+              <label for="tg-input-api-id" style="font-size: 0.78rem; font-weight: 600; display: block; margin-bottom: 0.4rem; color: var(--ink);">API ID</label>
+              <input type="text" id="tg-input-api-id" aria-label="Telegram API ID" placeholder="Örn: 12345678" style="width:100%; padding:0.75rem; border:1.5px solid var(--line); border-radius:8px; background:var(--paper); color:var(--ink); font-family:'Geist', sans-serif; font-size:0.9rem;">
+            </div>
+
+            <div>
+              <label for="tg-input-api-hash" style="font-size: 0.78rem; font-weight: 600; display: block; margin-bottom: 0.4rem; color: var(--ink);">API Hash</label>
+              <input type="password" id="tg-input-api-hash" aria-label="Telegram API Hash" placeholder="Örn: 9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d" style="width:100%; padding:0.75rem; border:1.5px solid var(--line); border-radius:8px; background:var(--paper); color:var(--ink); font-family:'Geist', sans-serif; font-size:0.9rem;">
+            </div>
+
+            <div>
+              <label for="tg-input-phone" style="font-size: 0.78rem; font-weight: 600; display: block; margin-bottom: 0.4rem; color: var(--ink);">Telefon Numarası (Ülke Koduyla)</label>
+              <input type="tel" id="tg-input-phone" aria-label="Telefon Numarası" placeholder="+905xxxxxxxxx" style="width:100%; padding:0.75rem; border:1.5px solid var(--line); border-radius:8px; background:var(--paper); color:var(--ink); font-family:'Geist', sans-serif; font-size:0.9rem;">
+            </div>
+
+            <div>
+              <label for="tg-input-chat-id" style="font-size: 0.78rem; font-weight: 600; display: block; margin-bottom: 0.4rem; color: var(--ink);">Kaynak Sohbet / Kanal</label>
+              <input type="text" id="tg-input-chat-id" aria-label="Kaynak Sohbet veya Kanal" value="me" placeholder="me (Kayıtlı Mesajlar) veya @kanaladi" style="width:100%; padding:0.75rem; border:1.5px solid var(--line); border-radius:8px; background:var(--paper); color:var(--ink); font-family:'Geist', sans-serif; font-size:0.9rem;">
+              <small style="font-size: 0.72rem; color: var(--muted); margin-top: 0.3rem; display:block;">Kayıtlı Mesajlarınız için <strong>me</strong> bırakın veya kitap paylaştığınız kanalın kullanıcı adını/ID'sini girin.</small>
+            </div>
+
+            <button type="button" id="tg-btn-send-code" onclick="telegramSubmitCredentials()" style="width: 100%; padding: 0.85rem; background: var(--accent); color: var(--on-accent, #fff); border: none; border-radius: var(--r-sm); font-family:'Geist', sans-serif; font-weight: 600; font-size: 0.95rem; cursor: pointer; display:flex; align-items:center; justify-content:center; gap: 0.5rem; transition: background 0.2s;">
+              Doğrulama Kodu Gönder <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 2: SMS Doğrulama Kodu & 2FA -->
+        <div id="tg-step-2" style="display: none;">
+          <div style="display:flex; flex-direction:column; gap: 1.2rem;">
+            <div style="text-align:center; padding: 0.5rem 0;">
+              <div style="width: 50px; height: 50px; margin: 0 auto 0.8rem; background: #ece7dc; border-radius: 50%; display:flex; align-items:center; justify-content:center; color: #292825; font-size: 1.3rem;">
+                <i class="fas fa-sms"></i>
+              </div>
+              <h3 style="font-family:'Instrument Serif',serif; color:var(--ink); font-size:1.3rem; margin:0;">Doğrulama Kodu</h3>
+              <p style="color:var(--muted); font-size:0.82rem; margin-top: 0.4rem; font-family:'Geist', sans-serif;">
+                Telegram uygulamasına veya <span id="tg-step-2-phone" style="font-weight:600; color:var(--ink);"></span> numarasına gelen onay kodunu girin.
+              </p>
+            </div>
+
+            <div>
+              <label for="tg-input-code" style="font-size: 0.78rem; font-weight: 600; display: block; margin-bottom: 0.4rem; color: var(--ink); text-align:center;">Onay Kodu</label>
+              <input type="text" id="tg-input-code" aria-label="Onay Kodu" placeholder="12345" maxlength="8" style="width:100%; text-align:center; letter-spacing: 0.4em; font-size: 1.4rem; font-weight: 700; padding:0.75rem; border:2px solid var(--line); border-radius:8px; background:var(--paper); color:var(--ink); font-family:'Geist Mono', monospace;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--line)'">
+            </div>
+
+            <!-- 2FA Password Field (shown if needed) -->
+            <div id="tg-2fa-container" style="display: none; background: rgba(184,134,47, 0.08); border: 1px dashed rgba(184,134,47, 0.4); padding: 1rem; border-radius: 8px;">
+              <label for="tg-input-password" style="font-size: 0.78rem; font-weight: 600; display: flex; align-items:center; gap: 0.4rem; color: #b45309; margin-bottom: 0.4rem;">
+                <i class="fas fa-lock"></i> İki Adımlı Doğrulama (2FA) Şifresi
+              </label>
+              <input type="password" id="tg-input-password" aria-label="İki Adımlı Doğrulama Şifresi" placeholder="Telegram Bulut Şifreniz" style="width:100%; padding:0.75rem; border:1.5px solid var(--line); border-radius:8px; background:var(--paper); color:var(--ink); font-family:'Geist', sans-serif; font-size:0.9rem;">
+            </div>
+
+            <div style="display: flex; gap: 0.8rem; margin-top: 0.5rem;">
+              <button type="button" class="btn-modal-secondary" onclick="setTelegramStep(1)" style="padding: 0.75rem 1.2rem; border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--paper); color: var(--muted); cursor: pointer; font-weight: 500;">
+                <i class="fas fa-arrow-left"></i> Geri
+              </button>
+              <button type="button" id="tg-btn-verify-code" onclick="telegramSubmitCode()" style="flex: 1; padding: 0.75rem; background: var(--accent); color: var(--on-accent, #fff); border: none; border-radius: var(--r-sm); font-family:'Geist', sans-serif; font-weight: 600; font-size: 0.95rem; cursor: pointer; display:flex; align-items:center; justify-content:center; gap: 0.5rem; transition: background 0.2s;">
+                <i class="fas fa-check"></i> Bağlantıyı Tamamla
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3: Bağlı Hesap & Senkronizasyon -->
+        <div id="tg-step-3" style="display: none;">
+          <div style="display:flex; flex-direction:column; gap: 1.2rem;">
+            <div style="background: rgba(95,122,79, 0.08); border: 1px solid rgba(95,122,79, 0.25); border-radius: 12px; padding: 1.2rem; display: flex; align-items: center; gap: 1rem;">
+              <div style="width: 48px; height: 48px; border-radius: 50%; background: #4a6340; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+                <i class="fas fa-check"></i>
+              </div>
+              <div style="flex: 1;">
+                <div style="font-family:'Geist',sans-serif; font-weight:700; color:var(--ink); font-size:1.05rem;" id="tg-connected-name">Telegram Kullanıcısı</div>
+                <div style="font-family:'Geist Mono',monospace; font-size:0.8rem; color:var(--muted); margin-top: 0.2rem;" id="tg-connected-phone">+90...</div>
+                <div style="display: flex; gap: 0.6rem; align-items: center; margin-top: 0.4rem;">
+                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#5f7a4f;"></span>
+                  <span style="font-size:0.75rem; color:#5f7a4f; font-weight:600;">Oturum Aktif</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Kanal / Sohbet Ayarı (Düzenlenebilir) -->
+            <div style="background: var(--paper-dark); border: 1px solid var(--line); border-radius: 12px; padding: 1rem; display:flex; flex-direction:column; gap: 0.8rem;">
+              <div>
+                <label for="tg-active-chat-input" style="font-size: 0.78rem; font-weight: 600; display: block; margin-bottom: 0.35rem; color: var(--ink);">
+                  <i class="fab fa-telegram-plane" style="color:var(--accent); margin-right:4px;"></i> Kaynak Sohbet / Kanal:
+                </label>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                  <input type="text" id="tg-active-chat-input" aria-label="Aktif Sohbet veya Kanal" value="me" placeholder="me, @kanaladi veya link" style="flex:1; padding:0.65rem 0.8rem; border:1.5px solid var(--line); border-radius:var(--r-sm); background:var(--paper); color:var(--ink); font-family:'Geist', sans-serif; font-size:0.88rem;" onkeydown="if(event.key==='Enter') saveTelegramActiveChat()">
+                  <button type="button" id="tg-btn-save-chat" onclick="saveTelegramActiveChat()" style="padding: 0.65rem 1rem; background: var(--accent); border: none; color: var(--on-accent, #fff); border-radius: var(--r-sm); font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap;">
+                    <i class="fas fa-save"></i> Kaydet
+                  </button>
+                </div>
+                <small style="font-size: 0.72rem; color: var(--muted); margin-top: 0.35rem; display:block;">
+                  Kendi Kayıtlı Mesajlarınız için <strong>me</strong>, kitap kanalınız için <strong>@kanaladi</strong> veya link girin.
+                </small>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items:center; border-top: 1px solid var(--line); padding-top: 0.6rem; font-size: 0.8rem; color: var(--muted);">
+                <span>Son Senkronizasyon:</span>
+                <span style="font-weight: 600; color: var(--ink);" id="tg-connected-last-sync">—</span>
+              </div>
+            </div>
+
+              <div style="display:flex; align-items:center; gap:0.55rem; font-size:0.8rem; color:var(--muted); padding: 0.2rem 0.2rem;">
+                <input type="checkbox" id="tg-reset-cursor" style="cursor:pointer; width:16px; height:16px; accent-color:var(--accent);">
+                <label for="tg-reset-cursor" style="cursor:pointer; user-select:none; color:var(--ink); font-weight:500;">
+                  Tüm geçmişi tara <span style="color:var(--muted); font-weight:normal;">(Son mesaj ID'sini sıfırla)</span>
+                </label>
+              </div>
+
+              <button type="button" id="tg-btn-sync-action" class="btn-modal-primary" onclick="telegramTriggerSync()" style="width: 100%; padding: 0.85rem; justify-content:center; gap: 0.6rem;">
+                <i class="fas fa-sync-alt"></i> Kitapları Şimdi Senkronize Et
+              </button>
+
+              <button type="button" id="tg-btn-disconnect" class="btn-modal-danger" onclick="telegramDisconnectAccount()" style="width: 100%; padding: 0.75rem; justify-content:center; gap: 0.5rem; background: transparent; color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent); border-radius: var(--r-sm);">
+                <i class="fas fa-unlink"></i> Hesabı Ayır (Çıkış Yap)
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  <!-- Shortcuts Help Modal -->
+  <div class="modal-overlay" id="shortcuts-modal" aria-modal="true" tabindex="-1" style="display:none; z-index:8000;">
+    <div class="modal" style="max-width: 480px; padding: 2rem; border-radius: var(--r-md); background: var(--paper); border: 1px solid var(--line); box-shadow: var(--shadow-lg);">
+      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+        <h2 style="font-family:'Instrument Serif',serif; font-size:1.35rem; color:var(--ink); margin:0; display:flex; align-items:center; gap:0.6rem;">
+          <i class="fas fa-keyboard" style="color:var(--accent);"></i> Klavye Kısayolları
+        </h2>
+        <button type="button" class="btn-close" onclick="closeShortcutsModal()" aria-label="Kapat" style="background:transparent; border:none; font-size:1.4rem; cursor:pointer; color:var(--muted);">&times;</button>
+      </div>
+      <div class="shortcuts-list" style="display:flex; flex-direction:column; gap:0.65rem; font-size:0.86rem;">
+        <div class="shortcut-row" style="display:flex; justify-content:space-between; align-items:center; padding:0.4rem 0; border-bottom:1px solid var(--line);">
+          <span>Kitap veya yazar ara</span>
+          <div style="display:flex; gap:0.3rem;"><kbd class="shortcut-kbd">/</kbd> <span style="opacity:0.5;">veya</span> <kbd class="shortcut-kbd">k</kbd></div>
+        </div>
+        <div class="shortcut-row" style="display:flex; justify-content:space-between; align-items:center; padding:0.4rem 0; border-bottom:1px solid var(--line);">
+          <span>Kart Görünümü</span>
+          <kbd class="shortcut-kbd">g</kbd>
+        </div>
+        <div class="shortcut-row" style="display:flex; justify-content:space-between; align-items:center; padding:0.4rem 0; border-bottom:1px solid var(--line);">
+          <span>Liste / Tablo Görünümü</span>
+          <kbd class="shortcut-kbd">t</kbd>
+        </div>
+        <div class="shortcut-row" style="display:flex; justify-content:space-between; align-items:center; padding:0.4rem 0; border-bottom:1px solid var(--line);">
+          <span>İstatistikler</span>
+          <kbd class="shortcut-kbd">s</kbd>
+        </div>
+        <div class="shortcut-row" style="display:flex; justify-content:space-between; align-items:center; padding:0.4rem 0; border-bottom:1px solid var(--line);">
+          <span>Favorileri Aç / Kapa</span>
+          <kbd class="shortcut-kbd">f</kbd>
+        </div>
+        <div class="shortcut-row" style="display:flex; justify-content:space-between; align-items:center; padding:0.4rem 0; border-bottom:1px solid var(--line);">
+          <span>Toplu Yönetim Modu</span>
+          <kbd class="shortcut-kbd">m</kbd>
+        </div>
+        <div class="shortcut-row" style="display:flex; justify-content:space-between; align-items:center; padding:0.4rem 0; border-bottom:1px solid var(--line);">
+          <span>Aydınlık / Karanlık Tema</span>
+          <kbd class="shortcut-kbd">d</kbd>
+        </div>
+        <div class="shortcut-row" style="display:flex; justify-content:space-between; align-items:center; padding:0.4rem 0; border-bottom:1px solid var(--line);">
+          <span>PDF İçinde Ara (Okuyucu)</span>
+          <kbd class="shortcut-kbd">Ctrl + F</kbd>
+        </div>
+        <div class="shortcut-row" style="display:flex; justify-content:space-between; align-items:center; padding:0.4rem 0; border-bottom:1px solid var(--line);">
+          <span>Açık pencere / paneli kapat</span>
+          <kbd class="shortcut-kbd">Esc</kbd>
+        </div>
+        <div class="shortcut-row" style="display:flex; justify-content:space-between; align-items:center; padding:0.4rem 0;">
+          <span>Kısayol Kılavuzu</span>
+          <kbd class="shortcut-kbd">?</kbd>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Instant LAN Handoff (QR Code) Modal -->
+  <div class="modal-overlay" id="handoff-modal" aria-modal="true" tabindex="-1" style="display:none; z-index:99999;">
+    <div class="modal" style="max-width:440px; text-align:center; padding:2rem; border-radius:18px; background:var(--paper); border:1px solid var(--line); box-shadow:0 25px 50px rgba(0,0,0,0.5);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h3 style="font-size:1.15rem; color:var(--ink); margin:0; display:flex; align-items:center; gap:0.5rem;">
+          <i class="fas fa-mobile-alt" style="color:var(--accent);"></i> Telefonda Okumaya Devam Et
+        </h3>
+        <button type="button" class="modal-close" style="position:static; font-size:1.3rem; border:none; background:none; cursor:pointer;" onclick="closeHandoffModal()" title="Kapat" aria-label="Kapat">&times;</button>
+      </div>
+      <p style="font-size:0.83rem; color:var(--muted); margin-bottom:1.2rem; line-height:1.5;">
+        Telefonunuzun kamerasıyla QR kodu taratın. Aynı Wi-Fi ağındayken kitap şifre sormadan doğrudan bu sayfadan açılır.
+      </p>
+      <div id="handoff-qr-container" style="background:#fff; padding:1.2rem; border-radius:12px; display:inline-block; box-shadow:0 8px 24px rgba(0,0,0,0.12); margin-bottom:1rem; min-width:210px; min-height:210px;">
+        <div style="padding:3rem 1rem; color:#888;"><i class="fas fa-spinner fa-spin"></i> QR Kod Üretiliyor...</div>
+      </div>
+      <div id="handoff-url-text" style="font-size:0.75rem; color:var(--muted); word-break:break-all; margin-bottom:0.8rem;"></div>
+      <div style="font-size:0.75rem; color:var(--accent); font-weight:600;" id="handoff-timer">⏱️ Kod süresi: 120 sn</div>
+    </div>
+  </div>
+
+  <!-- Duplicate Books Modal -->
+  <div class="modal-overlay" id="duplicates-modal" aria-modal="true" tabindex="-1" style="display:none; z-index:3600;">
+    <div class="modal" style="max-width:680px; padding:2rem; border-radius:20px; background:var(--paper); border:1px solid var(--line); box-shadow:0 25px 50px rgba(0,0,0,0.5);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; border-bottom:1px solid var(--line); padding-bottom:0.8rem;">
+        <h3 style="font-family:'Instrument Serif',serif; font-size:1.35rem; color:var(--ink); margin:0; display:flex; align-items:center; gap:0.6rem;">
+          <i class="fas fa-copy" style="color:var(--accent);"></i> Mükerrer / Çift Kitap Avcısı
+        </h3>
+        <button type="button" class="btn-close" onclick="closeDuplicatesModal()" aria-label="Kapat" style="background:transparent; border:none; font-size:1.4rem; cursor:pointer; color:var(--muted);">&times;</button>
+      </div>
+      <p style="font-size:0.82rem; color:var(--muted); margin-bottom:1rem; line-height:1.4;">
+        Aynı ada, yazara veya dosya boyutuna sahip mükerrer kopyalar tespit edilir. İstediğiniz kopyayı tek tıkla kütüphaneden silebilirsiniz.
+      </p>
+      <div id="duplicates-container" style="max-height:55vh; overflow-y:auto; display:flex; flex-direction:column; gap:1rem; padding-right:0.3rem;">
+        <div style="text-align:center; padding:2rem; color:var(--muted);"><i class="fas fa-spinner fa-spin"></i> Taranıyor...</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', path='/js/state.js') }}?v=2026110804"></script>
+  <script src="{{ url_for('static', path='/js/api.js') }}?v=2026110804"></script>
+  <script src="{{ url_for('static', path='/js/ui_core.js') }}?v=2026110804"></script>
+  <script src="{{ url_for('static', path='/js/ui_logs.js') }}?v=2026110804"></script>
+  <script src="{{ url_for('static', path='/js/ui_chat_settings.js') }}?v=2026110804"></script>
+  <script src="{{ url_for('static', path='/js/ui_telegram.js') }}?v=2026110804"></script>
+  <script src="{{ url_for('static', path='/js/ui_workspace.js') }}?v=2026110804"></script>
+  <script src="{{ url_for('static', path='/js/websocket.js') }}?v=2026110804"></script>
+  <script src="{{ url_for('static', path='/js/app.js') }}?v=2026110804"></script>
+</body>
+
+</html>
