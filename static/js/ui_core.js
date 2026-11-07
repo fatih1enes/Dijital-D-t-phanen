@@ -425,6 +425,54 @@
     }
     window.renderRecentShelf = renderRecentShelf;
 
+    // --- PERSISTENT ELEMENT MAPS (60FPS ZERO-REBUILD ARCHITECTURE) ---
+    const cardElementsMap = new Map();
+    window.cardElementsMap = cardElementsMap;
+    const tableRowsMap = new Map();
+    window.tableRowsMap = tableRowsMap;
+
+    function createBookCardElement(b) {
+      const card = document.createElement('div');
+      card.className = 'book-card';
+      card.id = `book-${b.hash}`;
+      card.dataset.hash = b.hash;
+
+      const coverInner = b.has_cover
+        ? `<img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" loading="lazy" decoding="async">`
+        : `<div class="card-cover-placeholder">${BOOK_ICON_LG}<span>${esc(b.title) || 'Kapak yok'}</span></div>`;
+
+      const favIcon = b.is_favorite
+        ? `<i class="fas fa-heart" style="color: #ff3e3e; font-size: 1.1rem;"></i>`
+        : `<i class="far fa-heart" style="color: #fff; font-size: 1.1rem;"></i>`;
+      const favBtnText = b.is_favorite ? 'Favorilerden Çıkar' : 'Favorilere Ekle';
+
+      card.innerHTML = `
+        <div class="selection-indicator"></div>
+        <div class="card-cover">
+          <div class="card-cat-badge">${esc(b.category)}</div>
+          <div class="btn-favorite-card" onclick="event.stopPropagation(); toggleFavorite('${b.hash}')" title="${favBtnText}">
+             ${favIcon}
+          </div>
+          ${coverInner}
+        </div>
+        <div class="card-body">
+          <div class="card-title">${esc(b.title) || '<em>İsimsiz</em>'}</div>
+          <div class="card-author">${esc(b.author) || 'Bilinmeyen Yazar'}</div>
+        </div>
+      `;
+
+      card.onclick = () => {
+        if (window.isSelectionMode) {
+          toggleSelectBook(card, b.hash);
+        } else {
+          const bookObj = (window.allBooks || []).find(x => x.hash === b.hash) || b;
+          openModal(bookObj);
+        }
+      };
+
+      return card;
+    }
+
     // --- GRID ---
     function renderGrid(books) {
       const grid = document.getElementById('grid-view');
@@ -433,8 +481,6 @@
         const tempId = node.dataset.tempId;
         return tempId && typeof uploadingCards !== 'undefined' && uploadingCards.has(tempId);
       });
-      grid.innerHTML = '';
-      activeUploads.forEach(node => grid.appendChild(node));
 
       const isSearchingOrFiltering = Boolean(document.getElementById('search-input')?.value?.trim()) ||
         (window.activeCategory && window.activeCategory !== 'all') ||
@@ -442,55 +488,81 @@
         Boolean(window.showOnlyFav);
 
       const doStagger = Boolean(window.shouldStagger) && !isSearchingOrFiltering;
+      const filteredHashes = new Set(books.map(b => b.hash));
+
+      // 1. Ensure cards exist in cardElementsMap for all available books
+      const allBooksList = window.allBooks || books;
+      allBooksList.forEach(b => {
+        if (!cardElementsMap.has(b.hash)) {
+          cardElementsMap.set(b.hash, createBookCardElement(b));
+        }
+      });
+
+      // 2. Clean up removed books from cardElementsMap
+      if (window.allBooks) {
+        const currentHashes = new Set(window.allBooks.map(b => b.hash));
+        for (const [hash, card] of cardElementsMap.entries()) {
+          if (!currentHashes.has(hash)) {
+            card.remove();
+            cardElementsMap.delete(hash);
+          }
+        }
+      }
+
+      // 3. Synchronize existing DOM
+      const existingCardsInGrid = new Set(Array.from(grid.querySelectorAll('.book-card')).map(c => c.dataset.hash));
+      let hasMissingCards = false;
 
       books.forEach((b, i) => {
-        const card = document.createElement('div');
-        card.className = 'book-card';
+        let card = cardElementsMap.get(b.hash);
+        if (!card) {
+          card = createBookCardElement(b);
+          cardElementsMap.set(b.hash, card);
+        }
+
+        // Update favorite & selection visual state without re-creating card
+        const favBtn = card.querySelector('.btn-favorite-card');
+        if (favBtn) {
+          favBtn.innerHTML = b.is_favorite
+            ? `<i class="fas fa-heart" style="color: #ff3e3e; font-size: 1.1rem;"></i>`
+            : `<i class="far fa-heart" style="color: #fff; font-size: 1.1rem;"></i>`;
+        }
+        card.classList.toggle('selected', selectedBooks.has(b.hash));
+
+        // Controlled stagger or instant display
         if (doStagger) {
           card.classList.add('stagger-in');
           const staggerIdx = i < 12 ? i : 0;
           card.style.setProperty('--card-index', staggerIdx);
           card.style.animationDelay = i < 12 ? `${i * 30}ms` : '0ms';
         } else {
+          card.classList.remove('stagger-in');
           card.style.animation = 'none';
         }
 
-        const coverInner = b.has_cover
-          ? `<img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" loading="lazy">`
-          : `<div class="card-cover-placeholder">${BOOK_ICON_LG}<span>${esc(b.title) || 'Kapak yok'}</span></div>`;
+        card.style.display = '';
 
-        const favIcon = b.is_favorite
-          ? `<i class="fas fa-heart" style="color: #ff3e3e; font-size: 1.1rem;"></i>`
-          : `<i class="far fa-heart" style="color: #fff; font-size: 1.1rem;"></i>`;
-        const favBtnText = b.is_favorite ? 'Favorilerden Çıkar' : 'Favorilere Ekle';
-
-        card.innerHTML = `
-      <div class="selection-indicator"></div>
-      <div class="card-cover">
-        <div class="card-cat-badge">${esc(b.category)}</div>
-        <div class="btn-favorite-card" onclick="event.stopPropagation(); toggleFavorite('${b.hash}')" title="${favBtnText}">
-           ${favIcon}
-        </div>
-        ${coverInner}
-      </div>
-      <div class="card-body">
-        <div class="card-title">${esc(b.title) || '<em>İsimsiz</em>'}</div>
-        <div class="card-author">${esc(b.author) || 'Bilinmeyen Yazar'}</div>
-      </div>
-    `;
-        card.id = `book-${b.hash}`;
-        card.dataset.hash = b.hash;
-        if (selectedBooks.has(b.hash)) card.classList.add('selected');
-
-        card.onclick = () => {
-          if (window.isSelectionMode) {
-            toggleSelectBook(card, b.hash);
-          } else {
-            openModal(b);
-          }
-        };
-        grid.appendChild(card);
+        if (!existingCardsInGrid.has(b.hash)) {
+          hasMissingCards = true;
+        }
       });
+
+      // Hide cards in DOM that are filtered out (Zero DOM removal, zero image reloads)
+      for (const [hash, card] of cardElementsMap.entries()) {
+        if (!filteredHashes.has(hash)) {
+          card.style.display = 'none';
+        }
+      }
+
+      // Populate if cards were missing or grid was empty
+      if (hasMissingCards || grid.querySelectorAll('.book-card').length === 0) {
+        grid.innerHTML = '';
+        activeUploads.forEach(node => grid.appendChild(node));
+        books.forEach(b => {
+          const card = cardElementsMap.get(b.hash);
+          if (card) grid.appendChild(card);
+        });
+      }
     }
 
     async function uploadCover(hash, input) {
@@ -514,11 +586,39 @@
       }
     }
 
+    function createTableRowElement(b) {
+      const tr = document.createElement('tr');
+      tr.id = `book-${b.hash}`;
+      tr.dataset.hash = b.hash;
+
+      const thumbCell = b.has_cover
+        ? `<td class="td-cover"><img src="/thumbnails/${b.hash}.jpg" alt="" loading="lazy" decoding="async"></td>`
+        : `<td class="td-cover"><div class="td-cover-empty">${BOOK_ICON_SM}</div></td>`;
+      tr.innerHTML = `
+        ${thumbCell}
+        <td class="td-title">${esc(b.title) || '—'}</td>
+        <td class="td-author">${esc(b.author) || '—'}</td>
+        <td class="td-cat">${esc(b.category) || '—'}</td>
+        <td class="td-cat">${esc(b.subcat) || '—'}</td>
+        <td class="td-summary"><div class="summary-text">${esc(b.summary)}</div></td>
+      `;
+
+      tr.onclick = () => {
+        if (window.isSelectionMode) {
+          toggleSelectBook(tr, b.hash);
+        } else {
+          const bookObj = (window.allBooks || []).find(x => x.hash === b.hash) || b;
+          openModal(bookObj);
+        }
+      };
+
+      return tr;
+    }
+
     // --- TABLE ---
     function renderTable(books) {
       const tbody = document.getElementById('table-body');
       if (!tbody) return;
-      tbody.innerHTML = '';
 
       const isSearchingOrFiltering = Boolean(document.getElementById('search-input')?.value?.trim()) ||
         (window.activeCategory && window.activeCategory !== 'all') ||
@@ -526,41 +626,72 @@
         Boolean(window.showOnlyFav);
 
       const doStagger = Boolean(window.shouldStagger) && !isSearchingOrFiltering;
+      const filteredHashes = new Set(books.map(b => b.hash));
+
+      // 1. Ensure rows exist in tableRowsMap
+      const allBooksList = window.allBooks || books;
+      allBooksList.forEach(b => {
+        if (!tableRowsMap.has(b.hash)) {
+          tableRowsMap.set(b.hash, createTableRowElement(b));
+        }
+      });
+
+      // 2. Clean up removed rows from tableRowsMap
+      if (window.allBooks) {
+        const currentHashes = new Set(window.allBooks.map(b => b.hash));
+        for (const [hash, tr] of tableRowsMap.entries()) {
+          if (!currentHashes.has(hash)) {
+            tr.remove();
+            tableRowsMap.delete(hash);
+          }
+        }
+      }
+
+      // 3. Synchronize existing DOM
+      const existingRowsInTbody = new Set(Array.from(tbody.querySelectorAll('tr')).map(r => r.dataset.hash));
+      let hasMissingRows = false;
 
       books.forEach((b, i) => {
-        const tr = document.createElement('tr');
+        let tr = tableRowsMap.get(b.hash);
+        if (!tr) {
+          tr = createTableRowElement(b);
+          tableRowsMap.set(b.hash, tr);
+        }
+
+        tr.classList.toggle('selected', selectedBooks.has(b.hash));
+
         if (doStagger) {
           tr.classList.add('stagger-in');
           const staggerIdx = i < 12 ? i : 0;
           tr.style.setProperty('--card-index', staggerIdx);
           tr.style.animationDelay = i < 12 ? `${i * 30}ms` : '0ms';
         } else {
+          tr.classList.remove('stagger-in');
           tr.style.animation = 'none';
         }
-        tr.id = `book-${b.hash}`;
-        tr.dataset.hash = b.hash;
-        if (selectedBooks.has(b.hash)) tr.classList.add('selected');
 
-        const thumbCell = b.has_cover
-          ? `<td class="td-cover"><img src="/thumbnails/${b.hash}.jpg" alt="" loading="lazy"></td>`
-          : `<td class="td-cover"><div class="td-cover-empty">${BOOK_ICON_SM}</div></td>`;
-        tr.innerHTML = `
-      ${thumbCell}
-      <td class="td-title">${esc(b.title) || '—'}</td>
-      <td class="td-author">${esc(b.author) || '—'}</td>
-      <td class="td-cat">${esc(b.category) || '—'}</td>
-      <td class="td-cat">${esc(b.subcat) || '—'}</td>
-      <td class="td-summary"><div class="summary-text">${esc(b.summary)}</div></td>
-    `;
-        tr.onclick = () => {
-          if (window.isSelectionMode) {
-            toggleSelectBook(tr, b.hash);
-          } else {
-            openModal(b);
-          }
-        };
-        tbody.appendChild(tr);
+        tr.style.display = '';
+
+        if (!existingRowsInTbody.has(b.hash)) {
+          hasMissingRows = true;
+        }
       });
+
+      // Hide rows that are filtered out
+      for (const [hash, tr] of tableRowsMap.entries()) {
+        if (!filteredHashes.has(hash)) {
+          tr.style.display = 'none';
+        }
+      }
+
+      // Populate if missing rows or empty tbody
+      if (hasMissingRows || tbody.querySelectorAll('tr').length === 0) {
+        tbody.innerHTML = '';
+        books.forEach(b => {
+          const tr = tableRowsMap.get(b.hash);
+          if (tr) tbody.appendChild(tr);
+        });
+      }
     }
 
     function compareTableValues(va, vb, sortDir) {
