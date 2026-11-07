@@ -209,30 +209,23 @@
 
   <div class="import-zone" id="import-zone">
     <div class="zero-state-hero" id="drop-box">
-      <div class="hero-kicker">ARŞİV &amp; OKUMA ALANI</div>
-      <h2 class="hero-title">Kişisel Arşiviniz.</h2>
-      <p class="hero-subtitle">Çalışmaya başlamak için PDF, EPUB veya TXT belgelerinizi bu alana sürükleyin ya da bilgisayarınızdan seçin.</p>
+      <div class="hero-kicker">KİŞİSEL ARŞİV &amp; OKUMA ALANI</div>
+      <h2 class="hero-title">Kişisel dijital <em>arşiviniz</em>.</h2>
+      <p class="hero-subtitle">PDF, EPUB ve TXT belgelerinizi bu alana sürükleyip bırakın ya da cihazınızdan seçin.</p>
       
       <div class="hero-primary-actions">
-        <button type="button" class="btn-hero-primary" onclick="document.getElementById('file-input').click()">
+        <button type="button" class="btn btn--primary btn--lg btn-hero-primary" onclick="document.getElementById('file-input').click()">
           <i class="fas fa-plus"></i>
           <span>Kitap Dosyası Seç</span>
         </button>
       </div>
 
-      <div class="hero-secondary-actions">
-        <button type="button" class="btn-hero-secondary" id="btn-telegram" onclick="openTelegramModal()">
-          <i class="fab fa-telegram-plane"></i>
-          <span>Telegram'dan Çek</span>
+      <div class="hero-secondary-links">
+        <button type="button" class="hero-text-link" id="btn-telegram" onclick="openTelegramModal()">Telegram'dan aktar</button>
+        <span class="hero-link-sep" aria-hidden="true">·</span>
+        <button type="button" class="hero-text-link" id="btn-sync" onclick="syncLibrary()">
+          <i class="fas fa-sync-alt" id="sync-icon" style="font-size:0.75em; margin-right:4px;"></i>Klasörü eşitle
         </button>
-        <button type="button" class="btn-hero-secondary" id="btn-sync" onclick="syncLibrary()">
-          <i class="fas fa-sync-alt" id="sync-icon"></i>
-          <span>Klasörü Eşitle</span>
-        </button>
-      </div>
-
-      <div class="hero-formats">
-        <span class="hero-formats-note">PDF · EPUB · TXT · Sürükleyip bırakın</span>
       </div>
 
       <input type="file" id="file-input" accept=".pdf,.epub,.txt" multiple onchange="handleFiles(this.files)" aria-label="Kütüphaneye eklenecek PDF veya EPUB dosyaları">

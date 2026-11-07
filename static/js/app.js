@@ -29,21 +29,39 @@
         chatInput.addEventListener('input', updateChatCounter);
       }
 
-      // Sürükle-Bırak Entegrasyonu
+      // Sürükle-Bırak Entegrasyonu (Tüm pencere ve hero alanı)
       const dropBox = document.getElementById('drop-box');
       if (dropBox) {
+        window.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          dropBox.classList.add('dragover');
+        });
+        window.addEventListener('dragleave', (e) => {
+          if (!e.relatedTarget) {
+            dropBox.classList.remove('dragover');
+          }
+        });
+        window.addEventListener('drop', (e) => {
+          e.preventDefault();
+          dropBox.classList.remove('dragover');
+          if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            handleFiles(e.dataTransfer.files);
+          }
+        });
         dropBox.addEventListener('dragover', (e) => {
           e.preventDefault();
-          dropBox.style.borderColor = 'var(--accent)';
+          dropBox.classList.add('dragover');
         });
         dropBox.addEventListener('dragleave', () => {
-          dropBox.style.borderColor = 'var(--sepia-light)';
+          dropBox.classList.remove('dragover');
         });
         dropBox.addEventListener('drop', (e) => {
           e.preventDefault();
           e.stopPropagation();
-          dropBox.style.borderColor = 'var(--sepia-light)';
-          handleFiles(e.dataTransfer.files);
+          dropBox.classList.remove('dragover');
+          if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            handleFiles(e.dataTransfer.files);
+          }
         });
       }
     }

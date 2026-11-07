@@ -1563,121 +1563,196 @@ h1 em {
   box-shadow: var(--shadow-md);
 }
 
-/* ═══════════════ 7. SIFIR DURUMU (ZERO STATE) & İÇE AKTARMA ═══════════════ */
+/* ═══════════════ 7. SIFIR DURUMU (ZERO STATE) & EDİTORYAL HERO ═══════════════ */
 .import-zone {
-  padding: 2.5rem 1.5rem;
   display: block;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: clamp(3rem, 10vh, 7rem) var(--sp-6);
+  box-sizing: border-box;
 }
 
 .zero-state-hero {
-  max-width: 620px;
-  margin: 1.5rem auto 3rem;
-  padding: 3.5rem 2.5rem;
-  text-align: center;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  box-shadow: var(--shadow-sm);
+  max-width: 880px;
+  margin: 0;
+  padding: var(--sp-6) 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--r-lg);
+  box-shadow: none;
+  text-align: left;
   position: relative;
-  transition: border-color var(--transition-smooth), box-shadow var(--transition-smooth), background-color var(--transition-smooth);
+  transition: background-color var(--t-ui) var(--ease-out),
+              border-color var(--t-ui) var(--ease-out);
 }
 
-.zero-state-hero.dragover,
-.zero-state-hero:hover {
+.zero-state-hero.dragover {
+  background: var(--surface-hover);
   border-color: var(--line-strong);
+}
+
+@keyframes heroMaskReveal {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes heroFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .hero-kicker {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
   color: var(--muted);
   text-transform: uppercase;
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--sp-4);
+  animation: heroFadeUp var(--t-page) var(--ease-out) both;
+  animation-delay: 0ms;
 }
 
 .hero-title {
   font-family: var(--font-serif);
-  font-size: 2.2rem;
+  font-size: clamp(3.25rem, 9vw, 7rem);
   font-weight: 400;
   font-style: normal;
   color: var(--ink);
-  margin-bottom: 0.5rem;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+  margin: 0 0 var(--sp-5) 0;
+  text-wrap: balance;
+  animation: heroMaskReveal var(--t-page) var(--ease-out) both;
+  animation-delay: 80ms;
+}
+
+.hero-title em {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--accent);
 }
 
 .hero-subtitle {
   font-family: var(--font-ui);
-  font-size: 0.9rem;
+  font-size: clamp(1rem, 1.8vw, 1.25rem);
   color: var(--muted);
-  max-width: 520px;
-  margin: 0 auto 1.5rem;
+  max-width: 46ch;
   line-height: 1.55;
   font-weight: 400;
+  margin: 0 0 var(--sp-6) 0;
+  text-wrap: pretty;
+  animation: heroFadeUp var(--t-page) var(--ease-out) both;
+  animation-delay: 160ms;
 }
 
 .hero-primary-actions {
-  margin-bottom: 1rem;
+  margin-bottom: var(--sp-4);
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
+  animation: heroFadeUp var(--t-page) var(--ease-out) both;
+  animation-delay: 240ms;
 }
 
 .btn-hero-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  height: 42px;
-  padding: 0 20px;
+  gap: var(--sp-2);
+  height: 48px;
+  padding: 0 var(--sp-6);
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  font-weight: 500;
+  background: var(--ink);
+  color: var(--paper);
+  border: 1px solid var(--ink);
+  border-radius: var(--r-md);
   cursor: pointer;
+  transition: background-color var(--t-micro) var(--ease-out),
+              border-color var(--t-micro) var(--ease-out),
+              transform var(--t-micro) var(--ease-out);
 }
 
-[data-theme="dark"] .btn-hero-primary {
+.btn-hero-primary:hover {
   background: var(--accent);
   border-color: var(--accent);
-  color: #ffffff;
+  color: var(--paper);
 }
 
-[data-theme="dark"] .btn-hero-primary:hover {
-  background: var(--accent-soft);
-  border-color: var(--accent-soft);
+.btn-hero-primary:active {
+  transform: scale(0.97);
 }
 
-.hero-secondary-actions {
+.hero-secondary-links {
   display: flex;
-  justify-content: center;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-top: var(--sp-2);
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  color: var(--muted);
+  animation: heroFadeUp var(--t-page) var(--ease-out) both;
+  animation-delay: 320ms;
 }
 
-.btn-hero-secondary,
-#btn-telegram,
-#btn-sync {
+.hero-text-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--muted);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--line-strong);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  height: 42px;
-  padding: 0 18px;
-  cursor: pointer;
+  transition: color var(--t-micro) var(--ease-out),
+              text-decoration-color var(--t-micro) var(--ease-out);
 }
 
-.hero-formats {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  margin-bottom: 1.5rem;
+.hero-text-link:hover {
+  color: var(--ink);
+  text-decoration-color: var(--ink);
 }
 
-.hero-formats-note {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--muted);
-  letter-spacing: 0.04em;
+.hero-text-link:active {
+  transform: scale(0.97);
+}
+
+.hero-link-sep {
+  color: var(--muted-light);
+  user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-kicker,
+  .hero-title,
+  .hero-subtitle,
+  .hero-primary-actions,
+  .hero-secondary-links {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    clip-path: none;
+  }
 }
 
 /* ═══════════════ DERİN ARAMA BUTONU ═══════════════ */
@@ -2084,19 +2159,7 @@ button:active:not(:disabled),
   }
 }
 
-.zero-state-hero {
-  animation: heroCardReveal var(--t-page) var(--ease-out) both;
-  box-shadow: var(--shadow-md);
-  transition: transform var(--t-ui) var(--ease-out),
-              box-shadow var(--t-ui) var(--ease-out),
-              border-color var(--t-micro) var(--ease-out);
-}
 
-.zero-state-hero:hover,
-.zero-state-hero.dragover {
-  border-color: var(--line-strong);
-  box-shadow: var(--shadow-lg);
-}
 
 /* Kitap Kartları İpeksi Hover */
 .book-card {
@@ -2231,8 +2294,11 @@ button:active:not(:disabled),
     gap: 1rem;
   }
   .zero-state-hero {
-    padding: 2.2rem 1.4rem;
-    margin: 1rem auto;
+    padding: var(--sp-4) 0;
+    margin: 0;
+  }
+  .hero-title {
+    font-size: clamp(2.5rem, 12vw, 3.8rem);
   }
   .header-actions .btn-primary-action span {
     display: none !important;
