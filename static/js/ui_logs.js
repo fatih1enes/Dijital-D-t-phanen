@@ -14,7 +14,7 @@
 
       modal.classList.add('open');
       document.body.classList.add('modal-open');
-      document.body.style.overflow = 'hidden';
+      document.body.classList.add('modal-open');
 
       // Setup smart scroll detection on logs container
       const body = document.getElementById('logs-body');
@@ -50,7 +50,7 @@
       const modal = document.getElementById('logs-modal');
       if (modal) modal.classList.remove('open');
       document.body.classList.remove('modal-open');
-      document.body.style.overflow = '';
+      document.body.classList.remove('modal-open');
       updateHeaderLogsBadge();
     }
 

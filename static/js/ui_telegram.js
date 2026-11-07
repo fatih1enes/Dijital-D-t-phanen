@@ -128,7 +128,7 @@ async function openTelegramModal() {
 
   modal.classList.add('open');
   document.body.classList.add('modal-open');
-  document.body.style.overflow = 'hidden';
+  document.body.classList.add('modal-open');
 
   // Check connection status
   try {
@@ -150,7 +150,7 @@ function closeTelegramModal() {
   const modal = document.getElementById('telegram-modal');
   if (modal) modal.classList.remove('open');
   document.body.classList.remove('modal-open');
-  document.body.style.overflow = '';
+  document.body.classList.remove('modal-open');
 }
 
 function closeTelegramModalBackdrop(e) {

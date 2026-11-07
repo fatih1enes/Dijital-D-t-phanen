@@ -214,7 +214,7 @@
       
       // Open overlay
       document.getElementById('workspace-reader').classList.add('open');
-      document.body.style.overflow = 'hidden';
+      document.body.classList.add('modal-open');
 
       // Load previous persistent chat history from server if exists
       const chatMessages = document.getElementById('workspace-chat-messages');
@@ -242,7 +242,7 @@
 
     function closeWorkspace() {
       document.getElementById('workspace-reader').classList.remove('open');
-      document.body.style.overflow = '';
+      document.body.classList.remove('modal-open');
       
       // Stop ongoing typewriter or TTS
       if (activeTypewriterTimer) {
@@ -2203,14 +2203,14 @@
       // Show Modal
       document.getElementById('pdf-note-modal').classList.add('open');
       document.body.classList.add('modal-open');
-      document.body.style.overflow = 'hidden';
+      document.body.classList.add('modal-open');
       setTimeout(() => document.getElementById('pdf-note-textarea').focus(), 150);
     }
 
     function closePdfNoteModalDirect() {
       document.getElementById('pdf-note-modal').classList.remove('open');
       document.body.classList.remove('modal-open');
-      document.body.style.overflow = '';
+      document.body.classList.remove('modal-open');
       pdfActiveHighlightIdForNote = null;
       clearSelection();
     }
@@ -2352,7 +2352,7 @@
       document.getElementById('pdf-note-textarea').value = currentNote;
       document.getElementById('pdf-note-modal').classList.add('open');
       document.body.classList.add('modal-open');
-      document.body.style.overflow = 'hidden';
+      document.body.classList.add('modal-open');
       setTimeout(() => document.getElementById('pdf-note-textarea').focus(), 150);
     }
 

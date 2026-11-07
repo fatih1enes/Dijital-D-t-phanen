@@ -164,7 +164,7 @@
 
       document.getElementById('col-modal').classList.add('open');
       document.body.classList.add('modal-open');
-      document.body.style.overflow = 'hidden';
+      document.body.classList.add('modal-open');
     }
 
     function toggleShareMenu(btn) {
@@ -682,7 +682,7 @@
   `;
       document.getElementById('modal').classList.add('open');
       document.body.classList.add('modal-open');
-      document.body.style.overflow = 'hidden';
+      document.body.classList.add('modal-open');
     }
 
     function showKeywordBooks(keyword) {
@@ -711,13 +711,13 @@
   `;
       document.getElementById('modal').classList.add('open');
       document.body.classList.add('modal-open');
-      document.body.style.overflow = 'hidden';
+      document.body.classList.add('modal-open');
     }
     function closeModal(e) { if (e.target === document.getElementById('modal')) closeModalDirect(); }
     function closeModalDirect() {
       document.getElementById('modal').classList.remove('open');
       document.body.classList.remove('modal-open');
-      document.body.style.overflow = '';
+      document.body.classList.remove('modal-open');
       window.currentModalHash = null;
     }
 
@@ -803,7 +803,7 @@
       if (m) {
         m.style.display = 'flex';
         m.classList.add('open');
-        document.body.style.overflow = 'hidden';
+        document.body.classList.add('modal-open');
       }
     }
     function closeShortcutsModal() {
@@ -811,7 +811,7 @@
       if (m) {
         m.classList.remove('open');
         m.style.display = 'none';
-        document.body.style.overflow = '';
+        document.body.classList.remove('modal-open');
       }
     }
     window.openShortcutsModal = openShortcutsModal;

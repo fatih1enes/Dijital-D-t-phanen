@@ -259,7 +259,7 @@
         if (modal) {
           modal.classList.add('open');
           document.body.classList.add('modal-open');
-          document.body.style.overflow = 'hidden';
+          document.body.classList.add('modal-open');
           switchSettingsTab('ai');
         }
       } catch (err) {
@@ -728,7 +728,7 @@
       const modal = document.getElementById('settings-modal');
       if (modal) modal.classList.remove('open');
       document.body.classList.remove('modal-open');
-      document.body.style.overflow = '';
+      document.body.classList.remove('modal-open');
     }
 
     function closeColModal(e) { if (e.target === document.getElementById('col-modal')) closeColModalDirect(); }
@@ -736,7 +736,7 @@
       const modal = document.getElementById('col-modal');
       if (modal) modal.classList.remove('open');
       document.body.classList.remove('modal-open');
-      document.body.style.overflow = '';
+      document.body.classList.remove('modal-open');
     }
 
     function toggleEditMode(hash) {
