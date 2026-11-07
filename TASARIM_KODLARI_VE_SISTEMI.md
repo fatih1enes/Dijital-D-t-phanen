@@ -107,13 +107,21 @@ Bu dosya, Dijital Kütüphane projesinin **tüm görsel tasarım sistemi, CSS ka
   --font-ui: 'Geist', system-ui, -apple-system, sans-serif;
   --font-mono: 'Geist Mono', ui-monospace, Consolas, monospace;
 
-  /* Typography Font Sizes */
+  /* Typography Font Sizes (E6 Standard Scale) */
+  --fs-label: 0.6875rem;                       /* Küçük etiket: Geist Mono */
   --fs-xs: 0.75rem;
   --fs-sm: 0.8125rem;
-  --fs-base: 0.9375rem;
-  --fs-lg: 1.125rem;
-  --fs-xl: 1.5rem;
-  --fs-2xl: 2.25rem;
+  --fs-base: 0.9375rem;                        /* Gövde: Geist 0.9375rem */
+  --fs-book-title: 1.0625rem;                  /* Kitap adı & Okuma metni: Newsreader */
+  --fs-h3: 1.35rem;                            /* H3 Bölüm başlığı: Newsreader 500 */
+  --fs-h2: 2rem;                               /* H2 Modal başlığı: Instrument Serif 400 */
+  --fs-h1: clamp(2.4rem, 5vw, 3.6rem);         /* H1 Header: Instrument Serif 400 */
+  --fs-display: clamp(3.25rem, 9vw, 7rem);     /* Display: Hero Instrument Serif 400 */
+
+  --lh-tight: 0.95;
+  --lh-heading: 1.15;
+  --lh-body: 1.55;
+  --lh-reading: 1.7;
 
   /* Spacing Scale (4px Grid) */
   --sp-1: 4px;
@@ -198,10 +206,10 @@ Bu dosya, Dijital Kütüphane projesinin **tüm görsel tasarım sistemi, CSS ka
   --color-surface-hover: var(--surface-hover);
   --color-surface-sunken: var(--paper-dark);
 
-  /* Typography & Contrast */
-  --ink: #1f1e1b;            /* Derin antrasit ana metin (Kontrast: 14:1) */
-  --muted: #6b675d;          /* İkincil yardımcı metin (Kontrast: 5.2:1) */
-  --muted-light: #8a8579;    /* Üçüncül / placeholder metin */
+  /* Typography & Contrast (WCAG Compliance) */
+  --ink: #1f1e1b;            /* Derin antrasit ana metin (Kontrast: 14.8:1, WCAG AAA) */
+  --muted: #6b675d;          /* İkincil yardımcı metin (Kontrast: 5.0:1, WCAG AA) */
+  --muted-light: #8a8579;    /* Yalnızca dekoratif çizgiler ve devre dışı öğeler (Kontrast: 3.3:1) */
   --sepia: #6b675d;
   --sepia-light: #b9b3a6;
 
@@ -286,10 +294,10 @@ body.dark-mode {
   --color-surface-hover: var(--surface-hover);
   --color-surface-sunken: var(--paper-dark);
 
-  /* Typography & Contrast */
-  --ink: #f0ece3;            /* Yüksek kontrastlı temiz krem metin */
-  --muted: #a39e93;          /* Yardımcı metin */
-  --muted-light: #736e64;
+  /* Typography & Contrast (WCAG Compliance) */
+  --ink: #f0ece3;            /* Yüksek kontrastlı temiz krem metin (Kontrast: 15.5:1, WCAG AAA) */
+  --muted: #a39e93;          /* Yardımcı metin (Kontrast: 6.8:1, WCAG AA) */
+  --muted-light: #736e64;    /* Yalnızca dekoratif çizgiler ve devre dışı öğeler (Kontrast: 3.6:1) */
   --sepia: #a39e93;
   --sepia-light: #59554e;
 
@@ -365,7 +373,7 @@ body.dark-mode {
  */
 
 
-/* ═══════════════ 2. GENEL SIFIRLAMA & TABAN ═══════════════ */
+/* ═══════════════ 2. GENEL SIFIRLAMA, TİPOGRAFİ & TABAN (E6) ═══════════════ */
 html {
   scrollbar-gutter: stable;
 }
@@ -373,12 +381,58 @@ html {
 body {
   font-family: var(--font-ui);
   font-size: var(--fs-base);
-  line-height: 1.55;
+  line-height: var(--lh-body);
   background-color: var(--paper);
   background-image: none;
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6,
+.hero-title,
+.modal-title,
+.brand-title-row h1 {
+  text-wrap: balance;
+}
+
+p,
+.hero-subtitle,
+.modal-author,
+.book-summary-text {
+  text-wrap: pretty;
+}
+
+.brand-title-row h1 {
+  font-family: var(--font-serif);
+  font-size: var(--fs-h1);
+  font-weight: 400;
+  line-height: var(--lh-heading);
+  letter-spacing: -0.02em;
+}
+
+.modal-title {
+  font-family: var(--font-serif);
+  font-size: var(--fs-h2);
+  font-weight: 400;
+  line-height: var(--lh-heading);
+}
+
+.card-title {
+  font-family: var(--font-reading);
+  font-size: var(--fs-book-title);
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.card-badge,
+.meta-chip,
+.tag-badge,
+.category-pill {
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
+  letter-spacing: 0.04em;
+  text-transform: none;
 }
 
 ::selection {
@@ -487,40 +541,118 @@ button:active:not(:disabled),
   transform: scale(0.985);
 }
 
-/* 1. Birincil Butonlar */
+/* ═══════════════ UNIFIED BUTTON COMPONENT SYSTEM (E5) ═══════════════ */
+.btn,
 .btn-import,
 .btn-modal-primary,
 .btn-modal-save,
 .btn-settings-save,
 .btn-empty-add,
-.btn-banner-load {
-  background: var(--ink);
-  color: var(--paper);
-  border: 1px solid var(--ink);
+.btn-banner-load,
+.btn-modal-secondary,
+.btn-modal-fav,
+.btn-settings-cancel,
+.btn-empty-clear,
+.btn-cascade-reset,
+.btn-modal-danger,
+.btn-primary-action,
+.btn-hero-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  height: 36px;
+  padding: 0 var(--sp-4);
   border-radius: var(--r-sm);
-  box-shadow: none;
   font-family: var(--font-ui);
-  font-size: var(--fs-sm);
+  font-size: 0.875rem;
   font-weight: 500;
-  letter-spacing: 0;
-  text-transform: none;
-  transition: all 140ms var(--ease-out);
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  box-sizing: border-box;
+  box-shadow: none;
+  transition: background-color var(--t-micro) var(--ease-out),
+              border-color var(--t-micro) var(--ease-out),
+              color var(--t-micro) var(--ease-out),
+              transform var(--t-micro) var(--ease-out);
+}
+
+.btn:active:not(:disabled),
+.btn-import:active:not(:disabled),
+.btn-modal-primary:active:not(:disabled),
+.btn-modal-save:active:not(:disabled),
+.btn-settings-save:active:not(:disabled),
+.btn-empty-add:active:not(:disabled),
+.btn-modal-secondary:active:not(:disabled),
+.btn-settings-cancel:active:not(:disabled),
+.btn-empty-clear:active:not(:disabled),
+.btn-cascade-reset:active:not(:disabled),
+.btn-modal-danger:active:not(:disabled),
+.btn-primary-action:active:not(:disabled),
+.btn-hero-primary:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn:disabled,
+button:disabled,
+[class*="btn-"]:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
   transform: none;
 }
 
+/* Button Sizes */
+.btn--sm,
+.btn-primary-action.compact {
+  height: 32px;
+  padding: 0 var(--sp-3);
+  font-size: 0.8125rem;
+}
+
+.btn--lg,
+.btn-hero-primary {
+  height: 44px;
+  padding: 0 var(--sp-6);
+  font-size: 1rem;
+  border-radius: var(--r-md);
+}
+
+/* 1. Primary Variant */
+.btn--primary,
+.btn-import,
+.btn-modal-primary,
+.btn-modal-save,
+.btn-settings-save,
+.btn-empty-add,
+.btn-banner-load,
+.btn-primary-action,
+.btn-hero-primary {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+.btn--primary:hover,
 .btn-import:hover,
 .btn-modal-primary:hover,
 .btn-modal-save:hover,
 .btn-settings-save:hover,
-.btn-empty-add:hover {
-  background: var(--accent-soft);
-  border-color: var(--accent-soft);
-  color: var(--on-accent);
-  transform: none;
-  box-shadow: none;
+.btn-empty-add:hover,
+.btn-banner-load:hover,
+.btn-primary-action:hover,
+.btn-hero-primary:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--paper);
 }
 
-/* 2. İkincil Butonlar */
+/* 2. Secondary Variant */
+.btn--secondary,
 .btn-modal-secondary,
 .btn-modal-fav,
 .btn-settings-cancel,
@@ -529,28 +661,19 @@ button:active:not(:disabled),
 .btn-sync {
   background: var(--surface);
   color: var(--ink);
-  border: 1px solid var(--line-strong);
-  border-radius: var(--r-sm);
-  box-shadow: none;
-  font-family: var(--font-ui);
-  font-size: var(--fs-sm);
-  font-weight: 500;
-  letter-spacing: 0;
-  text-transform: none;
-  transition: all 140ms var(--ease-out);
-  transform: none;
+  border-color: var(--line);
 }
 
+.btn--secondary:hover,
 .btn-modal-secondary:hover,
 .btn-modal-fav:hover,
 .btn-settings-cancel:hover,
 .btn-empty-clear:hover,
+.btn-cascade-reset:hover,
 .btn-sync:hover {
   background: var(--paper-dark);
-  border-color: var(--ink);
+  border-color: var(--line-strong);
   color: var(--ink);
-  transform: none;
-  box-shadow: none;
 }
 
 .btn-modal-fav.is-fav {
@@ -559,26 +682,31 @@ button:active:not(:disabled),
   color: var(--accent);
 }
 
-/* 3. Tehlike Butonları */
-.btn-modal-danger {
-  border-radius: var(--r-sm);
-  font-family: var(--font-ui);
-  font-size: var(--fs-sm);
-  letter-spacing: 0;
-  text-transform: none;
-  transition: all var(--t-micro) var(--ease-out);
+/* 3. Ghost Variant */
+.btn--ghost {
+  background: transparent;
+  color: var(--muted);
+  border-color: transparent;
 }
 
+.btn--ghost:hover {
+  background: var(--paper-dark);
+  color: var(--ink);
+}
+
+/* 4. Danger Variant */
+.btn--danger,
+.btn-modal-danger {
+  background: var(--surface);
+  color: var(--danger);
+  border-color: var(--line);
+}
+
+.btn--danger:hover,
 .btn-modal-danger:hover {
   background: var(--danger-bg);
-  color: var(--danger);
   border-color: var(--danger);
-}
-
-button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-  transform: none;
+  color: var(--danger);
 }
 
 /* ═══════════════ 5. HEADER & KOMPAKT NAV ═══════════════ */
@@ -629,50 +757,10 @@ h1 em {
   gap: var(--sp-2);
 }
 
-.btn-primary-action {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  background: var(--ink);
-  color: var(--paper);
-  border: 1px solid var(--ink);
-  border-radius: var(--r-sm);
-  padding: 0.5rem 1rem;
-  font-family: var(--font-ui);
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  transition: transform var(--t-micro) var(--ease-out), box-shadow var(--t-micro) var(--ease-out), background var(--t-micro) var(--ease-out);
-  white-space: nowrap;
-}
-
 .btn-primary-action.hidden,
 #header-add-book-btn[style*="display: none"],
 #compact-add-book-btn[style*="display: none"] {
   display: none !important;
-}
-
-.btn-primary-action:hover {
-  transform: none;
-  box-shadow: none;
-  background: var(--accent);
-  border-color: var(--accent);
-}
-
-.btn-primary-action:active {
-  transform: scale(0.985);
-}
-
-[data-theme="dark"] .btn-primary-action {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #ffffff;
-}
-
-.btn-primary-action.compact {
-  padding: 0.35rem 0.75rem;
-  font-size: var(--fs-xs);
 }
 
 .header-action-divider {
@@ -810,13 +898,26 @@ h1 em {
 }
 
 .compact-nav {
-  background: var(--surface);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   border-bottom: 1px solid var(--line);
   box-shadow: var(--shadow-sm);
   padding: var(--sp-2) 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  transform: translateY(-101%);
+  transition: transform var(--t-ui) var(--ease-out);
+  z-index: 2000;
+}
+
+.compact-nav.visible {
+  transform: translateY(0);
 }
 
 .compact-brand {
@@ -861,6 +962,36 @@ h1 em {
 .stat-pill i { color: var(--muted); }
 .stat-pill span { color: var(--ink); font-weight: 600; }
 
+#stat-total,
+.stat-total-val {
+  font-variant-numeric: tabular-nums;
+  display: inline-block;
+  transition: transform var(--t-micro) var(--ease-spring);
+}
+
+@keyframes statCountBump {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.18); color: var(--accent); }
+  100% { transform: scale(1); }
+}
+
+.stat-count-bump {
+  animation: statCountBump 320ms var(--ease-spring);
+}
+
+/* ═══════════════ UNIFORM ICON SYSTEM (E3) ═══════════════ */
+i[class*="fa-"],
+svg {
+  color: currentColor;
+  vertical-align: -0.125em;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+i[class*="fa-heart"] {
+  transition: transform var(--t-micro) var(--ease-spring), color var(--t-micro) var(--ease-out);
+}
+
 .theme-toggle {
   width: 36px;
   height: 36px;
@@ -878,6 +1009,99 @@ h1 em {
   background: var(--paper-dark);
   color: var(--ink);
   border-color: var(--line);
+}
+
+/* ═══════════════ REFINED UTILITY & CALLOUT SYSTEM (E4) ═══════════════ */
+.callout {
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-md);
+  font-family: var(--font-ui);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+}
+
+.callout--warn {
+  background: var(--warn-bg);
+  border: 1px solid var(--warn);
+  color: var(--warn);
+}
+
+.callout--danger {
+  background: var(--danger-bg);
+  border: 1px solid var(--danger);
+  color: var(--danger);
+}
+
+.callout--ok {
+  background: var(--ok-bg);
+  border: 1px solid var(--ok);
+  color: var(--ok);
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  margin-bottom: var(--sp-3);
+}
+
+.field-label {
+  font-family: var(--font-ui);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: var(--sp-1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.field-input,
+.field-textarea {
+  width: 100%;
+  padding: 0.65rem var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  box-sizing: border-box;
+  transition: border-color var(--t-micro) var(--ease-out), box-shadow var(--t-micro) var(--ease-out);
+}
+
+.field-input:focus,
+.field-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--line-strong);
+}
+
+.shortcut-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--sp-2) 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.shortcut-key {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  background: var(--paper-dark);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xs);
+  padding: 2px 6px;
+  color: var(--ink);
+}
+
+.modal-top {
+  height: 3px;
+  background: var(--accent);
+  width: 100%;
 }
 
 /* ═══════════════ 6. KONTROL PANELİ & ARAMA & FİLTRELER ═══════════════ */
@@ -1917,121 +2141,196 @@ h1 em {
   box-shadow: var(--shadow-md);
 }
 
-/* ═══════════════ 7. SIFIR DURUMU (ZERO STATE) & İÇE AKTARMA ═══════════════ */
+/* ═══════════════ 7. SIFIR DURUMU (ZERO STATE) & EDİTORYAL HERO ═══════════════ */
 .import-zone {
-  padding: 2.5rem 1.5rem;
   display: block;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: clamp(3rem, 10vh, 7rem) var(--sp-6);
+  box-sizing: border-box;
 }
 
 .zero-state-hero {
-  max-width: 620px;
-  margin: 1.5rem auto 3rem;
-  padding: 3.5rem 2.5rem;
-  text-align: center;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  box-shadow: var(--shadow-sm);
+  max-width: 880px;
+  margin: 0;
+  padding: var(--sp-6) 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--r-lg);
+  box-shadow: none;
+  text-align: left;
   position: relative;
-  transition: border-color var(--transition-smooth), box-shadow var(--transition-smooth), background-color var(--transition-smooth);
+  transition: background-color var(--t-ui) var(--ease-out),
+              border-color var(--t-ui) var(--ease-out);
 }
 
-.zero-state-hero.dragover,
-.zero-state-hero:hover {
+.zero-state-hero.dragover {
+  background: var(--surface-hover);
   border-color: var(--line-strong);
+}
+
+@keyframes heroMaskReveal {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes heroFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .hero-kicker {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
   color: var(--muted);
   text-transform: uppercase;
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--sp-4);
+  animation: heroFadeUp var(--t-page) var(--ease-out) both;
+  animation-delay: 0ms;
 }
 
 .hero-title {
   font-family: var(--font-serif);
-  font-size: 2.2rem;
+  font-size: clamp(3.25rem, 9vw, 7rem);
   font-weight: 400;
   font-style: normal;
   color: var(--ink);
-  margin-bottom: 0.5rem;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+  margin: 0 0 var(--sp-5) 0;
+  text-wrap: balance;
+  animation: heroMaskReveal var(--t-page) var(--ease-out) both;
+  animation-delay: 80ms;
+}
+
+.hero-title em {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--accent);
 }
 
 .hero-subtitle {
   font-family: var(--font-ui);
-  font-size: 0.9rem;
+  font-size: clamp(1rem, 1.8vw, 1.25rem);
   color: var(--muted);
-  max-width: 520px;
-  margin: 0 auto 1.5rem;
+  max-width: 46ch;
   line-height: 1.55;
   font-weight: 400;
+  margin: 0 0 var(--sp-6) 0;
+  text-wrap: pretty;
+  animation: heroFadeUp var(--t-page) var(--ease-out) both;
+  animation-delay: 160ms;
 }
 
 .hero-primary-actions {
-  margin-bottom: 1rem;
+  margin-bottom: var(--sp-4);
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
+  animation: heroFadeUp var(--t-page) var(--ease-out) both;
+  animation-delay: 240ms;
 }
 
 .btn-hero-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  height: 42px;
-  padding: 0 20px;
+  gap: var(--sp-2);
+  height: 48px;
+  padding: 0 var(--sp-6);
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  font-weight: 500;
+  background: var(--ink);
+  color: var(--paper);
+  border: 1px solid var(--ink);
+  border-radius: var(--r-md);
   cursor: pointer;
+  transition: background-color var(--t-micro) var(--ease-out),
+              border-color var(--t-micro) var(--ease-out),
+              transform var(--t-micro) var(--ease-out);
 }
 
-[data-theme="dark"] .btn-hero-primary {
+.btn-hero-primary:hover {
   background: var(--accent);
   border-color: var(--accent);
-  color: #ffffff;
+  color: var(--paper);
 }
 
-[data-theme="dark"] .btn-hero-primary:hover {
-  background: var(--accent-soft);
-  border-color: var(--accent-soft);
+.btn-hero-primary:active {
+  transform: scale(0.97);
 }
 
-.hero-secondary-actions {
+.hero-secondary-links {
   display: flex;
-  justify-content: center;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-top: var(--sp-2);
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  color: var(--muted);
+  animation: heroFadeUp var(--t-page) var(--ease-out) both;
+  animation-delay: 320ms;
 }
 
-.btn-hero-secondary,
-#btn-telegram,
-#btn-sync {
+.hero-text-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--muted);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--line-strong);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  height: 42px;
-  padding: 0 18px;
-  cursor: pointer;
+  transition: color var(--t-micro) var(--ease-out),
+              text-decoration-color var(--t-micro) var(--ease-out);
 }
 
-.hero-formats {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  margin-bottom: 1.5rem;
+.hero-text-link:hover {
+  color: var(--ink);
+  text-decoration-color: var(--ink);
 }
 
-.hero-formats-note {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--muted);
-  letter-spacing: 0.04em;
+.hero-text-link:active {
+  transform: scale(0.97);
+}
+
+.hero-link-sep {
+  color: var(--muted-light);
+  user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-kicker,
+  .hero-title,
+  .hero-subtitle,
+  .hero-primary-actions,
+  .hero-secondary-links {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    clip-path: none;
+  }
 }
 
 /* ═══════════════ DERİN ARAMA BUTONU ═══════════════ */
@@ -2104,7 +2403,7 @@ h1 em {
 .shelf-count {
   font-family: var(--font-mono);
   font-size: 0.72rem;
-  color: var(--muted-light);
+  color: var(--muted);
 }
 
 .recent-shelf-grid {
@@ -2265,58 +2564,7 @@ h1 em {
   color: var(--ok);
 }
 
-/* ═══════════════ FLUID 60FPS INTERACTION PHYSICS ═══════════════ */
-.btn-import,
-.btn-modal-primary,
-.btn-modal-save,
-.btn-settings-save,
-.btn-empty-add,
-.btn-banner-load,
-.btn-primary-action,
-.btn-hero-primary {
-  background: var(--ink);
-  color: var(--paper);
-  border: 1px solid var(--ink);
-  border-radius: var(--r-sm);
-  box-shadow: var(--shadow-sm);
-  font-family: var(--font-ui);
-  font-size: var(--fs-sm);
-  font-weight: 500;
-  letter-spacing: 0;
-  text-transform: none;
-  transition: background-color var(--t-micro) var(--ease-out),
-              border-color var(--t-micro) var(--ease-out),
-              color var(--t-micro) var(--ease-out),
-              transform var(--t-micro) var(--ease-out);
-}
-
-/* İkincil Butonlar */
-.btn-modal-secondary,
-.btn-modal-fav,
-.btn-settings-cancel,
-.btn-empty-clear,
-.btn-cascade-reset,
-.btn-sync,
-.btn-hero-secondary,
-#btn-telegram,
-#btn-sync {
-  background: var(--surface);
-  color: var(--ink);
-  border: 1px solid var(--line-strong);
-  border-radius: var(--r-sm);
-  box-shadow: none;
-  font-family: var(--font-ui);
-  font-size: var(--fs-sm);
-  font-weight: 500;
-  letter-spacing: 0;
-  text-transform: none;
-  cursor: pointer;
-  transition: background-color var(--t-micro) var(--ease-out),
-              border-color var(--t-micro) var(--ease-out),
-              color var(--t-micro) var(--ease-out),
-              transform var(--t-micro) var(--ease-out);
-}
-
+/* ═══════════════ FLUID INTERACTION PHYSICS ═══════════════ */
 /* İkon Butonları */
 .header-icon-btn,
 .view-btn,
@@ -2342,6 +2590,7 @@ h1 em {
 
 /* ── MOUSE HOVER: Sadece fare/pointer cihazlarda çalışır, dokunmatik ekranda asla yapışmaz ── */
 @media (hover: hover) and (pointer: fine) {
+  .btn--primary:hover:not(:disabled),
   .btn-import:hover:not(:disabled),
   .btn-modal-primary:hover:not(:disabled),
   .btn-modal-save:hover:not(:disabled),
@@ -2350,23 +2599,21 @@ h1 em {
   .btn-banner-load:hover:not(:disabled),
   .btn-primary-action:hover:not(:disabled),
   .btn-hero-primary:hover:not(:disabled) {
-    background: var(--accent-soft);
-    border-color: var(--accent-soft);
-    color: var(--on-accent);
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--paper);
     transform: none;
   }
 
+  .btn--secondary:hover:not(:disabled),
   .btn-modal-secondary:hover:not(:disabled),
   .btn-modal-fav:hover:not(:disabled),
   .btn-settings-cancel:hover:not(:disabled),
   .btn-empty-clear:hover:not(:disabled),
   .btn-cascade-reset:hover:not(:disabled),
-  .btn-sync:hover:not(:disabled),
-  .btn-hero-secondary:hover:not(:disabled),
-  #btn-telegram:hover:not(:disabled),
-  #btn-sync:hover:not(:disabled) {
-    background: var(--surface-hover);
-    border-color: var(--ink);
+  .btn-sync:hover:not(:disabled) {
+    background: var(--paper-dark);
+    border-color: var(--line-strong);
     color: var(--ink);
     transform: none;
   }
@@ -2402,14 +2649,8 @@ h1 em {
 
 /* ── BASMA GERİ BİLDİRİMİ: Hem fare hem dokunmatik ekranda çalışır ── */
 button:active:not(:disabled),
-[class*="btn-"]:active:not(:disabled),
-.btn-primary-action:active:not(:disabled),
-.btn-hero-primary:active:not(:disabled),
-.btn-hero-secondary:active:not(:disabled),
-#btn-telegram:active:not(:disabled),
-#btn-sync:active:not(:disabled),
-.btn-modal-primary:active:not(:disabled),
-.btn-modal-secondary:active:not(:disabled) {
+.btn:active:not(:disabled),
+[class*="btn-"]:active:not(:disabled) {
   transform: scale(0.97);
 }
 
@@ -2438,19 +2679,7 @@ button:active:not(:disabled),
   }
 }
 
-.zero-state-hero {
-  animation: heroCardReveal var(--t-page) var(--ease-out) both;
-  box-shadow: var(--shadow-md);
-  transition: transform var(--t-ui) var(--ease-out),
-              box-shadow var(--t-ui) var(--ease-out),
-              border-color var(--t-micro) var(--ease-out);
-}
 
-.zero-state-hero:hover,
-.zero-state-hero.dragover {
-  border-color: var(--line-strong);
-  box-shadow: var(--shadow-lg);
-}
 
 /* Kitap Kartları İpeksi Hover */
 .book-card {
@@ -2585,8 +2814,11 @@ button:active:not(:disabled),
     gap: 1rem;
   }
   .zero-state-hero {
-    padding: 2.2rem 1.4rem;
-    margin: 1rem auto;
+    padding: var(--sp-4) 0;
+    margin: 0;
+  }
+  .hero-title {
+    font-size: clamp(2.5rem, 12vw, 3.8rem);
   }
   .header-actions .btn-primary-action span {
     display: none !important;
@@ -3043,6 +3275,8 @@ button:active:not(:disabled),
       });
     }
   </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
     href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap"
     rel="stylesheet">
@@ -3082,7 +3316,7 @@ button:active:not(:disabled),
       </div>
       <div class="header-actions">
         <!-- Primary Action: + Kitap Ekle (Visible when library has items) -->
-        <button type="button" class="btn-primary-action" id="header-add-book-btn" style="display:none;" onclick="document.getElementById('file-input').click()" title="Yeni Kitap Ekle (PDF, EPUB, TXT)">
+        <button type="button" class="btn btn--primary btn--sm btn-primary-action" id="header-add-book-btn" style="display:none;" onclick="document.getElementById('file-input').click()" title="Yeni Kitap Ekle (PDF, EPUB, TXT)">
           <i class="fas fa-plus"></i>
           <span>Kitap Ekle</span>
         </button>
@@ -3165,7 +3399,7 @@ button:active:not(:disabled),
         <i class="fas fa-book" style="margin-right:5px; color:var(--accent);"></i>
         <span class="stat-total-val">—</span>
       </div>
-      <button type="button" class="btn-primary-action compact" id="compact-add-book-btn" style="display:none;" onclick="document.getElementById('file-input').click()" title="Yeni Kitap Ekle">
+      <button type="button" class="btn btn--primary btn--sm btn-primary-action compact" id="compact-add-book-btn" style="display:none;" onclick="document.getElementById('file-input').click()" title="Yeni Kitap Ekle">
         <i class="fas fa-plus"></i>
         <span>Kitap Ekle</span>
       </button>
@@ -3231,30 +3465,23 @@ button:active:not(:disabled),
 
   <div class="import-zone" id="import-zone">
     <div class="zero-state-hero" id="drop-box">
-      <div class="hero-kicker">ARŞİV &amp; OKUMA ALANI</div>
-      <h2 class="hero-title">Kişisel Arşiviniz.</h2>
-      <p class="hero-subtitle">Çalışmaya başlamak için PDF, EPUB veya TXT belgelerinizi bu alana sürükleyin ya da bilgisayarınızdan seçin.</p>
+      <div class="hero-kicker">KİŞİSEL ARŞİV &amp; OKUMA ALANI</div>
+      <h2 class="hero-title">Kişisel dijital <em>arşiviniz</em>.</h2>
+      <p class="hero-subtitle">PDF, EPUB ve TXT belgelerinizi bu alana sürükleyip bırakın ya da cihazınızdan seçin.</p>
       
       <div class="hero-primary-actions">
-        <button type="button" class="btn-hero-primary" onclick="document.getElementById('file-input').click()">
+        <button type="button" class="btn btn--primary btn--lg btn-hero-primary" onclick="document.getElementById('file-input').click()">
           <i class="fas fa-plus"></i>
           <span>Kitap Dosyası Seç</span>
         </button>
       </div>
 
-      <div class="hero-secondary-actions">
-        <button type="button" class="btn-hero-secondary" id="btn-telegram" onclick="openTelegramModal()">
-          <i class="fab fa-telegram-plane"></i>
-          <span>Telegram'dan Çek</span>
+      <div class="hero-secondary-links">
+        <button type="button" class="hero-text-link" id="btn-telegram" onclick="openTelegramModal()">Telegram'dan aktar</button>
+        <span class="hero-link-sep" aria-hidden="true">·</span>
+        <button type="button" class="hero-text-link" id="btn-sync" onclick="syncLibrary()">
+          <i class="fas fa-sync-alt" id="sync-icon" style="font-size:0.75em; margin-right:4px;"></i>Klasörü eşitle
         </button>
-        <button type="button" class="btn-hero-secondary" id="btn-sync" onclick="syncLibrary()">
-          <i class="fas fa-sync-alt" id="sync-icon"></i>
-          <span>Klasörü Eşitle</span>
-        </button>
-      </div>
-
-      <div class="hero-formats">
-        <span class="hero-formats-note">PDF · EPUB · TXT · Sürükleyip bırakın</span>
       </div>
 
       <input type="file" id="file-input" accept=".pdf,.epub,.txt" multiple onchange="handleFiles(this.files)" aria-label="Kütüphaneye eklenecek PDF veya EPUB dosyaları">
@@ -3363,10 +3590,10 @@ button:active:not(:disabled),
         Tümü <span class="ops-tab-badge" id="ops-tab-badge-all">0</span>
       </button>
       <button class="ops-tab-btn" id="ops-tab-active" onclick="setOpsTab('active')">
-        ⚡ Aktif <span class="ops-tab-badge active-tag" id="ops-tab-badge-active">0</span>
+        Aktif <span class="ops-tab-badge active-tag" id="ops-tab-badge-active">0</span>
       </button>
       <button class="ops-tab-btn" id="ops-tab-completed" onclick="setOpsTab('completed')">
-        ✓ Tamamlanan <span class="ops-tab-badge" id="ops-tab-badge-completed">0</span>
+        Tamamlanan <span class="ops-tab-badge" id="ops-tab-badge-completed">0</span>
       </button>
     </div>
 
@@ -3567,15 +3794,15 @@ button:active:not(:disabled),
           <button type="button" class="btn-workspace-action" id="workspace-export-btn" onclick="toggleWorkspaceExportMenu()" title="Kitap ve Notları Dışa Aktar (Obsidian, Anki, BibTeX)">
             <i class="fas fa-file-export"></i> <span>Dışa Aktar</span>
           </button>
-          <div id="workspace-export-menu" class="export-menu" style="display:none; position:absolute; top:120%; right:0; width:180px; background:var(--color-surface, #fff); border:1px solid var(--line); border-radius:8px; box-shadow:0 8px 16px rgba(0,0,0,0.12); z-index:1000; overflow:hidden;">
+          <div id="workspace-export-menu" class="export-menu" style="display:none; position:absolute; top:120%; right:0; width:180px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r-sm); box-shadow:var(--shadow-md); z-index:1000; overflow:hidden;">
             <button type="button" class="export-menu-item" style="display:flex; width:100%; border:none; background:none; cursor:pointer; align-items:center; gap:0.5rem; padding:0.6rem 0.8rem; font-size:0.75rem; color:var(--ink); text-decoration:none;" onclick="exportCurrentWorkspaceBook('obsidian')">
-              <i class="fas fa-gem" style="color:#7c3aed;"></i> Obsidian (.md)
+              <i class="fas fa-gem" style="color:var(--accent);"></i> Obsidian (.md)
             </button>
             <button type="button" class="export-menu-item" style="display:flex; width:100%; border:none; background:none; cursor:pointer; align-items:center; gap:0.5rem; padding:0.6rem 0.8rem; font-size:0.75rem; color:var(--ink); text-decoration:none; border-top:1px solid var(--line);" onclick="exportCurrentWorkspaceBook('anki')">
-              <i class="fas fa-clone" style="color:#2563eb;"></i> Anki Kartları (.tsv)
+              <i class="fas fa-clone" style="color:var(--accent);"></i> Anki Kartları (.tsv)
             </button>
             <button type="button" class="export-menu-item" style="display:flex; width:100%; border:none; background:none; cursor:pointer; align-items:center; gap:0.5rem; padding:0.6rem 0.8rem; font-size:0.75rem; color:var(--ink); text-decoration:none; border-top:1px solid var(--line);" onclick="exportCurrentWorkspaceBook('bibtex')">
-              <i class="fas fa-graduation-cap" style="color:#059669;"></i> BibTeX (.bib)
+              <i class="fas fa-graduation-cap" style="color:var(--accent);"></i> BibTeX (.bib)
             </button>
           </div>
         </div>
@@ -3737,10 +3964,10 @@ button:active:not(:disabled),
             </button>
           </div>
           <div class="workspace-prompt-chips" id="workspace-prompt-chips" style="display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; margin-bottom:6px;">
-            <button type="button" class="prompt-chip" onclick="insertPromptChip('Bu kitabı ana hatlarıyla özetler misin?')">📝 Özetle</button>
-            <button type="button" class="prompt-chip" onclick="insertPromptChip('Kitabın ana fikirleri ve kilit temaları nelerdir?')">💡 Ana Temalar</button>
-            <button type="button" class="prompt-chip" onclick="insertPromptChip('Bu kitabın ana mesajını 5 yaşındaki birine anlatır gibi basitçe açıkla.')">👶 Basitçe Açıkla</button>
-            <button type="button" class="prompt-chip" onclick="insertPromptChip('Bu kitaptan akılda kalıcı en çarpıcı 3 alıntıyı sayfa referansıyla listele.')">✨ Çarpıcı Alıntılar</button>
+            <button type="button" class="prompt-chip" onclick="insertPromptChip('Bu kitabı ana hatlarıyla özetler misin?')">Özetle</button>
+            <button type="button" class="prompt-chip" onclick="insertPromptChip('Kitabın ana fikirleri ve kilit temaları nelerdir?')">Ana Temalar</button>
+            <button type="button" class="prompt-chip" onclick="insertPromptChip('Bu kitabın ana mesajını 5 yaşındaki birine anlatır gibi basitçe açıkla.')">Basitçe Açıkla</button>
+            <button type="button" class="prompt-chip" onclick="insertPromptChip('Bu kitaptan akılda kalıcı en çarpıcı 3 alıntıyı sayfa referansıyla listele.')">Çarpıcı Alıntılar</button>
           </div>
           <div class="workspace-input-wrapper">
             <textarea id="workspace-chat-input" placeholder="Bu kitap hakkında soru sor..." aria-label="Kitap hakkında soru sor" rows="1" onkeydown="handleWorkspaceChatKey(event)"></textarea>
@@ -3802,8 +4029,8 @@ button:active:not(:disabled),
                 <option value="ollama">Ollama (Local)</option>
                 <option value="lmstudio">LM Studio (Local)</option>
               </select>
-              <div id="ai-local-warning" style="display:none; color: #881337; font-size: 0.72rem; margin-top: 0.4rem; line-height: 1.4; background: #fff1f2; padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px dashed rgba(176,71,60, 0.25);">
-                <i class="fas fa-exclamation-triangle" style="margin-right: 0.3rem;"></i> <strong>Uyarı:</strong> Yerel modda sohbet asistanı kullanılamaz.
+              <div id="ai-local-warning" class="callout callout--danger" style="display:none; margin-top: 0.4rem;">
+                <i class="fas fa-exclamation-triangle"></i> <strong>Uyarı:</strong> Yerel modda sohbet asistanı kullanılamaz.
               </div>
             </div>
 
@@ -4006,7 +4233,7 @@ button:active:not(:disabled),
           <div class="settings-section-card">
             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 0.2rem;">
               <span class="settings-section-label" style="margin-bottom:0;">Uzaktan ve yerel erişim şifresi</span>
-              <span id="sec-pwd-status-badge" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; border-radius: 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(156, 163, 175, 0.15); color: var(--muted);">
+              <span id="sec-pwd-status-badge" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; border-radius: 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem; background: var(--paper-dark); border: 1px solid var(--line); color: var(--muted);">
                 <i class="fas fa-circle" style="font-size:0.5rem;"></i> Kontrol ediliyor...
               </span>
             </div>
@@ -4035,7 +4262,7 @@ button:active:not(:disabled),
 
             <div style="display: flex; gap: 0.6rem; align-items: center; justify-content: space-between; margin-top: 0.2rem;">
               <small id="sec-pwd-hint" style="font-size: 0.72rem; color: var(--muted);">Şifreyi yazdıktan sonra "Şifreyi Kaydet" butonuna veya Enter'a basabilirsiniz.</small>
-              <button type="button" id="btn-remove-access-pwd" onclick="removeAccessPassword()" class="btn-settings-cancel" style="display: none; color: #b0473c; border-color: rgba(176,71,60, 0.3); font-size: 0.76rem; padding: 0.4rem 0.8rem;">
+              <button type="button" id="btn-remove-access-pwd" onclick="removeAccessPassword()" class="btn btn--danger btn--sm" style="display: none; padding: 0.4rem 0.8rem;">
                 <i class="fas fa-trash-alt" style="margin-right: 0.3rem;"></i> Şifreyi Kaldır
               </button>
             </div>
@@ -4048,7 +4275,7 @@ button:active:not(:disabled),
             <div style="background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-xs); padding: 0.85rem 1rem;">
               <div style="font-size: 0.76rem; font-weight: 600; color: var(--ink); margin-bottom: 0.4rem; display: flex; align-items: center; justify-content: space-between;">
                 <span>Telefon Tarayıcısına Yazılacak Adres:</span>
-                <span style="font-size: 0.7rem; color: #5f7a4f; font-weight: 500;"><i class="fas fa-wifi"></i> Aynı Wi-Fi</span>
+                <span style="font-size: 0.7rem; color: var(--ok); font-weight: 500;"><i class="fas fa-wifi"></i> Aynı Wi-Fi</span>
               </div>
               <div style="display: flex; gap: 0.5rem; align-items: center;">
                 <code id="phone-connection-url-display" style="flex: 1; padding: 0.55rem 0.8rem; background: var(--paper-dark); border-radius: 6px; font-size: 0.88rem; font-weight: 600; color: var(--accent); border: 1px dashed var(--line); word-break: break-all;">
@@ -4062,15 +4289,15 @@ button:active:not(:disabled),
 
             <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.78rem; color: var(--muted); line-height: 1.45;">
               <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
-                <span style="background: var(--accent); color: #fff; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700; flex-shrink: 0; margin-top: 2px;">1</span>
+                <span style="background: var(--accent); color: var(--paper); width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700; flex-shrink: 0; margin-top: 2px;">1</span>
                 <span>Bilgisayarınız ve telefonunuzun <strong>aynı Wi-Fi ağına</strong> bağlı olduğundan emin olun.</span>
               </div>
               <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
-                <span style="background: var(--accent); color: #fff; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700; flex-shrink: 0; margin-top: 2px;">2</span>
+                <span style="background: var(--accent); color: var(--paper); width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700; flex-shrink: 0; margin-top: 2px;">2</span>
                 <span>Yukarıdaki adresi telefonunuzun Chrome, Safari veya tarayıcısına girin.</span>
               </div>
               <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
-                <span style="background: var(--accent); color: #fff; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700; flex-shrink: 0; margin-top: 2px;">3</span>
+                <span style="background: var(--accent); color: var(--paper); width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700; flex-shrink: 0; margin-top: 2px;">3</span>
                 <span>Ekrana gelen şifre kutusuna yukarıda belirlediğiniz erişim şifresini yazıp kütüphanenizi kullanın.</span>
               </div>
             </div>
@@ -4078,17 +4305,17 @@ button:active:not(:disabled),
 
           <!-- Kart 3: E-Kitap Okuyucular İçin OPDS 1.2 Kataloğu -->
           <div class="settings-section-card">
-            <span class="settings-section-label" style="color: #6e614c;"><i class="fas fa-rss" style="margin-right: 4px;"></i> E-KİTAP OKUYUCU (OPDS 1.2 KATALOĞU)</span>
+            <span class="settings-section-label"><i class="fas fa-rss" style="margin-right: 4px;"></i> E-KİTAP OKUYUCU (OPDS 1.2 KATALOĞU)</span>
             <p style="font-size: 0.78rem; color: var(--muted); margin: 0; line-height: 1.45;">
               Moon+ Reader, Apple Books, Kobo, KOReader veya Aldiko gibi e-okuyucu uygulamalarına aşağıdaki OPDS kataloğu adresini ekleyerek kütüphanenizdeki kitapları doğrudan e-okuyucunuzdan indirebilirsiniz:
             </p>
             <div style="background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-xs); padding: 0.85rem 1rem; margin-top: 0.6rem;">
               <div style="font-size: 0.76rem; font-weight: 600; color: var(--ink); margin-bottom: 0.4rem; display: flex; align-items: center; justify-content: space-between;">
                 <span>OPDS Katalog Bağlantı Adresi:</span>
-                <span style="font-size: 0.7rem; color: #6e614c; font-weight: 500;"><i class="fas fa-book-reader"></i> OPDS 1.2</span>
+                <span style="font-size: 0.7rem; color: var(--muted); font-weight: 500;"><i class="fas fa-book-reader"></i> OPDS 1.2</span>
               </div>
               <div style="display: flex; gap: 0.5rem; align-items: center;">
-                <code id="opds-connection-url-display" style="flex: 1; padding: 0.55rem 0.8rem; background: var(--paper-dark); border-radius: 6px; font-size: 0.88rem; font-weight: 600; color: #6e614c; border: 1px dashed var(--line); word-break: break-all;">
+                <code id="opds-connection-url-display" style="flex: 1; padding: 0.55rem 0.8rem; background: var(--paper-dark); border-radius: 6px; font-size: 0.88rem; font-weight: 600; color: var(--accent); border: 1px dashed var(--line); word-break: break-all;">
                   http://.../opds
                 </code>
                 <button type="button" onclick="copyOpdsConnectionUrl()" class="btn-modal-secondary" style="padding: 0.55rem 0.85rem; font-size: 0.78rem; display: flex; align-items: center; gap: 0.35rem; white-space: nowrap;">
@@ -4131,10 +4358,10 @@ button:active:not(:disabled),
             <span class="settings-section-label">Veri ve sistem araçları</span>
             <div style="display: flex; flex-direction: column; gap: 0.75rem;">
               <button type="button" class="btn-modal-secondary" style="width:100%; padding: 0.8rem 1rem; border-radius: var(--radius-xs); display: flex; align-items: center; justify-content: center; gap: 0.6rem;" onclick="exportToExcel()">
-                <i class="fas fa-file-excel" style="color: #5f7a4f; font-size: 1.05rem;"></i> Kütüphaneyi Excel'e Aktar (.xlsx)
+                <i class="fas fa-file-excel" style="color: var(--accent); font-size: 1.05rem;"></i> Kütüphaneyi Excel'e Aktar (.xlsx)
               </button>
               <button type="button" class="btn-modal-secondary" style="width:100%; padding: 0.8rem 1rem; border-radius: var(--radius-xs); display: flex; align-items: center; justify-content: center; gap: 0.6rem;" onclick="openDuplicatesModal()">
-                <i class="fas fa-copy" style="color: #ea580c; font-size: 1.05rem;"></i> Mükerrer / Çift Kitapları Tara ve Temizle
+                <i class="fas fa-copy" style="color: var(--accent); font-size: 1.05rem;"></i> Mükerrer / Çift Kitapları Tara ve Temizle
               </button>
               <button type="button" class="btn-modal-secondary" style="width:100%; padding: 0.8rem 1rem; border-radius: var(--radius-xs); display: flex; align-items: center; justify-content: center; gap: 0.6rem;" onclick="exportFullLibraryZip()">
                 <i class="fas fa-file-archive" style="color: var(--accent); font-size: 1.05rem;"></i> Taşınabilir Tam Kütüphane Yedeği (.zip)
@@ -4181,7 +4408,7 @@ button:active:not(:disabled),
 
       <div style="text-align: center; margin-bottom: 2rem;">
         <div
-          style="width: 64px; height: 64px; margin: 0 auto 1rem; background: rgba(110,97,76, 0.1); border-radius: 50%; display:flex; align-items:center; justify-content:center; color: var(--accent); font-size: 1.8rem;">
+          style="width: 64px; height: 64px; margin: 0 auto 1rem; background: var(--paper-dark); border-radius: 50%; display:flex; align-items:center; justify-content:center; color: var(--accent); font-size: 1.8rem;">
           <i class="fas fa-layer-group"></i>
         </div>
         <h3 style="font-family:'Instrument Serif',serif; color:var(--ink); font-size:1.8rem; font-weight: 400;">
@@ -4192,7 +4419,7 @@ button:active:not(:disabled),
 
       <div style="margin-bottom: 2rem;">
         <div id="col-list"
-          style="max-height: 250px; overflow-y:auto; border: 1px solid var(--line); border-radius: 8px; background: var(--paper-dark); padding: 0.8rem; display:flex; flex-direction:column; gap:0.5rem; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);">
+          style="max-height: 250px; overflow-y:auto; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--paper-dark); padding: 0.8rem; display:flex; flex-direction:column; gap:0.5rem;">
           <!-- Koleksiyonlar buraya yüklenecek -->
         </div>
       </div>
@@ -4221,7 +4448,7 @@ button:active:not(:disabled),
       <button type="button" class="modal-close" onclick="closePdfNoteModalDirect()" title="Kapat" aria-label="Kapat"><i class="fas fa-times"></i></button>
 
       <div style="text-align: center; margin-bottom: 1.5rem;">
-        <div style="width: 54px; height: 54px; margin: 0 auto 1rem; background: rgba(110,97,76, 0.1); border-radius: 50%; display:flex; align-items:center; justify-content:center; color: var(--accent); font-size: 1.5rem;">
+        <div style="width: 54px; height: 54px; margin: 0 auto 1rem; background: var(--paper-dark); border-radius: 50%; display:flex; align-items:center; justify-content:center; color: var(--accent); font-size: 1.5rem;">
           <i class="fas fa-pen-fancy"></i>
         </div>
         <h3 style="font-family:'Instrument Serif',serif; color:var(--ink); font-size:1.6rem; font-weight: 400;">Okuma Notu Ekle</h3>
@@ -4230,7 +4457,7 @@ button:active:not(:disabled),
 
       <div style="margin-bottom: 1.5rem;">
         <div class="pdf-selected-text-preview" id="pdf-selected-text-preview" style="max-height: 80px; overflow-y: auto; background: var(--paper-dark); border-left: 3px solid var(--accent); padding: 0.6rem 0.8rem; font-style: italic; font-size: 0.85rem; border-radius: 4px; margin-bottom: 1rem; color: var(--muted);"></div>
-        <textarea id="pdf-note-textarea" placeholder="Notunuzu buraya yazın..." aria-label="Not Metni" style="width: 100%; min-height: 120px; padding: 0.8rem; border: 1px solid var(--line); border-radius: 8px; font-family:'Geist', sans-serif; font-size: 0.95rem; background: var(--paper); color: var(--ink); box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); outline: none; resize: vertical;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--line)'"></textarea>
+        <textarea id="pdf-note-textarea" placeholder="Notunuzu buraya yazın..." aria-label="Not Metni" class="field-textarea" style="min-height: 120px; font-family:'Geist', sans-serif; font-size: 0.95rem; resize: vertical;"></textarea>
       </div>
 
       <!-- Vurgu Rengi Seçici -->
@@ -4246,7 +4473,7 @@ button:active:not(:disabled),
 
       <div style="display: flex; gap: 0.8rem; justify-content: flex-end;">
         <button type="button" class="btn-modal-secondary" onclick="closePdfNoteModalDirect()" style="padding: 0.6rem 1.2rem; border-radius: var(--r-sm);">Vazgeç</button>
-        <button type="button" onclick="savePdfNote()" style="padding: 0.6rem 1.5rem; background: var(--accent); color: #fff; border: none; border-radius: var(--r-sm); font-family:'Geist', sans-serif; font-weight:600; cursor: pointer; transition: all 0.2s;">Kaydet</button>
+        <button type="button" onclick="savePdfNote()" class="btn btn--primary">Kaydet</button>
       </div>
     </div>
   </div>
@@ -4254,12 +4481,12 @@ button:active:not(:disabled),
   <!-- Telegram Senkronizasyon Modalı -->
   <div class="modal-overlay" id="telegram-modal" aria-modal="true" tabindex="-1" style="z-index: 7500;">
     <div class="modal" style="max-width: 520px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; padding: 0; border-radius: var(--r-md);">
-      <div class="modal-top" style="background: linear-gradient(90deg, #6e614c, #9a8d77);"></div>
+      <div class="modal-top"></div>
       <button type="button" class="modal-close" style="top: 1.2rem; right: 1.2rem;" onclick="closeTelegramModal()" title="Kapat" aria-label="Kapat"><i class="fas fa-times"></i></button>
 
       <!-- Modal Header -->
       <div style="padding: 1.5rem 2rem 1.2rem; border-bottom: 1px solid var(--line); display:flex; align-items:center; gap: 0.9rem;">
-        <div style="width: 44px; height: 44px; border-radius: 12px; background: #ece7dc; color: #292825; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
+        <div style="width: 44px; height: 44px; border-radius: var(--r-sm); background: var(--paper-dark); color: var(--ink); display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
           <i class="fab fa-telegram-plane"></i>
         </div>
         <div>
@@ -4269,7 +4496,7 @@ button:active:not(:disabled),
       </div>
 
       <!-- Error banner -->
-      <div id="tg-modal-error" style="display:none; margin: 1rem 2rem 0; padding: 0.75rem 1rem; border-radius: 8px; background: #f3e1de; border: 1px solid rgba(220, 38, 38, 0.3); color: #7a2b23; font-size: 0.82rem; font-family:'Geist', sans-serif;"></div>
+      <div id="tg-modal-error" class="callout callout--danger" style="display:none; margin: 1rem 2rem 0;"></div>
 
       <!-- Modal Body (Scrollable) -->
       <div style="flex: 1; overflow-y: auto; padding: 1.5rem 2rem;">
@@ -4277,9 +4504,9 @@ button:active:not(:disabled),
         <!-- STEP 1: API Bilgileri & Telefon No -->
         <div id="tg-step-1" style="display: block;">
           <div style="display:flex; flex-direction:column; gap: 1.2rem;">
-            <div style="background: var(--paper-dark); padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid var(--line); font-size: 0.8rem; color: var(--muted); line-height: 1.5;">
-              <i class="fas fa-info-circle" style="color: #4a4740; margin-right: 4px;"></i>
-              Telegram API ID ve Hash bilgilerinizi almak için <a href="https://my.telegram.org" target="_blank" rel="noopener noreferrer" style="color:#4a4740; font-weight:600; text-decoration:underline;">my.telegram.org</a> adresine giriş yapıp <em>API development tools</em> bölümünü ziyaret edebilirsiniz.
+            <div style="background: var(--paper-dark); padding: 0.85rem 1rem; border-radius: var(--r-sm); border: 1px solid var(--line); font-size: 0.8rem; color: var(--muted); line-height: 1.5;">
+              <i class="fas fa-info-circle" style="color: var(--muted); margin-right: 4px;"></i>
+              Telegram API ID ve Hash bilgilerinizi almak için <a href="https://my.telegram.org" target="_blank" rel="noopener noreferrer" style="color:var(--accent); font-weight:600; text-decoration:underline;">my.telegram.org</a> adresine giriş yapıp <em>API development tools</em> bölümünü ziyaret edebilirsiniz.
             </div>
 
             <div>
@@ -4303,7 +4530,7 @@ button:active:not(:disabled),
               <small style="font-size: 0.72rem; color: var(--muted); margin-top: 0.3rem; display:block;">Kayıtlı Mesajlarınız için <strong>me</strong> bırakın veya kitap paylaştığınız kanalın kullanıcı adını/ID'sini girin.</small>
             </div>
 
-            <button type="button" id="tg-btn-send-code" onclick="telegramSubmitCredentials()" style="width: 100%; padding: 0.85rem; background: var(--accent); color: var(--on-accent, #fff); border: none; border-radius: var(--r-sm); font-family:'Geist', sans-serif; font-weight: 600; font-size: 0.95rem; cursor: pointer; display:flex; align-items:center; justify-content:center; gap: 0.5rem; transition: background 0.2s;">
+            <button type="button" id="tg-btn-send-code" onclick="telegramSubmitCredentials()" class="btn btn--primary" style="width: 100%;">
               Doğrulama Kodu Gönder <i class="fas fa-arrow-right"></i>
             </button>
           </div>
@@ -4313,7 +4540,7 @@ button:active:not(:disabled),
         <div id="tg-step-2" style="display: none;">
           <div style="display:flex; flex-direction:column; gap: 1.2rem;">
             <div style="text-align:center; padding: 0.5rem 0;">
-              <div style="width: 50px; height: 50px; margin: 0 auto 0.8rem; background: #ece7dc; border-radius: 50%; display:flex; align-items:center; justify-content:center; color: #292825; font-size: 1.3rem;">
+              <div style="width: 50px; height: 50px; margin: 0 auto 0.8rem; background: var(--paper-dark); border-radius: 50%; display:flex; align-items:center; justify-content:center; color: var(--ink); font-size: 1.3rem;">
                 <i class="fas fa-sms"></i>
               </div>
               <h3 style="font-family:'Instrument Serif',serif; color:var(--ink); font-size:1.3rem; margin:0;">Doğrulama Kodu</h3>
@@ -4328,18 +4555,18 @@ button:active:not(:disabled),
             </div>
 
             <!-- 2FA Password Field (shown if needed) -->
-            <div id="tg-2fa-container" style="display: none; background: rgba(184,134,47, 0.08); border: 1px dashed rgba(184,134,47, 0.4); padding: 1rem; border-radius: 8px;">
-              <label for="tg-input-password" style="font-size: 0.78rem; font-weight: 600; display: flex; align-items:center; gap: 0.4rem; color: #b45309; margin-bottom: 0.4rem;">
+            <div id="tg-2fa-container" class="callout callout--warn" style="display: none; padding: 1rem; border-radius: var(--r-sm); flex-direction: column;">
+              <label for="tg-input-password" style="font-size: 0.78rem; font-weight: 600; display: flex; align-items:center; gap: 0.4rem; color: var(--warn); margin-bottom: 0.4rem;">
                 <i class="fas fa-lock"></i> İki Adımlı Doğrulama (2FA) Şifresi
               </label>
-              <input type="password" id="tg-input-password" aria-label="İki Adımlı Doğrulama Şifresi" placeholder="Telegram Bulut Şifreniz" style="width:100%; padding:0.75rem; border:1.5px solid var(--line); border-radius:8px; background:var(--paper); color:var(--ink); font-family:'Geist', sans-serif; font-size:0.9rem;">
+              <input type="password" id="tg-input-password" aria-label="İki Adımlı Doğrulama Şifresi" placeholder="Telegram Bulut Şifreniz" style="width:100%; padding:0.75rem; border:1px solid var(--line); border-radius:8px; background:var(--paper); color:var(--ink); font-family:'Geist', sans-serif; font-size:0.9rem;">
             </div>
 
             <div style="display: flex; gap: 0.8rem; margin-top: 0.5rem;">
               <button type="button" class="btn-modal-secondary" onclick="setTelegramStep(1)" style="padding: 0.75rem 1.2rem; border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--paper); color: var(--muted); cursor: pointer; font-weight: 500;">
                 <i class="fas fa-arrow-left"></i> Geri
               </button>
-              <button type="button" id="tg-btn-verify-code" onclick="telegramSubmitCode()" style="flex: 1; padding: 0.75rem; background: var(--accent); color: var(--on-accent, #fff); border: none; border-radius: var(--r-sm); font-family:'Geist', sans-serif; font-weight: 600; font-size: 0.95rem; cursor: pointer; display:flex; align-items:center; justify-content:center; gap: 0.5rem; transition: background 0.2s;">
+              <button type="button" id="tg-btn-verify-code" onclick="telegramSubmitCode()" class="btn btn--primary" style="flex: 1;">
                 <i class="fas fa-check"></i> Bağlantıyı Tamamla
               </button>
             </div>
@@ -4349,16 +4576,16 @@ button:active:not(:disabled),
         <!-- STEP 3: Bağlı Hesap & Senkronizasyon -->
         <div id="tg-step-3" style="display: none;">
           <div style="display:flex; flex-direction:column; gap: 1.2rem;">
-            <div style="background: rgba(95,122,79, 0.08); border: 1px solid rgba(95,122,79, 0.25); border-radius: 12px; padding: 1.2rem; display: flex; align-items: center; gap: 1rem;">
-              <div style="width: 48px; height: 48px; border-radius: 50%; background: #4a6340; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+            <div class="callout callout--ok" style="border-radius: var(--r-md); padding: 1.2rem; display: flex; align-items: center; gap: 1rem;">
+              <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--ok); color: var(--paper); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
                 <i class="fas fa-check"></i>
               </div>
               <div style="flex: 1;">
                 <div style="font-family:'Geist',sans-serif; font-weight:700; color:var(--ink); font-size:1.05rem;" id="tg-connected-name">Telegram Kullanıcısı</div>
                 <div style="font-family:'Geist Mono',monospace; font-size:0.8rem; color:var(--muted); margin-top: 0.2rem;" id="tg-connected-phone">+90...</div>
                 <div style="display: flex; gap: 0.6rem; align-items: center; margin-top: 0.4rem;">
-                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#5f7a4f;"></span>
-                  <span style="font-size:0.75rem; color:#5f7a4f; font-weight:600;">Oturum Aktif</span>
+                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--ok);"></span>
+                  <span style="font-size:0.75rem; color:var(--ok); font-weight:600;">Oturum Aktif</span>
                 </div>
               </div>
             </div>
@@ -4371,7 +4598,7 @@ button:active:not(:disabled),
                 </label>
                 <div style="display: flex; gap: 0.5rem; align-items: center;">
                   <input type="text" id="tg-active-chat-input" aria-label="Aktif Sohbet veya Kanal" value="me" placeholder="me, @kanaladi veya link" style="flex:1; padding:0.65rem 0.8rem; border:1.5px solid var(--line); border-radius:var(--r-sm); background:var(--paper); color:var(--ink); font-family:'Geist', sans-serif; font-size:0.88rem;" onkeydown="if(event.key==='Enter') saveTelegramActiveChat()">
-                  <button type="button" id="tg-btn-save-chat" onclick="saveTelegramActiveChat()" style="padding: 0.65rem 1rem; background: var(--accent); border: none; color: var(--on-accent, #fff); border-radius: var(--r-sm); font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap;">
+                  <button type="button" id="tg-btn-save-chat" onclick="saveTelegramActiveChat()" class="btn btn--primary" style="white-space: nowrap;">
                     <i class="fas fa-save"></i> Kaydet
                   </button>
                 </div>
@@ -4462,7 +4689,7 @@ button:active:not(:disabled),
 
   <!-- Instant LAN Handoff (QR Code) Modal -->
   <div class="modal-overlay" id="handoff-modal" aria-modal="true" tabindex="-1" style="z-index:99999;">
-    <div class="modal" style="max-width:440px; text-align:center; padding:2rem; border-radius:18px; background:var(--paper); border:1px solid var(--line); box-shadow:0 25px 50px rgba(0,0,0,0.5);">
+    <div class="modal" style="max-width:440px; text-align:center; padding:2rem; border-radius:var(--r-md); background:var(--paper); border:1px solid var(--line); box-shadow:var(--shadow-xl);">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
         <h3 style="font-size:1.15rem; color:var(--ink); margin:0; display:flex; align-items:center; gap:0.5rem;">
           <i class="fas fa-mobile-alt" style="color:var(--accent);"></i> Telefonda Okumaya Devam Et
@@ -4472,17 +4699,17 @@ button:active:not(:disabled),
       <p style="font-size:0.83rem; color:var(--muted); margin-bottom:1.2rem; line-height:1.5;">
         Telefonunuzun kamerasıyla QR kodu taratın. Aynı Wi-Fi ağındayken kitap şifre sormadan doğrudan bu sayfadan açılır.
       </p>
-      <div id="handoff-qr-container" style="background:#fff; padding:1.2rem; border-radius:12px; display:inline-block; box-shadow:0 8px 24px rgba(0,0,0,0.12); margin-bottom:1rem; min-width:210px; min-height:210px;">
-        <div style="padding:3rem 1rem; color:#888;"><i class="fas fa-spinner fa-spin"></i> QR Kod Üretiliyor...</div>
+      <div id="handoff-qr-container" style="background:#fff; padding:1.2rem; border-radius:var(--r-sm); display:inline-block; box-shadow:var(--shadow-md); margin-bottom:1rem; min-width:210px; min-height:210px;">
+        <div style="padding:3rem 1rem; color:var(--muted);"><i class="fas fa-spinner fa-spin"></i> QR Kod Üretiliyor...</div>
       </div>
       <div id="handoff-url-text" style="font-size:0.75rem; color:var(--muted); word-break:break-all; margin-bottom:0.8rem;"></div>
-      <div style="font-size:0.75rem; color:var(--accent); font-weight:600;" id="handoff-timer">⏱️ Kod süresi: 120 sn</div>
+      <div style="font-size:0.75rem; color:var(--accent); font-weight:600;" id="handoff-timer">Kod süresi: 120 sn</div>
     </div>
   </div>
 
   <!-- Duplicate Books Modal -->
   <div class="modal-overlay" id="duplicates-modal" aria-modal="true" tabindex="-1" style="z-index:3600;">
-    <div class="modal" style="max-width:680px; padding:2rem; border-radius:20px; background:var(--paper); border:1px solid var(--line); box-shadow:0 25px 50px rgba(0,0,0,0.5);">
+    <div class="modal" style="max-width:680px; padding:2rem; border-radius:var(--r-md); background:var(--paper); border:1px solid var(--line); box-shadow:var(--shadow-xl);">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; border-bottom:1px solid var(--line); padding-bottom:0.8rem;">
         <h3 style="font-family:'Instrument Serif',serif; font-size:1.35rem; color:var(--ink); margin:0; display:flex; align-items:center; gap:0.6rem;">
           <i class="fas fa-copy" style="color:var(--accent);"></i> Mükerrer / Çift Kitap Avcısı
@@ -4531,151 +4758,109 @@ button:active:not(:disabled),
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uo0qcPxh4Plq7G5tGm0rU+1SPhVotteLpBERwTkw==" crossorigin="anonymous" referrerpolicy="no-referrer">
-  <link rel="stylesheet" href="{{ url_for('static', path='/css/tokens.css') }}?v=2026110805">
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/app.css') }}?v=2026110805">
   <style>
-    html {
-      color-scheme: light dark;
-    }
-    ::view-transition-old(root),
-    ::view-transition-new(root) {
-      animation-duration: var(--t-ui);
-      animation-timing-function: var(--ease-out);
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
     body {
       min-height: 100vh;
       display: flex;
-      align-items: center;
+      flex-direction: column;
       justify-content: center;
-      font-family: 'Geist', system-ui, -apple-system, sans-serif;
+      align-items: center;
+      padding: var(--sp-6) var(--sp-4);
       background-color: var(--paper);
       color: var(--ink);
-      background-image:
-        radial-gradient(ellipse at 15% 15%, var(--accent-glow) 0%, transparent 50%),
-        radial-gradient(ellipse at 85% 85%, rgba(130,116,94, 0.08) 0%, transparent 50%);
-      transition: background-color 0.3s ease, color 0.3s ease;
-      padding: 1.5rem;
+      font-family: var(--font-ui);
       position: relative;
+      box-sizing: border-box;
+      transition: opacity var(--t-ui) var(--ease-out);
+    }
+
+    .login-topbar {
+      position: absolute;
+      top: var(--sp-6);
+      left: var(--sp-6);
+      right: var(--sp-6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .login-brand-top {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .login-brand-sub {
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .login-brand-title {
+      font-family: var(--font-serif);
+      font-size: 1.15rem;
+      color: var(--ink);
     }
 
     .theme-toggle-btn {
-      position: absolute;
-      top: 1.5rem;
-      right: 1.5rem;
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      border-radius: var(--r-sm);
       border: 1px solid var(--line);
-      background: var(--card-bg);
-      color: var(--ink);
+      background: var(--surface);
+      color: var(--muted);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.1rem;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-      transition: color var(--t-micro) var(--ease-out), border-color var(--t-micro) var(--ease-out), background-color var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out);
+      font-size: 0.95rem;
+      transition: color var(--t-micro) var(--ease-out),
+                  border-color var(--t-micro) var(--ease-out),
+                  background-color var(--t-micro) var(--ease-out);
     }
 
     .theme-toggle-btn:hover {
-      border-color: var(--accent);
-      color: var(--accent);
+      border-color: var(--line-strong);
+      color: var(--ink);
       background: var(--paper-dark);
-    }
-
-    .theme-toggle-btn:active {
-      transform: scale(0.94);
-      transition-duration: var(--t-micro);
     }
 
     .login-container {
       width: 100%;
-      max-width: 440px;
-    }
-
-    .login-card {
-      background: var(--card-bg);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 2.5rem 2.2rem;
-      box-shadow: var(--shadow-lg);
-      text-align: center;
-      animation: cardAppear 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    @keyframes cardAppear {
-      from {
-        opacity: 0;
-        transform: translateY(16px) scale(0.98);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-
-    .brand-icon {
-      width: 64px;
-      height: 64px;
-      margin: 0 auto 1.25rem;
-      border-radius: 18px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-size: 1.8rem;
-      box-shadow: 0 8px 24px var(--accent-glow);
-    }
-
-    .brand-badge {
-      display: inline-block;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.15em;
-      color: var(--sepia);
-      font-weight: 600;
-      margin-bottom: 0.35rem;
-    }
-
-    .login-title {
-      font-family: 'Instrument Serif', Georgia, serif;
-      font-size: 1.95rem;
-      font-weight: 400;
-      font-style: italic;
-      color: var(--ink);
-      margin-bottom: 0.5rem;
-    }
-
-    .login-desc {
-      font-size: 0.9rem;
-      color: var(--muted);
-      line-height: 1.5;
-      margin-bottom: 2rem;
-    }
-
-    .form-group {
-      margin-bottom: 1.5rem;
+      max-width: 380px;
+      margin: 0 auto;
       text-align: left;
     }
 
-    .form-label {
-      display: block;
-      font-size: 0.82rem;
-      font-weight: 600;
+    .login-title {
+      font-family: var(--font-serif);
+      font-size: clamp(2.4rem, 6vw, 3.4rem);
+      font-weight: 400;
       color: var(--ink);
-      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+      margin: 0 0 var(--sp-3) 0;
+      text-wrap: balance;
+    }
+
+    .login-desc {
+      font-family: var(--font-ui);
+      font-size: 0.9375rem;
+      color: var(--muted);
+      line-height: 1.55;
+      margin: 0 0 var(--sp-6) 0;
+      text-wrap: pretty;
+    }
+
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-4);
     }
 
     .input-wrapper {
@@ -4684,218 +4869,111 @@ button:active:not(:disabled),
       align-items: center;
     }
 
-    .input-wrapper input {
+    .login-input {
       width: 100%;
-      padding: 0.85rem 2.8rem 0.85rem 1.1rem;
-      font-size: 0.95rem;
-      font-family: inherit;
-      border: 1.5px solid var(--line);
-      border-radius: var(--radius-sm);
-      background: rgba(255, 255, 255, 0.4);
+      height: 44px;
+      padding: 0 2.8rem 0 var(--sp-4);
+      font-family: var(--font-ui);
+      font-size: 0.9375rem;
       color: var(--ink);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--r-sm);
+      box-sizing: border-box;
       outline: none;
-      transition: all 0.2s ease;
+      transition: border-color var(--t-micro) var(--ease-out),
+                  box-shadow var(--t-micro) var(--ease-out);
     }
 
-    .input-wrapper input:focus {
+    .login-input:focus {
       border-color: var(--accent);
-      box-shadow: 0 0 0 4px var(--accent-glow);
-      background: var(--card-bg);
+      box-shadow: 0 0 0 2px var(--line-strong);
+    }
+
+    @keyframes inputMicroShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-3px); }
+      75% { transform: translateX(3px); }
+    }
+
+    .login-input.input-error {
+      border-color: var(--danger);
+      animation: inputMicroShake 200ms var(--ease-out) 2;
     }
 
     .toggle-pwd-btn {
       position: absolute;
-      right: 0.85rem;
+      right: var(--sp-3);
       background: none;
       border: none;
       color: var(--muted);
       cursor: pointer;
-      font-size: 1rem;
-      padding: 0.3rem;
-      transition: color var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out);
-    }
-
-    .toggle-pwd-btn:hover {
-      color: var(--accent);
-    }
-
-    .toggle-pwd-btn:active {
-      transform: scale(0.94);
-      transition-duration: var(--t-micro);
-    }
-
-    .btn-submit {
-      width: 100%;
-      padding: 0.9rem;
-      font-size: 1rem;
-      font-weight: 600;
-      font-family: inherit;
-      color: #fff;
-      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
-      border: none;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      box-shadow: 0 4px 16px var(--accent-glow);
-      position: relative;
-      overflow: hidden;
-      transition: transform var(--t-micro) var(--ease-out), box-shadow var(--t-micro) var(--ease-out), opacity var(--t-micro) ease;
+      font-size: 0.9rem;
+      padding: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
+      transition: color var(--t-micro) var(--ease-out);
     }
 
-    .btn-submit::after {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -120%;
-      width: 60%;
-      height: 200%;
-      background: linear-gradient(
-        105deg,
-        transparent 20%,
-        rgba(255, 255, 255, 0.28) 50%,
-        transparent 80%
-      );
-      transform: rotate(25deg);
-      pointer-events: none;
-      opacity: 0;
+    .toggle-pwd-btn:hover {
+      color: var(--ink);
     }
 
-    .btn-submit:hover:not(:disabled) {
-      box-shadow: 0 8px 26px var(--accent-glow);
-      opacity: 0.98;
-    }
-
-    .btn-submit:hover:not(:disabled)::after {
-      opacity: 1;
-      left: 190%;
-      transition: left 0.75s var(--ease-out), opacity 0.4s ease;
-    }
-
-    .btn-submit:active:not(:disabled) {
-      transform: scale(0.97);
-      transition-duration: var(--t-micro);
-      box-shadow: 0 2px 8px var(--accent-glow);
-    }
-
-    .btn-submit:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .message-box {
-      margin-top: 1.25rem;
-      padding: 0.75rem 1rem;
-      border-radius: var(--radius-sm);
-      font-size: 0.88rem;
-      display: none;
-      align-items: center;
-      gap: 0.6rem;
-      text-align: left;
-      line-height: 1.4;
-    }
-
-    .message-box.error {
-      display: flex;
-      background: #f6e9e6;
-      border: 1px solid rgba(168,68,58,.3);
-      color: #7a2b23;
-    }
-
-    [data-theme="dark"] .message-box.error {
-      background: #3c1414;
-      border-color: rgba(176,71,60, 0.3);
-      color: #fecaca;
-    }
-
-    .message-box.warning {
-      display: flex;
-      background: #faf3e0;
-      border: 1px solid rgba(217, 119, 6, 0.25);
-      color: #5e4318;
-    }
-
-    [data-theme="dark"] .message-box.warning {
-      background: #3b2506;
-      border-color: rgba(184,134,47, 0.3);
-      color: #e8dca0;
-    }
-
-    .shake {
-      animation: shake 0.4s ease-in-out;
-    }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      20%, 60% { transform: translateX(-6px); }
-      40%, 80% { transform: translateX(6px); }
-    }
-
-    .footer-note {
-      margin-top: 2rem;
-      font-size: 0.78rem;
+    .login-footer-note {
+      margin-top: var(--sp-6);
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
       color: var(--muted);
-      opacity: 0.8;
+      letter-spacing: 0.04em;
     }
 
-    body { background-image: none; }
-    .theme-toggle-btn { width: 36px; height: 36px; border-radius: 6px; backdrop-filter: none; box-shadow: none; background: transparent; color: var(--muted); border-color: transparent; }
-    .theme-toggle-btn:hover { transform: none; background: var(--card-bg); border-color: var(--line); color: var(--ink); box-shadow: none; }
-    .login-card { backdrop-filter: none; -webkit-backdrop-filter: none; border: 1px solid var(--line); box-shadow: 0 12px 32px -12px rgba(41,40,37,.22); animation: cardAppear .5s cubic-bezier(.22,1,.36,1) both; text-align: left; }
-    .brand-icon { width: 40px; height: 40px; margin: 0 0 1.5rem; border-radius: 6px; background: var(--ink); color: var(--paper); box-shadow: none; font-size: 1.1rem; }
-    .brand-badge { font-size: .8125rem; letter-spacing: 0; text-transform: none; font-weight: 500; color: var(--muted); }
-    .login-title { font-weight: 400; font-style: normal; font-size: 2.4rem; line-height: 1.05; letter-spacing: -.015em; }
-    .form-label { font-weight: 500; font-size: .8125rem; color: var(--muted); }
-    .input-wrapper input { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; }
-    .input-wrapper input:focus { border-color: var(--ink); box-shadow: 0 0 0 3px var(--accent-glow); background: var(--paper); }
-    .btn-submit { background: var(--ink); color: var(--paper); box-shadow: none; border-radius: 6px; font-size: .875rem; font-weight: 500; }
-    .btn-submit::after { display: none; }
-    .btn-submit:hover:not(:disabled) { background: var(--accent-soft); color: #faf9f6; transform: none; box-shadow: none; }
-    .btn-submit:active:not(:disabled) { transform: none; }
-    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+    @media (prefers-reduced-motion: reduce) {
+      .login-input.input-error {
+        animation: none;
+      }
+    }
   </style>
 </head>
 
 <body>
-  <button class="theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()" title="Tema Değiştir">
-    <i class="fas fa-moon"></i>
-  </button>
+  <div class="login-topbar">
+    <div class="login-brand-top">
+      <span class="login-brand-sub">DİJİTAL KOLEKSİYON</span>
+      <span class="login-brand-title">Kütüphanem</span>
+    </div>
+    <button class="theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()" title="Aydınlık / Karanlık Mod" aria-label="Aydınlık veya Karanlık Mod">
+      <i class="fas fa-moon"></i>
+    </button>
+  </div>
 
   <div class="login-container">
-    <div class="login-card" id="login-card">
-      <div class="brand-icon">
-        <i class="fas fa-book-reader"></i>
+    <h1 class="login-title">Kütüphanem</h1>
+    <p class="login-desc">Kişisel dijital arşivinize erişmek için lütfen şifrenizi girin.</p>
+
+    <form class="login-form" id="login-form" onsubmit="handleLogin(event)">
+      <div class="field-group">
+        <label class="field-label" for="password">Giriş Şifresi</label>
+        <div class="input-wrapper">
+          <input type="password" id="password" name="password" class="login-input" placeholder="Şifrenizi yazın..." autocomplete="current-password" autofocus required>
+          <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility()" title="Şifreyi Göster/Gizle" aria-label="Şifreyi Göster veya Gizle">
+            <i class="fas fa-eye" id="pwd-icon"></i>
+          </button>
+        </div>
       </div>
-      <span class="brand-badge">Güvenli Erişim</span>
-      <h1 class="login-title">Kütüphanem</h1>
-      <p class="login-desc">Kişisel dijital kitaplığınıza erişmek için lütfen yönetici şifrenizi girin.</p>
 
-      <form id="login-form" onsubmit="handleLogin(event)">
-        <div class="form-group">
-          <label class="form-label" for="password">Giriş Şifresi</label>
-          <div class="input-wrapper">
-            <input type="password" id="password" name="password" placeholder="Şifrenizi yazın..." autocomplete="current-password" autofocus required>
-            <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility()" title="Şifreyi Göster/Gizle">
-              <i class="fas fa-eye" id="pwd-icon"></i>
-            </button>
-          </div>
-        </div>
+      <button type="submit" class="btn btn--primary btn--lg" id="submit-btn" style="width: 100%;">
+        <span>Giriş Yap</span>
+        <i class="fas fa-arrow-right"></i>
+      </button>
 
-        <button type="submit" class="btn-submit" id="submit-btn">
-          <span>Giriş Yap</span>
-          <i class="fas fa-arrow-right"></i>
-        </button>
+      <div class="callout callout--danger" id="msg-box" style="display: none; margin-top: var(--sp-2);">
+        <i class="fas fa-exclamation-circle" id="msg-icon"></i>
+        <span id="msg-text"></span>
+      </div>
+    </form>
 
-        <div class="message-box" id="msg-box">
-          <i class="fas fa-exclamation-circle" id="msg-icon"></i>
-          <span id="msg-text"></span>
-        </div>
-      </form>
-
-      <p class="footer-note">Dijital Kütüphane &bull; Güvenli Oturum Yönetimi</p>
-    </div>
+    <p class="login-footer-note">Dijital Kütüphane &bull; Güvenli Oturum</p>
   </div>
 
   <script>
@@ -4958,7 +5036,7 @@ button:active:not(:disabled),
       const box = document.getElementById('msg-box');
       const msgText = document.getElementById('msg-text');
       const msgIcon = document.getElementById('msg-icon');
-      box.className = `message-box ${type}`;
+      box.className = type === 'warning' ? 'callout callout--warn' : 'callout callout--danger';
       msgText.textContent = text;
       msgIcon.className = type === 'warning' ? 'fas fa-shield-alt' : 'fas fa-exclamation-circle';
       box.style.display = 'flex';
@@ -5009,7 +5087,7 @@ button:active:not(:disabled),
         // Ağ hatası durumunda formu açık bırak
       }
     }
-    // Sayfa açıldığında oturum durumunu sorgula
+
     document.addEventListener('DOMContentLoaded', () => {
       void checkAuthStatus();
     });
@@ -5021,7 +5099,6 @@ button:active:not(:disabled),
 
       const pwdInput = document.getElementById('password');
       const submitBtn = document.getElementById('submit-btn');
-      const card = document.getElementById('login-card');
       const password = pwdInput.value;
 
       submitBtn.disabled = true;
@@ -5035,20 +5112,23 @@ button:active:not(:disabled),
         });
 
         if (res.ok) {
-          // Başarılı giriş
-          const params = new URLSearchParams(window.location.search);
-          const rawNext = params.get('next');
-          const nextUrl = (rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//')) ? rawNext : '/';
-          window.location.href = nextUrl;
+          // Başarılı giriş: Sayfayı yumuşakça soluklaştırarak yönlendir
+          document.body.style.transition = 'opacity var(--t-ui) var(--ease-out)';
+          document.body.style.opacity = '0';
+          setTimeout(() => {
+            const params = new URLSearchParams(window.location.search);
+            const rawNext = params.get('next');
+            const nextUrl = (rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//')) ? rawNext : '/';
+            window.location.href = nextUrl;
+          }, 280);
           return;
         }
 
         const data = await res.json().catch(() => ({}));
-        card.classList.add('shake');
-        setTimeout(() => card.classList.remove('shake'), 400);
+        pwdInput.classList.add('input-error');
+        setTimeout(() => pwdInput.classList.remove('input-error'), 450);
 
         if (res.status === 429) {
-          // Rate-limit kilidi
           const detail = String(data.detail || '');
           let seconds = 60;
           if (detail.includes('saniye')) {
@@ -5064,7 +5144,6 @@ button:active:not(:disabled),
           showMessage(data.detail || 'Giriş yapılamadı.', 'error');
         }
       } catch (err) {
-        // Ağ hatası veya bağlantı kopması durumunda kullanıcıya hata mesajı göster ve konsola kaydet
         console.error('Giriş isteği sırasında hata oluştu:', err);
         showMessage('Sunucuya bağlanırken bir sorun oluştu.', 'error');
       } finally {
@@ -11627,21 +11706,39 @@ button:active:not(:disabled),
         chatInput.addEventListener('input', updateChatCounter);
       }
 
-      // Sürükle-Bırak Entegrasyonu
+      // Sürükle-Bırak Entegrasyonu (Tüm pencere ve hero alanı)
       const dropBox = document.getElementById('drop-box');
       if (dropBox) {
+        window.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          dropBox.classList.add('dragover');
+        });
+        window.addEventListener('dragleave', (e) => {
+          if (!e.relatedTarget) {
+            dropBox.classList.remove('dragover');
+          }
+        });
+        window.addEventListener('drop', (e) => {
+          e.preventDefault();
+          dropBox.classList.remove('dragover');
+          if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            handleFiles(e.dataTransfer.files);
+          }
+        });
         dropBox.addEventListener('dragover', (e) => {
           e.preventDefault();
-          dropBox.style.borderColor = 'var(--accent)';
+          dropBox.classList.add('dragover');
         });
         dropBox.addEventListener('dragleave', () => {
-          dropBox.style.borderColor = 'var(--sepia-light)';
+          dropBox.classList.remove('dragover');
         });
         dropBox.addEventListener('drop', (e) => {
           e.preventDefault();
           e.stopPropagation();
-          dropBox.style.borderColor = 'var(--sepia-light)';
-          handleFiles(e.dataTransfer.files);
+          dropBox.classList.remove('dragover');
+          if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            handleFiles(e.dataTransfer.files);
+          }
         });
       }
     }
@@ -11785,28 +11882,36 @@ button:active:not(:disabled),
 
     // ─── İŞLEM MERKEZİ MANTIĞI ──────────────────────────────────────────
 
-    // ─── MODERN SCROLL LOGIC (Smooth & Zero Jitter) ─────────────────────
-    let lastScrollY = window.scrollY;
+    // ─── HEADER & COMPACT-NAV INTERSECTION OBSERVER (Zero Jitter) ──────
+    const mainHeader = document.querySelector('header:not(.workspace-header)');
     const compactNav = document.getElementById('compact-nav');
     const scrollBtn = document.getElementById('scroll-top-btn');
 
+    if (mainHeader && compactNav && 'IntersectionObserver' in window) {
+      const headerObserver = new IntersectionObserver((entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting) {
+          compactNav.classList.remove('visible');
+        } else {
+          const workspace = document.getElementById('workspace-view');
+          const isWorkspaceActive = workspace && workspace.classList.contains('active');
+          if (!isWorkspaceActive) {
+            compactNav.classList.add('visible');
+          }
+        }
+      }, {
+        threshold: 0
+      });
+      headerObserver.observe(mainHeader);
+    }
+
+    // Scroll to Top Button Visibility
     window.addEventListener('scroll', () => {
-      const currentScrollY = window.scrollY;
-
-      if (currentScrollY <= 150) {
-        compactNav?.classList.remove('visible');
-      } else if (currentScrollY > lastScrollY && currentScrollY > 300) {
-        compactNav?.classList.remove('visible');
-      } else if (currentScrollY < lastScrollY) {
-        compactNav?.classList.add('visible');
-      }
-
-      if (currentScrollY > 600) {
+      if (window.scrollY > 600) {
         scrollBtn?.classList.add('visible');
       } else {
         scrollBtn?.classList.remove('visible');
       }
-      lastScrollY = currentScrollY;
     }, { passive: true });
 
 // EXPOSE FUNCTIONS TO GLOBAL SCOPE
@@ -12105,7 +12210,7 @@ window.login = () => { window.location.href = "/login"; };
              </div>
            </div>
 
-           <button type="button" onclick="event.stopPropagation(); deleteCollection(${c.id})" style="background:none; color:var(--muted); border:none; width:34px; height:34px; border-radius:50%; cursor:pointer; font-size: 0.9rem; transition: all 0.2s; display:flex; align-items:center; justify-content:center;" onmouseover="this.style.background='rgba(255,62,62,0.1)'; this.style.color='#ff3e3e'" onmouseout="this.style.background='none'; this.style.color='var(--muted)'" title="Koleksiyonu Sil">
+           <button type="button" onclick="event.stopPropagation(); deleteCollection(${c.id})" style="background:none; color:var(--muted); border:none; width:34px; height:34px; border-radius:50%; cursor:pointer; font-size: 0.9rem; transition: all 0.2s; display:flex; align-items:center; justify-content:center;" onmouseover="this.style.background='var(--danger-bg)'; this.style.color='var(--danger)'" onmouseout="this.style.background='none'; this.style.color='var(--muted)'" title="Koleksiyonu Sil">
                <i class="fas fa-trash-alt"></i>
            </button>
          </div>
@@ -12230,8 +12335,20 @@ window.login = () => { window.location.href = "/login"; };
     function updateStats() {
       const total = window.allBooks?.length || 0;
       const statTotal = document.getElementById('stat-total');
-      if (statTotal) statTotal.textContent = total;
-      document.querySelectorAll('.stat-total-val').forEach(el => el.textContent = total);
+      if (statTotal && statTotal.textContent !== String(total)) {
+        statTotal.textContent = total;
+        statTotal.classList.remove('stat-count-bump');
+        void statTotal.offsetWidth;
+        statTotal.classList.add('stat-count-bump');
+      }
+      document.querySelectorAll('.stat-total-val').forEach(el => {
+        if (el.textContent !== String(total)) {
+          el.textContent = total;
+          el.classList.remove('stat-count-bump');
+          void el.offsetWidth;
+          el.classList.add('stat-count-bump');
+        }
+      });
     }
 
     // --- FILTER (Feature 7: Enhanced with AND Logic) ---
@@ -12423,8 +12540,8 @@ window.login = () => { window.location.href = "/login"; };
         : `<div class="card-cover-placeholder">${BOOK_ICON_LG}<span>${esc(b.title) || 'Kapak yok'}</span></div>`;
 
       const favIcon = b.is_favorite
-        ? `<i class="fas fa-heart" style="color: #ff3e3e; font-size: 1.1rem;"></i>`
-        : `<i class="far fa-heart" style="color: #fff; font-size: 1.1rem;"></i>`;
+        ? `<i class="fas fa-heart" style="color: var(--danger); font-size: 1.1rem;"></i>`
+        : `<i class="far fa-heart" style="color: var(--paper); font-size: 1.1rem;"></i>`;
       const favBtnText = b.is_favorite ? 'Favorilerden Çıkar' : 'Favorilere Ekle';
 
       const progress = getBookReadingProgress(b);
@@ -12536,8 +12653,8 @@ window.login = () => { window.location.href = "/login"; };
         const favBtn = card.querySelector('.btn-favorite-card');
         if (favBtn) {
           favBtn.innerHTML = b.is_favorite
-            ? `<i class="fas fa-heart" style="color: #ff3e3e; font-size: 1.1rem;"></i>`
-            : `<i class="far fa-heart" style="color: #fff; font-size: 1.1rem;"></i>`;
+            ? `<i class="fas fa-heart" style="color: var(--danger); font-size: 1.1rem;"></i>`
+            : `<i class="far fa-heart" style="color: var(--paper); font-size: 1.1rem;"></i>`;
         }
         card.classList.toggle('selected', selectedBooks.has(b.hash));
 
@@ -12786,7 +12903,7 @@ window.login = () => { window.location.href = "/login"; };
             <i class="fas fa-edit"></i> Düzenle
           </button>
           ${!isAnalyzed ? `
-          <button class="btn-modal-secondary" id="btn-reanalyze-${b.hash}" onclick="reanalyzeBookModal('${b.hash}')" style="background:rgba(234,88,12,0.1); border:1.5px solid #ea580c; color:#ea580c; font-weight:700;">
+          <button class="btn-modal-secondary" id="btn-reanalyze-${b.hash}" onclick="reanalyzeBookModal('${b.hash}')" style="background:var(--warn-bg); border:1px solid var(--warn); color:var(--warn); font-weight:600;">
             <i class="fas fa-magic"></i> Yapay Zeka ile Analiz Et
           </button>
           ` : ''}
@@ -12799,13 +12916,13 @@ window.login = () => { window.location.href = "/login"; };
             </button>
             <div id="export-menu-${b.hash}" class="export-menu" style="display:none; position:absolute; top:100%; left:0; right:0; background:var(--color-surface, #fff); border:1px solid var(--line); border-radius:8px; box-shadow:0 8px 16px rgba(0,0,0,0.12); z-index:100; margin-top:4px; overflow:hidden;">
               <a href="/api/books/${b.hash}/export/obsidian" download class="export-menu-item" style="display:flex; align-items:center; gap:0.5rem; padding:0.6rem 0.8rem; font-size:0.75rem; color:var(--ink); text-decoration:none; cursor:pointer;" onclick="toggleExportMenu('${b.hash}')">
-                <i class="fas fa-gem" style="color:#7c3aed;"></i> Obsidian Notu (.md)
+                <i class="fas fa-gem" style="color:var(--accent);"></i> Obsidian Notu (.md)
               </a>
               <a href="/api/books/${b.hash}/export/anki" download class="export-menu-item" style="display:flex; align-items:center; gap:0.5rem; padding:0.6rem 0.8rem; font-size:0.75rem; color:var(--ink); text-decoration:none; cursor:pointer; border-top:1px solid var(--line);" onclick="toggleExportMenu('${b.hash}')">
-                <i class="fas fa-clone" style="color:#2563eb;"></i> Anki Kartları (.tsv)
+                <i class="fas fa-clone" style="color:var(--accent);"></i> Anki Kartları (.tsv)
               </a>
               <a href="/api/books/${b.hash}/export/bibtex" download class="export-menu-item" style="display:flex; align-items:center; gap:0.5rem; padding:0.6rem 0.8rem; font-size:0.75rem; color:var(--ink); text-decoration:none; cursor:pointer; border-top:1px solid var(--line);" onclick="toggleExportMenu('${b.hash}')">
-                <i class="fas fa-graduation-cap" style="color:#059669;"></i> BibTeX Akademik (.bib)
+                <i class="fas fa-graduation-cap" style="color:var(--accent);"></i> BibTeX Akademik (.bib)
               </a>
             </div>
           </div>
@@ -12819,7 +12936,7 @@ window.login = () => { window.location.href = "/login"; };
           </button>
         </div>
         <div class="modal-meta-left" style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.4rem;">
-          <span class="meta-chip" style="font-size: 0.6rem; opacity: 0.85; word-break: break-all; white-space: normal; line-height: 1.4; padding: 0.5rem; text-align: center;">📄 ${esc(b.file)}</span>
+          <span class="meta-chip" style="font-size: 0.6rem; opacity: 0.85; word-break: break-all; white-space: normal; line-height: 1.4; padding: 0.5rem; text-align: center;">${esc(b.file)}</span>
         </div>
       </div>
       <div class="modal-right" style="flex: 1; border-left: 1px solid var(--line); padding-left: 2rem;">
@@ -12828,17 +12945,17 @@ window.login = () => { window.location.href = "/login"; };
         <div class="modal-author" style="margin-bottom: 1.5rem; font-style: italic; font-size: 1.1rem; color: var(--muted); opacity: 0.9;">${esc(b.author) || 'Bilinmeyen Yazar'}</div>
 
         ${(!b.category || b.category === 'Bilinmeyen' || b.summary?.includes('Analiz başarısız')) ? `
-          <div style="background: rgba(234, 88, 12, 0.08); border: 1.5px dashed #ea580c; border-radius: 12px; padding: 1.2rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+          <div style="background: var(--warn-bg); border: 1px solid var(--warn); border-radius: var(--r-md); padding: 1.2rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
             <div>
-              <div style="font-weight: 700; color: #ea580c; font-size: 0.95rem; display:flex; align-items:center; gap:0.5rem;">
+              <div style="font-weight: 600; color: var(--warn); font-size: 0.95rem; display:flex; align-items:center; gap:0.5rem;">
                 <i class="fas fa-exclamation-triangle"></i> Yapay Zeka Analizi Bekliyor
               </div>
               <div style="font-size: 0.82rem; color: var(--muted); margin-top: 0.3rem;">
                 Bu kitabın başlığı, yazarı ve özeti henüz yapay zeka ile incelenmedi.
               </div>
             </div>
-            <button id="btn-reanalyze-banner-${b.hash}" onclick="reanalyzeBookModal('${b.hash}')" style="background: #ea580c; color: #fff; border: none; padding: 0.75rem 1.4rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; white-space: nowrap; box-shadow: 0 4px 12px rgba(234,88,12,0.35); transition: all 0.2s;">
-              <i class="fas fa-magic"></i> Şimdi Analiz Et
+            <button id="btn-reanalyze-banner-${b.hash}" onclick="reanalyzeBookModal('${b.hash}')" class="btn btn--primary" style="white-space: nowrap;">
+              <i class="fas fa-wand-magic-sparkles"></i> Şimdi Analiz Et
             </button>
           </div>
         ` : ''}
@@ -13066,7 +13183,7 @@ window.login = () => { window.location.href = "/login"; };
         }
       }
 
-      addChatMessage('ai', `✅ ${successCount} kitap başarıyla silindi.`);
+      addChatMessage('ai', `${successCount} kitap başarıyla silindi.`);
       if (failedBooks.length > 0) {
         addChatMessage('ai', `⚠️ Şu kitaplar silinemedi: ${failedBooks.join(', ')}`);
       }
@@ -13348,14 +13465,14 @@ window.login = () => { window.location.href = "/login"; };
         const res = await apiReanalyzeBook(fileHash);
         if (res.status === 'success') {
           const d = res.data || {};
-          showToast(`✅ Yapay zeka analizi başarıyla tamamlandı!\nKitap: ${d.kitap_adi || ''}\nYazar: ${d.yazar || ''}`, 'success');
+          showToast(`Yapay zeka analizi başarıyla tamamlandı!\nKitap: ${d.kitap_adi || ''}\nYazar: ${d.yazar || ''}`, 'success');
           closeModalDirect();
           if (typeof loadBooksFromAPI === 'function') await loadBooksFromAPI();
         } else {
-          showToast(`⚠️ Analiz tamamlanamadı: ${res.message || 'API anahtarınızı kontrol edin.'}`, 'warning');
+          showToast(`Analiz tamamlanamadı: ${res.message || 'API anahtarınızı kontrol edin.'}`, 'warning');
         }
       } catch (err) {
-        showToast(`❌ Hata: ${err.message || 'Analiz sırasında sorun oluştu.'}`, 'error');
+        showToast(`Hata: ${err.message || 'Analiz sırasında sorun oluştu.'}`, 'error');
       } finally {
         if (btn) {
           btn.disabled = false;
@@ -13609,17 +13726,17 @@ window.login = () => { window.location.href = "/login"; };
       try {
         const res = await apiFetch(`/api/books/${encodeURIComponent(fileHash)}/compress`, { method: 'POST' });
         if (res?.success) {
-          showToast(`✅ PDF Optimize Edildi!\nEski Boyut: ${res.old_mb} MB ➔ Yeni: ${res.new_mb} MB (%${res.reduction_percent} tasarruf)`, 'success');
+          showToast(`PDF Optimize Edildi!\nEski Boyut: ${res.old_mb} MB ➔ Yeni: ${res.new_mb} MB (%${res.reduction_percent} tasarruf)`, 'success');
           // Reload book list to reflect new size
           if (typeof reloadBooks === 'function') reloadBooks();
           // Update details modal if open
           const sizeEl = document.querySelector('#modal-content .book-info-row span:last-child');
           if (sizeEl) sizeEl.textContent = `${res.new_mb} MB`;
         } else {
-          showToast(`ℹ️ ${res?.message || 'Sıkıştırma tamamlandı.'}`, 'info');
+          showToast(`${res?.message || 'Sıkıştırma tamamlandı.'}`, 'info');
         }
       } catch (err) {
-        showToast(`❌ Sıkıştırma hatası: ${err.message || 'İşlem gerçekleştirilemedi.'}`, 'error');
+        showToast(`Sıkıştırma hatası: ${err.message || 'İşlem gerçekleştirilemedi.'}`, 'error');
       } finally {
         if (btn && prevHtml) {
           btn.disabled = false;
@@ -17442,7 +17559,7 @@ window.login = () => { window.location.href = "/login"; };
         if (handoffCountdownTimer) clearInterval(handoffCountdownTimer);
         handoffCountdownTimer = setInterval(() => {
           remaining -= 1;
-          if (timerEl) timerEl.textContent = `⏱️ Kod süresi: ${remaining} sn`;
+          if (timerEl) timerEl.textContent = `Kod süresi: ${remaining} sn`;
           if (remaining <= 0) {
             clearInterval(handoffCountdownTimer);
             qrContainer.innerHTML = '<div style="color:var(--muted); padding:3rem 1rem;">QR kodun süresi doldu.<br><button class="btn-empty-add" onclick="openHandoffModal()" style="margin-top:0.8rem; font-size:0.8rem;">Yenile</button></div>';
@@ -18918,7 +19035,7 @@ window.login = () => { window.location.href = "/login"; };
     }
 
     function getOpsStepNum(step, target) {
-      return step > target ? '✓' : String(target);
+      return step > target ? '<i class="fas fa-check" style="font-size:0.65em;"></i>' : String(target);
     }
 
     function renderOpsActiveCard(t, pct, logs) {
@@ -19086,7 +19203,7 @@ window.login = () => { window.location.href = "/login"; };
             loadBooksFromAPI(1, false).catch(err => console.error("Book reload failed:", err));
           }
           if (typeof addChatMessage === 'function') {
-            addChatMessage('ai', `✅ ${t.filename} başarıyla analiz edildi ve kütüphanenize eklendi.`);
+            addChatMessage('ai', `${t.filename} başarıyla analiz edildi ve kütüphanenize eklendi.`);
           }
         }
       });
