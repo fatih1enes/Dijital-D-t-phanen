@@ -6112,17 +6112,7 @@
       backdrop-filter: blur(12px);
     }
 
-    /* ═══════════ Silky-Smooth Theme Transition (Cross-Fade) ═══════════ */
-    .theme-transitioning,
-    .theme-transitioning *,
-    .theme-transitioning *::before,
-    .theme-transitioning *::after {
-      transition: background-color var(--t-ui) var(--ease-out),
-                  border-color var(--t-ui) var(--ease-out),
-                  color var(--t-ui) var(--ease-out),
-                  box-shadow var(--t-ui) var(--ease-out);
-      transition-delay: 0s;
-    }
+
 
     @keyframes themeIconSpin {
       0% {

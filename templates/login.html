@@ -4,6 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f4f1eb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#161513" media="(prefers-color-scheme: dark)">
   <title>Giriş Yap — Dijital Kütüphane</title>
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,6 +16,14 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uo0qcPxh4Plq7G5tGm0rU+1SPhVotteLpBERwTkw==" crossorigin="anonymous" referrerpolicy="no-referrer">
   <link rel="stylesheet" href="{{ url_for('static', path='/css/tokens.css') }}?v=2026110805">
   <style>
+    html {
+      color-scheme: light dark;
+    }
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+      animation-duration: var(--t-ui);
+      animation-timing-function: var(--ease-out);
+    }
 
     * {
       box-sizing: border-box;
@@ -370,19 +380,37 @@
 
   <script>
     // Tema Yönetimi
+    function updateThemeMeta(theme) {
+      const color = theme === 'dark' ? '#161513' : '#f4f1eb';
+      let meta = document.querySelector('meta[name="theme-color"]:not([media])');
+      if (!meta) meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) {
+        meta.setAttribute('content', color);
+        if (meta.hasAttribute('media')) meta.removeAttribute('media');
+      }
+    }
+
     function applyTheme(theme) {
       document.documentElement.dataset.theme = theme;
       const icon = document.querySelector('#theme-toggle i');
       if (icon) {
         icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
       }
+      updateThemeMeta(theme);
     }
 
     function toggleTheme() {
       const current = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
       const next = current === 'dark' ? 'light' : 'dark';
-      localStorage.setItem('kutuphane-theme', next);
-      applyTheme(next);
+      const apply = () => {
+        localStorage.setItem('kutuphane-theme', next);
+        applyTheme(next);
+      };
+      if (!document.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        apply();
+        return;
+      }
+      document.startViewTransition(apply);
     }
 
     // Başlangıç teması

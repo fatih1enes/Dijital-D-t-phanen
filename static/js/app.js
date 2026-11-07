@@ -134,38 +134,55 @@
     }
 
     // ─── ÖZELLİK 6: GECE MODU TOGGLE FONKSİYONU ─────────────────────────
+    function updateThemeMeta(theme) {
+      const color = theme === 'dark' ? '#161513' : '#f4f1eb';
+      let meta = document.querySelector('meta[name="theme-color"]:not([media])');
+      if (!meta) {
+        meta = document.querySelector('meta[name="theme-color"]');
+      }
+      if (meta) {
+        meta.setAttribute('content', color);
+        if (meta.hasAttribute('media')) {
+          meta.removeAttribute('media');
+        }
+      }
+    }
+
+    function updateThemeIcons(theme, spin = true) {
+      const spinClass = spin ? ' theme-icon-spin' : '';
+      const iconHTML = theme === 'dark'
+        ? `<i class="fas fa-sun${spinClass}"></i>`
+        : `<i class="fas fa-moon${spinClass}"></i>`;
+      const mainThemeBtn = document.getElementById('theme-toggle');
+      if (mainThemeBtn) mainThemeBtn.innerHTML = iconHTML;
+      document.querySelectorAll('.compact-theme-toggle').forEach(btn => btn.innerHTML = iconHTML);
+    }
+
     function toggleTheme() {
       const html = document.documentElement;
       const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
 
-      // İpeksi pürüzsüz geçiş sınıfını etkinleştir
-      html.classList.add('theme-transitioning');
-      html.dataset.theme = next;
-      localStorage.setItem('kutuphane-theme', next);
+      const apply = () => {
+        html.dataset.theme = next;
+        localStorage.setItem('kutuphane-theme', next);
+        updateThemeIcons(next, true);
+        updateThemeMeta(next);
+      };
 
-      const iconHTML = next === 'dark'
-        ? '<i class="fas fa-sun theme-icon-spin"></i>'
-        : '<i class="fas fa-moon theme-icon-spin"></i>';
+      if (!document.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        apply();
+        return;
+      }
 
-      // Butonları senkronize et
-      const mainThemeBtn = document.getElementById('theme-toggle');
-      if (mainThemeBtn) mainThemeBtn.innerHTML = iconHTML;
-      document.querySelectorAll('.compact-theme-toggle').forEach(btn => btn.innerHTML = iconHTML);
-
-      // Geçiş süresi bittiğinde sınıfı temizle
-      setTimeout(() => {
-        html.classList.remove('theme-transitioning');
-      }, 350);
+      document.startViewTransition(apply);
     }
 
     // Sayfa yüklenirken kaydedilmiş tema tercihini uygula
     (function () {
       const saved = localStorage.getItem('kutuphane-theme') || 'light';
       document.documentElement.dataset.theme = saved;
-      const iconHTML = saved === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
-      const btn = document.getElementById('theme-toggle');
-      if (btn) btn.innerHTML = iconHTML;
-      document.querySelectorAll('.compact-theme-toggle').forEach(b => b.innerHTML = iconHTML);
+      updateThemeIcons(saved, false);
+      updateThemeMeta(saved);
     })();
 
     // ─── İŞLEM MERKEZİ MANTIĞI ──────────────────────────────────────────

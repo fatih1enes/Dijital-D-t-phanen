@@ -37,39 +37,15 @@ body {
   outline-offset: 2px;
 }
 
-/* ═══════════════ 3. TEMA GEÇİŞİ (İPEKSİ & FLAŞSIZ) ═══════════════ */
-.theme-transitioning,
-.theme-transitioning body,
-.theme-transitioning header,
-.theme-transitioning main,
-.theme-transitioning .compact-nav,
-.theme-transitioning .modal,
-.theme-transitioning .logs-panel,
-.theme-transitioning #ops-center,
-.theme-transitioning #chat-panel,
-.theme-transitioning .book-card,
-.theme-transitioning .card-cover,
-.theme-transitioning .controls-panel,
-.theme-transitioning .search-wrap,
-.theme-transitioning .dropdown-trigger,
-.theme-transitioning .dropdown-menu,
-.theme-transitioning .view-toggle,
-.theme-transitioning .view-btn,
-.theme-transitioning .stat-card,
-.theme-transitioning table,
-.theme-transitioning tr,
-.theme-transitioning td,
-.theme-transitioning th,
-.theme-transitioning .import-box,
-.theme-transitioning button,
-.theme-transitioning input,
-.theme-transitioning select,
-.theme-transitioning textarea {
-  transition: background-color var(--t-ui) var(--ease-out),
-              border-color var(--t-ui) var(--ease-out),
-              color var(--t-ui) var(--ease-out),
-              box-shadow var(--t-ui) var(--ease-out),
-              fill var(--t-ui) var(--ease-out);
+/* ═══════════════ 3. TEMA GEÇİŞİ (VIEW TRANSITIONS API) ═══════════════ */
+html {
+  color-scheme: light dark;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--t-ui);
+  animation-timing-function: var(--ease-out);
 }
 
 .theme-icon-spin {
