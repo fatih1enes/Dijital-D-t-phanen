@@ -11,151 +11,109 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uo0qcPxh4Plq7G5tGm0rU+1SPhVotteLpBERwTkw==" crossorigin="anonymous" referrerpolicy="no-referrer">
-  <link rel="stylesheet" href="{{ url_for('static', path='/css/tokens.css') }}?v=2026110805">
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/app.css') }}?v=2026110805">
   <style>
-    html {
-      color-scheme: light dark;
-    }
-    ::view-transition-old(root),
-    ::view-transition-new(root) {
-      animation-duration: var(--t-ui);
-      animation-timing-function: var(--ease-out);
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
     body {
       min-height: 100vh;
       display: flex;
-      align-items: center;
+      flex-direction: column;
       justify-content: center;
-      font-family: 'Geist', system-ui, -apple-system, sans-serif;
+      align-items: center;
+      padding: var(--sp-6) var(--sp-4);
       background-color: var(--paper);
       color: var(--ink);
-      background-image:
-        radial-gradient(ellipse at 15% 15%, var(--accent-glow) 0%, transparent 50%),
-        radial-gradient(ellipse at 85% 85%, rgba(130,116,94, 0.08) 0%, transparent 50%);
-      transition: background-color 0.3s ease, color 0.3s ease;
-      padding: 1.5rem;
+      font-family: var(--font-ui);
       position: relative;
+      box-sizing: border-box;
+      transition: opacity var(--t-ui) var(--ease-out);
+    }
+
+    .login-topbar {
+      position: absolute;
+      top: var(--sp-6);
+      left: var(--sp-6);
+      right: var(--sp-6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .login-brand-top {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .login-brand-sub {
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .login-brand-title {
+      font-family: var(--font-serif);
+      font-size: 1.15rem;
+      color: var(--ink);
     }
 
     .theme-toggle-btn {
-      position: absolute;
-      top: 1.5rem;
-      right: 1.5rem;
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      border-radius: var(--r-sm);
       border: 1px solid var(--line);
-      background: var(--card-bg);
-      color: var(--ink);
+      background: var(--surface);
+      color: var(--muted);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.1rem;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-      transition: color var(--t-micro) var(--ease-out), border-color var(--t-micro) var(--ease-out), background-color var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out);
+      font-size: 0.95rem;
+      transition: color var(--t-micro) var(--ease-out),
+                  border-color var(--t-micro) var(--ease-out),
+                  background-color var(--t-micro) var(--ease-out);
     }
 
     .theme-toggle-btn:hover {
-      border-color: var(--accent);
-      color: var(--accent);
+      border-color: var(--line-strong);
+      color: var(--ink);
       background: var(--paper-dark);
-    }
-
-    .theme-toggle-btn:active {
-      transform: scale(0.94);
-      transition-duration: var(--t-micro);
     }
 
     .login-container {
       width: 100%;
-      max-width: 440px;
-    }
-
-    .login-card {
-      background: var(--card-bg);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 2.5rem 2.2rem;
-      box-shadow: var(--shadow-lg);
-      text-align: center;
-      animation: cardAppear 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    @keyframes cardAppear {
-      from {
-        opacity: 0;
-        transform: translateY(16px) scale(0.98);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-
-    .brand-icon {
-      width: 64px;
-      height: 64px;
-      margin: 0 auto 1.25rem;
-      border-radius: 18px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-size: 1.8rem;
-      box-shadow: 0 8px 24px var(--accent-glow);
-    }
-
-    .brand-badge {
-      display: inline-block;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.15em;
-      color: var(--sepia);
-      font-weight: 600;
-      margin-bottom: 0.35rem;
-    }
-
-    .login-title {
-      font-family: 'Instrument Serif', Georgia, serif;
-      font-size: 1.95rem;
-      font-weight: 400;
-      font-style: italic;
-      color: var(--ink);
-      margin-bottom: 0.5rem;
-    }
-
-    .login-desc {
-      font-size: 0.9rem;
-      color: var(--muted);
-      line-height: 1.5;
-      margin-bottom: 2rem;
-    }
-
-    .form-group {
-      margin-bottom: 1.5rem;
+      max-width: 380px;
+      margin: 0 auto;
       text-align: left;
     }
 
-    .form-label {
-      display: block;
-      font-size: 0.82rem;
-      font-weight: 600;
+    .login-title {
+      font-family: var(--font-serif);
+      font-size: clamp(2.4rem, 6vw, 3.4rem);
+      font-weight: 400;
       color: var(--ink);
-      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+      margin: 0 0 var(--sp-3) 0;
+      text-wrap: balance;
+    }
+
+    .login-desc {
+      font-family: var(--font-ui);
+      font-size: 0.9375rem;
+      color: var(--muted);
+      line-height: 1.55;
+      margin: 0 0 var(--sp-6) 0;
+      text-wrap: pretty;
+    }
+
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-4);
     }
 
     .input-wrapper {
@@ -164,218 +122,111 @@
       align-items: center;
     }
 
-    .input-wrapper input {
+    .login-input {
       width: 100%;
-      padding: 0.85rem 2.8rem 0.85rem 1.1rem;
-      font-size: 0.95rem;
-      font-family: inherit;
-      border: 1.5px solid var(--line);
-      border-radius: var(--radius-sm);
-      background: rgba(255, 255, 255, 0.4);
+      height: 44px;
+      padding: 0 2.8rem 0 var(--sp-4);
+      font-family: var(--font-ui);
+      font-size: 0.9375rem;
       color: var(--ink);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--r-sm);
+      box-sizing: border-box;
       outline: none;
-      transition: all 0.2s ease;
+      transition: border-color var(--t-micro) var(--ease-out),
+                  box-shadow var(--t-micro) var(--ease-out);
     }
 
-    .input-wrapper input:focus {
+    .login-input:focus {
       border-color: var(--accent);
-      box-shadow: 0 0 0 4px var(--accent-glow);
-      background: var(--card-bg);
+      box-shadow: 0 0 0 2px var(--line-strong);
+    }
+
+    @keyframes inputMicroShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-3px); }
+      75% { transform: translateX(3px); }
+    }
+
+    .login-input.input-error {
+      border-color: var(--danger) !important;
+      animation: inputMicroShake 200ms var(--ease-out) 2;
     }
 
     .toggle-pwd-btn {
       position: absolute;
-      right: 0.85rem;
+      right: var(--sp-3);
       background: none;
       border: none;
       color: var(--muted);
       cursor: pointer;
-      font-size: 1rem;
-      padding: 0.3rem;
-      transition: color var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out);
-    }
-
-    .toggle-pwd-btn:hover {
-      color: var(--accent);
-    }
-
-    .toggle-pwd-btn:active {
-      transform: scale(0.94);
-      transition-duration: var(--t-micro);
-    }
-
-    .btn-submit {
-      width: 100%;
-      padding: 0.9rem;
-      font-size: 1rem;
-      font-weight: 600;
-      font-family: inherit;
-      color: #fff;
-      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
-      border: none;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      box-shadow: 0 4px 16px var(--accent-glow);
-      position: relative;
-      overflow: hidden;
-      transition: transform var(--t-micro) var(--ease-out), box-shadow var(--t-micro) var(--ease-out), opacity var(--t-micro) ease;
+      font-size: 0.9rem;
+      padding: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
+      transition: color var(--t-micro) var(--ease-out);
     }
 
-    .btn-submit::after {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -120%;
-      width: 60%;
-      height: 200%;
-      background: linear-gradient(
-        105deg,
-        transparent 20%,
-        rgba(255, 255, 255, 0.28) 50%,
-        transparent 80%
-      );
-      transform: rotate(25deg);
-      pointer-events: none;
-      opacity: 0;
+    .toggle-pwd-btn:hover {
+      color: var(--ink);
     }
 
-    .btn-submit:hover:not(:disabled) {
-      box-shadow: 0 8px 26px var(--accent-glow);
-      opacity: 0.98;
-    }
-
-    .btn-submit:hover:not(:disabled)::after {
-      opacity: 1;
-      left: 190%;
-      transition: left 0.75s var(--ease-out), opacity 0.4s ease;
-    }
-
-    .btn-submit:active:not(:disabled) {
-      transform: scale(0.97);
-      transition-duration: var(--t-micro);
-      box-shadow: 0 2px 8px var(--accent-glow);
-    }
-
-    .btn-submit:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .message-box {
-      margin-top: 1.25rem;
-      padding: 0.75rem 1rem;
-      border-radius: var(--radius-sm);
-      font-size: 0.88rem;
-      display: none;
-      align-items: center;
-      gap: 0.6rem;
-      text-align: left;
-      line-height: 1.4;
-    }
-
-    .message-box.error {
-      display: flex;
-      background: #f6e9e6;
-      border: 1px solid rgba(168,68,58,.3);
-      color: #7a2b23;
-    }
-
-    [data-theme="dark"] .message-box.error {
-      background: #3c1414;
-      border-color: rgba(176,71,60, 0.3);
-      color: #fecaca;
-    }
-
-    .message-box.warning {
-      display: flex;
-      background: #faf3e0;
-      border: 1px solid rgba(217, 119, 6, 0.25);
-      color: #5e4318;
-    }
-
-    [data-theme="dark"] .message-box.warning {
-      background: #3b2506;
-      border-color: rgba(184,134,47, 0.3);
-      color: #e8dca0;
-    }
-
-    .shake {
-      animation: shake 0.4s ease-in-out;
-    }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      20%, 60% { transform: translateX(-6px); }
-      40%, 80% { transform: translateX(6px); }
-    }
-
-    .footer-note {
-      margin-top: 2rem;
-      font-size: 0.78rem;
+    .login-footer-note {
+      margin-top: var(--sp-6);
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
       color: var(--muted);
-      opacity: 0.8;
+      letter-spacing: 0.04em;
     }
 
-    body { background-image: none; }
-    .theme-toggle-btn { width: 36px; height: 36px; border-radius: 6px; backdrop-filter: none; box-shadow: none; background: transparent; color: var(--muted); border-color: transparent; }
-    .theme-toggle-btn:hover { transform: none; background: var(--card-bg); border-color: var(--line); color: var(--ink); box-shadow: none; }
-    .login-card { backdrop-filter: none; -webkit-backdrop-filter: none; border: 1px solid var(--line); box-shadow: 0 12px 32px -12px rgba(41,40,37,.22); animation: cardAppear .5s cubic-bezier(.22,1,.36,1) both; text-align: left; }
-    .brand-icon { width: 40px; height: 40px; margin: 0 0 1.5rem; border-radius: 6px; background: var(--ink); color: var(--paper); box-shadow: none; font-size: 1.1rem; }
-    .brand-badge { font-size: .8125rem; letter-spacing: 0; text-transform: none; font-weight: 500; color: var(--muted); }
-    .login-title { font-weight: 400; font-style: normal; font-size: 2.4rem; line-height: 1.05; letter-spacing: -.015em; }
-    .form-label { font-weight: 500; font-size: .8125rem; color: var(--muted); }
-    .input-wrapper input { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; }
-    .input-wrapper input:focus { border-color: var(--ink); box-shadow: 0 0 0 3px var(--accent-glow); background: var(--paper); }
-    .btn-submit { background: var(--ink); color: var(--paper); box-shadow: none; border-radius: 6px; font-size: .875rem; font-weight: 500; }
-    .btn-submit::after { display: none; }
-    .btn-submit:hover:not(:disabled) { background: var(--accent-soft); color: #faf9f6; transform: none; box-shadow: none; }
-    .btn-submit:active:not(:disabled) { transform: none; }
-    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+    @media (prefers-reduced-motion: reduce) {
+      .login-input.input-error {
+        animation: none;
+      }
+    }
   </style>
 </head>
 
 <body>
-  <button class="theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()" title="Tema Değiştir">
-    <i class="fas fa-moon"></i>
-  </button>
+  <div class="login-topbar">
+    <div class="login-brand-top">
+      <span class="login-brand-sub">DİJİTAL KOLEKSİYON</span>
+      <span class="login-brand-title">Kütüphanem</span>
+    </div>
+    <button class="theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()" title="Aydınlık / Karanlık Mod" aria-label="Aydınlık veya Karanlık Mod">
+      <i class="fas fa-moon"></i>
+    </button>
+  </div>
 
   <div class="login-container">
-    <div class="login-card" id="login-card">
-      <div class="brand-icon">
-        <i class="fas fa-book-reader"></i>
+    <h1 class="login-title">Kütüphanem</h1>
+    <p class="login-desc">Kişisel dijital arşivinize erişmek için lütfen şifrenizi girin.</p>
+
+    <form class="login-form" id="login-form" onsubmit="handleLogin(event)">
+      <div class="field-group">
+        <label class="field-label" for="password">Giriş Şifresi</label>
+        <div class="input-wrapper">
+          <input type="password" id="password" name="password" class="login-input" placeholder="Şifrenizi yazın..." autocomplete="current-password" autofocus required>
+          <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility()" title="Şifreyi Göster/Gizle" aria-label="Şifreyi Göster veya Gizle">
+            <i class="fas fa-eye" id="pwd-icon"></i>
+          </button>
+        </div>
       </div>
-      <span class="brand-badge">Güvenli Erişim</span>
-      <h1 class="login-title">Kütüphanem</h1>
-      <p class="login-desc">Kişisel dijital kitaplığınıza erişmek için lütfen yönetici şifrenizi girin.</p>
 
-      <form id="login-form" onsubmit="handleLogin(event)">
-        <div class="form-group">
-          <label class="form-label" for="password">Giriş Şifresi</label>
-          <div class="input-wrapper">
-            <input type="password" id="password" name="password" placeholder="Şifrenizi yazın..." autocomplete="current-password" autofocus required>
-            <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility()" title="Şifreyi Göster/Gizle">
-              <i class="fas fa-eye" id="pwd-icon"></i>
-            </button>
-          </div>
-        </div>
+      <button type="submit" class="btn btn--primary btn--lg" id="submit-btn" style="width: 100%;">
+        <span>Giriş Yap</span>
+        <i class="fas fa-arrow-right"></i>
+      </button>
 
-        <button type="submit" class="btn-submit" id="submit-btn">
-          <span>Giriş Yap</span>
-          <i class="fas fa-arrow-right"></i>
-        </button>
+      <div class="callout callout--danger" id="msg-box" style="display: none; margin-top: var(--sp-2);">
+        <i class="fas fa-exclamation-circle" id="msg-icon"></i>
+        <span id="msg-text"></span>
+      </div>
+    </form>
 
-        <div class="message-box" id="msg-box">
-          <i class="fas fa-exclamation-circle" id="msg-icon"></i>
-          <span id="msg-text"></span>
-        </div>
-      </form>
-
-      <p class="footer-note">Dijital Kütüphane &bull; Güvenli Oturum Yönetimi</p>
-    </div>
+    <p class="login-footer-note">Dijital Kütüphane &bull; Güvenli Oturum</p>
   </div>
 
   <script>
@@ -438,7 +289,7 @@
       const box = document.getElementById('msg-box');
       const msgText = document.getElementById('msg-text');
       const msgIcon = document.getElementById('msg-icon');
-      box.className = `message-box ${type}`;
+      box.className = type === 'warning' ? 'callout callout--warn' : 'callout callout--danger';
       msgText.textContent = text;
       msgIcon.className = type === 'warning' ? 'fas fa-shield-alt' : 'fas fa-exclamation-circle';
       box.style.display = 'flex';
@@ -489,7 +340,7 @@
         // Ağ hatası durumunda formu açık bırak
       }
     }
-    // Sayfa açıldığında oturum durumunu sorgula
+
     document.addEventListener('DOMContentLoaded', () => {
       void checkAuthStatus();
     });
@@ -501,7 +352,6 @@
 
       const pwdInput = document.getElementById('password');
       const submitBtn = document.getElementById('submit-btn');
-      const card = document.getElementById('login-card');
       const password = pwdInput.value;
 
       submitBtn.disabled = true;
@@ -515,20 +365,23 @@
         });
 
         if (res.ok) {
-          // Başarılı giriş
-          const params = new URLSearchParams(window.location.search);
-          const rawNext = params.get('next');
-          const nextUrl = (rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//')) ? rawNext : '/';
-          window.location.href = nextUrl;
+          // Başarılı giriş: Sayfayı yumuşakça soluklaştırarak yönlendir
+          document.body.style.transition = 'opacity var(--t-ui) var(--ease-out)';
+          document.body.style.opacity = '0';
+          setTimeout(() => {
+            const params = new URLSearchParams(window.location.search);
+            const rawNext = params.get('next');
+            const nextUrl = (rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//')) ? rawNext : '/';
+            window.location.href = nextUrl;
+          }, 280);
           return;
         }
 
         const data = await res.json().catch(() => ({}));
-        card.classList.add('shake');
-        setTimeout(() => card.classList.remove('shake'), 400);
+        pwdInput.classList.add('input-error');
+        setTimeout(() => pwdInput.classList.remove('input-error'), 450);
 
         if (res.status === 429) {
-          // Rate-limit kilidi
           const detail = String(data.detail || '');
           let seconds = 60;
           if (detail.includes('saniye')) {
@@ -544,7 +397,6 @@
           showMessage(data.detail || 'Giriş yapılamadı.', 'error');
         }
       } catch (err) {
-        // Ağ hatası veya bağlantı kopması durumunda kullanıcıya hata mesajı göster ve konsola kaydet
         console.error('Giriş isteği sırasında hata oluştu:', err);
         showMessage('Sunucuya bağlanırken bir sorun oluştu.', 'error');
       } finally {
