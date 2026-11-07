@@ -1674,6 +1674,7 @@
         if (!canvas && wrapper) {
           canvas = document.createElement('canvas');
           canvas.id = `pdf-render-canvas-${pageNum}`;
+          canvas.className = 'pdf-page-canvas';
           wrapper.insertBefore(canvas, wrapper.firstChild);
         }
         if (!canvas) {
@@ -3300,33 +3301,34 @@
     }
 
     function applyChromaGuard(canvas, mode) {
-      if (!canvas || !mode || mode === 'normal') return;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      const w = canvas.width;
-      const h = canvas.height;
-      if (!w || !h) return;
+      // Sepia, e-ink and normal modes are handled via zero-cost GPU CSS filters on [data-surface-mode]
+      if (!canvas || mode !== 'chromaguard') return;
 
-      try {
-        const imgData = ctx.getImageData(0, 0, w, h);
-        const data = imgData.data;
-        const len = data.length;
-
-        if (mode === 'sepia') {
-          applySepiaFilter(data, len);
-        } else if (mode === 'eink') {
-          applyEinkFilter(data, len);
-        } else if (mode === 'chromaguard') {
-          applyChromaGuardFilter(data, len);
+      const runTransform = () => {
+        try {
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
+          const w = canvas.width;
+          const h = canvas.height;
+          if (!w || !h) return;
+          const imgData = ctx.getImageData(0, 0, w, h);
+          applyChromaGuardFilter(imgData.data, imgData.data.length);
+          ctx.putImageData(imgData, 0, 0);
+        } catch (e) {
+          console.debug('ChromaGuard pixel transform warning:', e);
         }
-        ctx.putImageData(imgData, 0, 0);
-      } catch (e) {
-        console.debug('ChromaGuard pixel transform warning:', e);
+      };
+
+      if (typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(() => runTransform(), { timeout: 200 });
+      } else {
+        setTimeout(runTransform, 16);
       }
     }
     window.applyChromaGuard = applyChromaGuard;
 
     function setReaderSurfaceMode(mode) {
+      const prevMode = currentReaderSurfaceMode;
       currentReaderSurfaceMode = mode;
       try {
         localStorage.setItem('pdf_reader_surface_mode', mode);
@@ -3341,13 +3343,19 @@
         btn.classList.toggle('active', btn.id === `btn-surface-${mode}`);
       });
 
-      // Cancel ongoing render tasks
+      // Switching between normal, sepia and eink requires ZERO re-renders: GPU CSS filter handles it in 0ms!
+      const requiresReRender = (prevMode === 'chromaguard' && mode !== 'chromaguard') || (mode === 'chromaguard');
+      if (!requiresReRender) {
+        return;
+      }
+
+      // Cancel ongoing render tasks and re-render only when entering/leaving ChromaGuard OLED mode
       Object.values(pdfRenderTasks).forEach(task => {
         try { task.cancel(); } catch (_) {}
       });
       pdfRenderTasks = {};
 
-      // Clear render tracker and re-render visible canvases with new filter
+      // Clear render tracker and re-render visible canvases
       pdfRenderedPages = {};
       checkVisiblePagesAndRender();
     }

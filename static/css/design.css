@@ -2356,3 +2356,26 @@ button:active:not(:disabled),
     animation: none !important;
   }
 }
+
+/* ═══════════════ READER SURFACE MODES (GPU HARDWARE ACCELERATED) ═══════════════ */
+#custom-pdf-viewer[data-surface-mode="sepia"] canvas,
+#custom-pdf-viewer[data-surface-mode="sepia"] .pdf-page-canvas,
+[data-surface="sepia"] .pdf-page-canvas,
+[data-surface="sepia"] .epub-content {
+  filter: sepia(0.35) contrast(0.95) brightness(0.98);
+  transition: filter var(--t-ui) var(--ease-out);
+}
+
+#custom-pdf-viewer[data-surface-mode="eink"] canvas,
+#custom-pdf-viewer[data-surface-mode="eink"] .pdf-page-canvas,
+[data-surface="eink"] .pdf-page-canvas,
+[data-surface="eink"] .epub-content {
+  filter: grayscale(1) contrast(1.1);
+  transition: filter var(--t-ui) var(--ease-out);
+}
+
+#custom-pdf-viewer[data-surface-mode="normal"] canvas,
+#custom-pdf-viewer[data-surface-mode="normal"] .pdf-page-canvas {
+  filter: none;
+  transition: filter var(--t-ui) var(--ease-out);
+}
