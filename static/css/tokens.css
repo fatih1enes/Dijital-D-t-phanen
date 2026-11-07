@@ -18,13 +18,21 @@
   --font-ui: 'Geist', system-ui, -apple-system, sans-serif;
   --font-mono: 'Geist Mono', ui-monospace, Consolas, monospace;
 
-  /* Typography Font Sizes */
+  /* Typography Font Sizes (E6 Standard Scale) */
+  --fs-label: 0.6875rem;                       /* Küçük etiket: Geist Mono */
   --fs-xs: 0.75rem;
   --fs-sm: 0.8125rem;
-  --fs-base: 0.9375rem;
-  --fs-lg: 1.125rem;
-  --fs-xl: 1.5rem;
-  --fs-2xl: 2.25rem;
+  --fs-base: 0.9375rem;                        /* Gövde: Geist 0.9375rem */
+  --fs-book-title: 1.0625rem;                  /* Kitap adı & Okuma metni: Newsreader */
+  --fs-h3: 1.35rem;                            /* H3 Bölüm başlığı: Newsreader 500 */
+  --fs-h2: 2rem;                               /* H2 Modal başlığı: Instrument Serif 400 */
+  --fs-h1: clamp(2.4rem, 5vw, 3.6rem);         /* H1 Header: Instrument Serif 400 */
+  --fs-display: clamp(3.25rem, 9vw, 7rem);     /* Display: Hero Instrument Serif 400 */
+
+  --lh-tight: 0.95;
+  --lh-heading: 1.15;
+  --lh-body: 1.55;
+  --lh-reading: 1.7;
 
   /* Spacing Scale (4px Grid) */
   --sp-1: 4px;

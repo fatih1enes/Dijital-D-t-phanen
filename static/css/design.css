@@ -11,7 +11,7 @@
  */
 
 
-/* ═══════════════ 2. GENEL SIFIRLAMA & TABAN ═══════════════ */
+/* ═══════════════ 2. GENEL SIFIRLAMA, TİPOGRAFİ & TABAN (E6) ═══════════════ */
 html {
   scrollbar-gutter: stable;
 }
@@ -19,12 +19,58 @@ html {
 body {
   font-family: var(--font-ui);
   font-size: var(--fs-base);
-  line-height: 1.55;
+  line-height: var(--lh-body);
   background-color: var(--paper);
   background-image: none;
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6,
+.hero-title,
+.modal-title,
+.brand-title-row h1 {
+  text-wrap: balance;
+}
+
+p,
+.hero-subtitle,
+.modal-author,
+.book-summary-text {
+  text-wrap: pretty;
+}
+
+.brand-title-row h1 {
+  font-family: var(--font-serif);
+  font-size: var(--fs-h1);
+  font-weight: 400;
+  line-height: var(--lh-heading);
+  letter-spacing: -0.02em;
+}
+
+.modal-title {
+  font-family: var(--font-serif);
+  font-size: var(--fs-h2);
+  font-weight: 400;
+  line-height: var(--lh-heading);
+}
+
+.card-title {
+  font-family: var(--font-reading);
+  font-size: var(--fs-book-title);
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.card-badge,
+.meta-chip,
+.tag-badge,
+.category-pill {
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
+  letter-spacing: 0.04em;
+  text-transform: none;
 }
 
 ::selection {
