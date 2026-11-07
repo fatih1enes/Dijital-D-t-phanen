@@ -136,6 +136,13 @@
   --color-accent-amber: var(--warn);
   --color-accent-red: var(--danger);
 
+  /* Terminal & Diagnostics Console Tokens (Consistent Monospace Dark Surface) */
+  --terminal-bg: #161513;
+  --terminal-surface: #201e1b;
+  --terminal-ink: #f0ece3;
+  --terminal-muted: #a39e93;
+  --terminal-line: rgba(240, 236, 227, 0.12);
+
   /* Shadows (Natural Diffusion) */
   --shadow-color: rgba(31, 30, 27, 0.08);
   --shadow-sm: 0 1px 3px rgba(31, 30, 27, 0.05), 0 1px 2px rgba(31, 30, 27, 0.03);
