@@ -481,8 +481,6 @@ h1 em {
 
 .compact-nav {
   background: var(--surface);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--line);
   box-shadow: var(--shadow-sm);
   padding: var(--sp-2) 2rem;
@@ -903,8 +901,8 @@ h1 em {
 /* ═══════════════ 9. SISTEM & İŞLEM LOGLARI (KRİSTAL NETLİKTE OKUNABİLİRLİK) ═══════════════ */
 .logs-modal {
   background: rgba(22, 21, 19, 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   transition: opacity var(--t-ui) var(--ease-out);
 }
 
@@ -1222,8 +1220,8 @@ h1 em {
 
 .modal-overlay {
   background: rgba(22, 21, 19, 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .modal-overlay.open {
