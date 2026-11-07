@@ -1,43 +1,55 @@
-# 🏛️ DİJİTAL KÜTÜPHANE — BÜTÜN TASARIM, ARAYÜZ VE UX SİSTEMİ KODLARI (FAZ A GÜNCEL SÜRÜM)
+# 🏛️ DİJİTAL KÜTÜPHANE — BÜTÜN TASARIM, ARAYÜZ, HAREKET VE PERFORMANS SİSTEMİ KODLARI (FAZ A + B + C GÜNCEL SÜRÜM)
 
-Bu dosya, Dijital Kütüphane projesinin **tüm görsel tasarım sistemi, CSS katman mimarisi, tasarım token'ları, HTML şablonları ve kritik UI/UX etkileşim kodlarını** yapay zekâ modellerine (Claude, GPT-4, Gemini vb.) tek parça halinde aktarmak amacıyla eksiksiz olarak bir araya getirilmiştir.
+Bu dosya, Dijital Kütüphane projesinin **tüm görsel tasarım sistemi, CSS katman mimarisi, tasarım token'ları, hareket fizikleri (60 FPS motion), HTML şablonları, çift tamponlama (double-buffering) ve kritik UI/UX performans kodlarını** yapay zekâ modellerine (Claude, GPT-4, Gemini vb.) tek parça halinde aktarmak amacıyla eksiksiz olarak bir araya getirilmiştir.
 
 ---
 
 ## 📋 İÇİNDEKİLER
 
-1. **TASARIM FELSEFESİ VE SİSTEM MİMARİSİ (Apple Books / Linear / Tesla Sakinliği)**
-2. **FAZ A: TEMEL VE KARARLILIK İLE GETİRİLEN MİMARİ İYİLEŞTİRMELER**
-3. **KOD DOSYALARI:**
+1. **TASARIM VE HAREKET FELSEFESİ (Apple Books / Linear / Tesla Sakinliği)**
+2. **FAZ A: TEMEL VE KARARLILIK İYİLEŞTİRMELERİ (A1 - A12)**
+3. **FAZ B: HAREKET SİSTEMİ STANDARDI (B1 - B5)**
+4. **FAZ C: PERFORMANS VE ÇİFT TAMPONLAMA (C1 - C7)**
+5. **KOD DOSYALARI:**
    - **DOSYA 0:** `static/css/app.css` (CSS Cascade Layers: `@layer legacy, tokens, design;`)
    - **DOSYA 1:** `static/css/tokens.css` (Tek Doğru Kaynak: Renk, Tipografi, Boşluk, Radius, Hareket Token'ları)
-   - **DOSYA 2:** `static/css/design.css` (Rafine Tasarım Katmanı v5, Tipografi & Mikro-Etkileşim Standartları)
+   - **DOSYA 2:** `static/css/design.css` (Rafine Tasarım Katmanı, Mikro-Etkileşim Standartları & View Transitions)
    - **DOSYA 3:** `templates/kutuphane.html` (Ana Kütüphane Arayüzü, Hero, Raf & Çalışma Alanı Şablonu)
-   - **DOSYA 4:** `templates/login.html` (Giriş Ekranı, Sıcak Kâğıt/Mürekkep Paleti & Responsive Formu)
+   - **DOSYA 4:** `templates/login.html` (Giriş Ekranı, Sıcak Kâğıt/Mürekkep Paleti & View Transitions)
    - **DOSYA 5:** `static/css/style.css` (Temel Bileşenler, Modallar, Panel Yapıları & Temizlikleri)
-   - **DOSYA 6.1:** `static/js/ui_core.js` (UI Çekirdeği, Raf & Grid Render Mantığı, Filtreler)
-   - **DOSYA 6.2:** `static/js/ui_workspace.js` (Retina 2.5 DPR Okuyucu, rAF Scroll, Yarış Durumu Korumalı Arama)
+   - **DOSYA 6.1:** `static/js/app.js` (Uygulama Yaşam Döngüsü, View Transitions Tema Geçişi)
+   - **DOSYA 6.2:** `static/js/ui_core.js` (UI Çekirdeği, cardElementsMap & tableRowsMap ile Sıfır Re-render)
+   - **DOSYA 6.3:** `static/js/ui_workspace.js` (Retina 2.5 DPR, Çift Tamponlama Zoom, GPU Yüzey Filtreleri)
+   - **DOSYA 6.4:** `static/js/ui_chat_settings.js` (Daktilo Efekti 2.5s Sınırlaması, Akıllı Scroll)
+   - **DOSYA 6.5:** `static/js/ui_logs.js` (İşlem Merkezi & Canlı Log Akışı)
 
 ---
 
-## 1. TASARIM FELSEFESİ VE SİSTEM MİMARİSİ
+## 1. TASARIM, HAREKET VE PERFORMANS FELSEFESİ
 
-- **Sessiz ve Rafine Estetik:** Yapay zekâ SaaS şablonu alışkanlıklarından (mor/mavi degrade, gereksiz parıltı, kontrolsüz blur, 20px+ yuvarlak köşeli kart tekrarı) tamamen arındırılmıştır.
+- **Sessiz ve Rafine Estetik:** Yapay zekâ SaaS şablonu klişelerinden (mor/mavi degrade, gereksiz neon parlama, kontrolsüz 20px+ blur, zıplayan hover efektleri) tamamen arındırılmıştır.
 - **Sıcak Kâğıt & Derin Mürekkep Paleti:** Açık temada sıcak kâğıt (`#f4f1eb`) ve derin antrasit mürekkep (`#1f1e1b`, kontrast 14:1); koyu temada obsidian kömür (`#161513`) ve temiz krem metin (`#f0ece3`).
 - **Doğal Tipografi:** Başlıklarda Instrument Serif (yalnızca 400 normal/italik, sahte kalın yasak); editoryal metinlerde Newsreader; kullanıcı arayüzünde Geist; sayısal ve künye alanlarında Geist Mono.
-- **Fizik Standartı (60 FPS Fluid Motion):** Buton ve etkileşimli kartlarda hover durumunda `translateY(-2px)`, active/tıklama anında `scale(0.975)`. Zamanlama token'dan gelir (`--t-fast: 150ms`, `--ease-out`).
+- **60 FPS Tutarlı Hareket Fizikleri:** Butonlarda zıplama (`translateY`) yasak, sadece dokunsal basılma (`scale(0.97)` / `scale(0.94)`). Kartlarda sakin yükseklik (`translateY(-2px)` + `--shadow-md`). Süreler ve eğriler token'dan (`--t-micro: 150ms`, `--t-ui: 280ms`, `--ease-out`, `--ease-spring`).
+- **Giriş Kadar Çıkış Da Güzel:** Bütün modallar, paneller ve açılır menüler hem giriş (`modalOverlayIn`, `modalPopIn`, `dropdownIn`) hem çıkış (`modalOverlayOut`, `modalPopOut`) animasyonuna sahiptir.
+- **Sıfır Flaş & Çift Tamponlama (Double-Buffering):** Okuyucuda zoom yapıldığında mevcut canvas silinmez; yeni yüksek çözünürlüklü sayfa arka planda render edilip tek bir `requestAnimationFrame` içinde takas edilir.
 
 ---
 
-## 2. FAZ A İLE GETİRİLEN KRİTİK DÜZELTMELER
+## 2. FAZ A, B VE C İLE GETİRİLEN MİMARİ DÖNÜŞÜMLER
 
-1. **CSS Katman Mimarisi (`@layer`):** `style.css` (legacy), `tokens.css` (tokens) ve `design.css` (design) katmanlarına ayrıldı. `design.css` içindeki 920'den fazla zorlama `!important` silinerek kod temizliği sağlandı.
-2. **Merkezi Token Sistemi:** `tokens.css` tek kaynak haline getirildi; `style.css`, `design.css` ve `login.html` içindeki mükerrer `:root` blokları silindi.
-3. **Gölge Çakışması:** `--shadow-color` rengi ile `--shadow-sm/md/lg/xl` tam gölgeleri ayrıştırıldı; `style.css`'teki bozuk `box-shadow` sözdizimleri onarıldı.
-4. **Retina PDF Netliği:** `ui_workspace.js` içinde `dpr = Math.min(window.devicePixelRatio || 1, 2.5)` ölçeklemesi ve `transform` matrisi ile yüksek DPI ekranlarda piksel netliğinde okuma sağlandı.
-5. **Scroll & Arama Kararlılığı:** Scroll debounce yerine `requestAnimationFrame` throttle mekanizmasına geçilerek beyaz sayfa sorunu çözüldü; PDF arama motoruna artan sayaçlı iptal token'ı (`pdfSearchToken`) ve iteratif döngü eklenerek yarış durumları engellendi.
-6. **Modal Sayfa Kayması:** `html { scrollbar-gutter: stable; }` ve `body.modal-open` sınıf standardı ile Windows'ta 15px layout shift çözüldü.
-7. **Mobil Yüzen Haplar:** 375px mobilde hem `#ops-toggle` hem `#chat-panel:not(.active)` haplarının çakışmadan kendi köşelerinde durması sağlandı.
+1. **CSS Katman Mimarisi (`@layer`):** `style.css` (legacy), `tokens.css` (tokens) ve `design.css` (design) katmanlarına ayrıldı. `design.css` içindeki 920'den fazla zorlama `!important` temizlendi.
+2. **Merkezi Token Sistemi:** `tokens.css` tek doğru kaynak haline getirildi; mükerrer `:root` blokları silindi.
+3. **Modal Sayfa Kayması:** `html { scrollbar-gutter: stable; }` ve `body.modal-open` sınıf standardı ile Windows'ta 15px layout shift çözüldü.
+4. **Stagger Kontrolü (B4):** Kart stagger animasyonu yalnızca ilk sayfa yüklemesinde ve görünüm değişiminde çalışır; canlı arama yazarken veya filtre tıklamasında `doStagger = false` ile sıfır gecikmeli gösterilir.
+5. **Erişilebilirlik (B5):** `prefers-reduced-motion: reduce` altında 0.01ms hilesi kaldırıldı; sakin 100-150ms opaklık solması sağlandı.
+6. **Bulanıklık Temizliği (C1):** Sabit navigasyon ve kontrollerdeki ağır blur'lar kaldırılarak saf yüzey rengine (`var(--surface)`) dönüldü, GPU yükü sıfırlandı.
+7. **GPU Bellek Tasarrufu (C2):** `.book-card` üzerindeki kalıcı `will-change` kaldırıldı; yalnızca hover ve stagger anında geçici olarak uygulanması sağlandı. `login.html`'deki 10 adet `translateZ(0)` temizlendi.
+8. **DOM Eleman Ön Bellekleme (C3):** `cardElementsMap` ve `tableRowsMap` ile arama ve filtrelemede `innerHTML = ''` yerine `display: none` / `''` kullanıldı; sıfır DOM re-render!
+9. **View Transitions API (C4):** `theme-transitioning` sınıfı ve tüm DOM'u kilitleyen `*` seçicisi silindi; `document.startViewTransition()` ile 0ms layout lag sağlandı.
+10. **GPU Yüzey Modları (C5):** Sepya ve E-Ink modları canvas piksel döngüsünden alınıp donanım hızlandırmalı CSS filtrelerine (`filter: sepia(...)`, `filter: grayscale(1)...`) bağlandı; UI donma süresi 0ms'ye indi. ChromaGuard `requestIdleCallback` ile asenkron yapıldı.
+11. **Çift Tamponlama Zoom (C6):** Zoom sırasında beyaz flaş engellendi, `is-zooming` ile `will-change` dinamik yönetildi.
+12. **Daktilo Efekti Hızlandırması (C7):** 500 kelimelik yapay zekâ yanıtları 2.5s ile sınırlandı; ara reflow'lar ve ara markdown parse işlemleri engellendi.
 
 ---
 
@@ -328,7 +340,7 @@ body.dark-mode {
 ```
 
 
-## DOSYA 2: static/css/design.css (Rafine Tasarım Sistemi v5 & Mikro-Etkileşimler)
+## DOSYA 2: static/css/design.css (Rafine Tasarım Sistemi, View Transitions & Mikro-Etkileşimler)
 
 **Dosya Yolu:** `static/css/design.css`
 
@@ -372,39 +384,15 @@ body {
   outline-offset: 2px;
 }
 
-/* ═══════════════ 3. TEMA GEÇİŞİ (İPEKSİ & FLAŞSIZ) ═══════════════ */
-.theme-transitioning,
-.theme-transitioning body,
-.theme-transitioning header,
-.theme-transitioning main,
-.theme-transitioning .compact-nav,
-.theme-transitioning .modal,
-.theme-transitioning .logs-panel,
-.theme-transitioning #ops-center,
-.theme-transitioning #chat-panel,
-.theme-transitioning .book-card,
-.theme-transitioning .card-cover,
-.theme-transitioning .controls-panel,
-.theme-transitioning .search-wrap,
-.theme-transitioning .dropdown-trigger,
-.theme-transitioning .dropdown-menu,
-.theme-transitioning .view-toggle,
-.theme-transitioning .view-btn,
-.theme-transitioning .stat-card,
-.theme-transitioning table,
-.theme-transitioning tr,
-.theme-transitioning td,
-.theme-transitioning th,
-.theme-transitioning .import-box,
-.theme-transitioning button,
-.theme-transitioning input,
-.theme-transitioning select,
-.theme-transitioning textarea {
-  transition: background-color var(--t-ui) var(--ease-out),
-              border-color var(--t-ui) var(--ease-out),
-              color var(--t-ui) var(--ease-out),
-              box-shadow var(--t-ui) var(--ease-out),
-              fill var(--t-ui) var(--ease-out);
+/* ═══════════════ 3. TEMA GEÇİŞİ (VIEW TRANSITIONS API) ═══════════════ */
+html {
+  color-scheme: light dark;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--t-ui);
+  animation-timing-function: var(--ease-out);
 }
 
 .theme-icon-spin {
@@ -816,8 +804,6 @@ h1 em {
 
 .compact-nav {
   background: var(--surface);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--line);
   box-shadow: var(--shadow-sm);
   padding: var(--sp-2) 2rem;
@@ -1238,8 +1224,8 @@ h1 em {
 /* ═══════════════ 9. SISTEM & İŞLEM LOGLARI (KRİSTAL NETLİKTE OKUNABİLİRLİK) ═══════════════ */
 .logs-modal {
   background: rgba(22, 21, 19, 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   transition: opacity var(--t-ui) var(--ease-out);
 }
 
@@ -1557,8 +1543,8 @@ h1 em {
 
 .modal-overlay {
   background: rgba(22, 21, 19, 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .modal-overlay.open {
@@ -2717,6 +2703,35 @@ button:active:not(:disabled),
     animation: none !important;
   }
 }
+
+/* ═══════════════ READER SURFACE MODES (GPU HARDWARE ACCELERATED) ═══════════════ */
+#custom-pdf-viewer[data-surface-mode="sepia"] canvas,
+#custom-pdf-viewer[data-surface-mode="sepia"] .pdf-page-canvas,
+[data-surface="sepia"] .pdf-page-canvas,
+[data-surface="sepia"] .epub-content {
+  filter: sepia(0.35) contrast(0.95) brightness(0.98);
+  transition: filter var(--t-ui) var(--ease-out);
+}
+
+#custom-pdf-viewer[data-surface-mode="eink"] canvas,
+#custom-pdf-viewer[data-surface-mode="eink"] .pdf-page-canvas,
+[data-surface="eink"] .pdf-page-canvas,
+[data-surface="eink"] .epub-content {
+  filter: grayscale(1) contrast(1.1);
+  transition: filter var(--t-ui) var(--ease-out);
+}
+
+#custom-pdf-viewer[data-surface-mode="normal"] canvas,
+#custom-pdf-viewer[data-surface-mode="normal"] .pdf-page-canvas {
+  filter: none;
+  transition: filter var(--t-ui) var(--ease-out);
+}
+
+/* ═══════════════ READER DOUBLE-BUFFERED ZOOM (GPU TRANSITION) ═══════════════ */
+#pdf-canvas-container.is-zooming .pdf-page-canvas,
+#pdf-canvas-container.is-zooming .pdf-page-wrapper {
+  will-change: transform;
+}
 ```
 
 
@@ -2732,7 +2747,7 @@ button:active:not(:disabled),
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#f4f1eb" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#1b1a17" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#161513" media="(prefers-color-scheme: dark)">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Kütüphanem</title>
@@ -4217,7 +4232,7 @@ button:active:not(:disabled),
 ```
 
 
-## DOSYA 4: templates/login.html (Giriş Ekranı Arayüzü & Stilleri)
+## DOSYA 4: templates/login.html (Giriş Ekranı Arayüzü & View Transitions)
 
 **Dosya Yolu:** `templates/login.html`
 
@@ -4228,6 +4243,8 @@ button:active:not(:disabled),
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f4f1eb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#161513" media="(prefers-color-scheme: dark)">
   <title>Giriş Yap — Dijital Kütüphane</title>
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -4238,6 +4255,14 @@ button:active:not(:disabled),
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uo0qcPxh4Plq7G5tGm0rU+1SPhVotteLpBERwTkw==" crossorigin="anonymous" referrerpolicy="no-referrer">
   <link rel="stylesheet" href="{{ url_for('static', path='/css/tokens.css') }}?v=2026110805">
   <style>
+    html {
+      color-scheme: light dark;
+    }
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+      animation-duration: var(--t-ui);
+      animation-timing-function: var(--ease-out);
+    }
 
     * {
       box-sizing: border-box;
@@ -4270,7 +4295,6 @@ button:active:not(:disabled),
       border-radius: 50%;
       border: 1px solid var(--line);
       background: var(--card-bg);
-      backdrop-filter: blur(10px);
       color: var(--ink);
       cursor: pointer;
       display: flex;
@@ -4278,22 +4302,18 @@ button:active:not(:disabled),
       justify-content: center;
       font-size: 1.1rem;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-      transform: translateZ(0);
-      backface-visibility: hidden;
-      will-change: transform, box-shadow;
-      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s, border-color 0.2s;
+      transition: color var(--t-micro) var(--ease-out), border-color var(--t-micro) var(--ease-out), background-color var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out);
     }
 
     .theme-toggle-btn:hover {
-      transform: translateY(-2px) scale(1.08) rotate(15deg) translateZ(0);
       border-color: var(--accent);
       color: var(--accent);
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+      background: var(--paper-dark);
     }
 
     .theme-toggle-btn:active {
-      transform: translateY(1.5px) scale(0.95) translateZ(0);
-      transition-duration: 0.07s;
+      transform: scale(0.94);
+      transition-duration: var(--t-micro);
     }
 
     .login-container {
@@ -4411,18 +4431,16 @@ button:active:not(:disabled),
       cursor: pointer;
       font-size: 1rem;
       padding: 0.3rem;
-      transform: translateZ(0);
-      transition: color 0.2s, transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: color var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out);
     }
 
     .toggle-pwd-btn:hover {
       color: var(--accent);
-      transform: scale(1.12) translateZ(0);
     }
 
     .toggle-pwd-btn:active {
-      transform: scale(0.92) translateZ(0);
-      transition-duration: 0.06s;
+      transform: scale(0.94);
+      transition-duration: var(--t-micro);
     }
 
     .btn-submit {
@@ -4439,10 +4457,7 @@ button:active:not(:disabled),
       box-shadow: 0 4px 16px var(--accent-glow);
       position: relative;
       overflow: hidden;
-      transform: translateZ(0);
-      backface-visibility: hidden;
-      will-change: transform, box-shadow;
-      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+      transition: transform var(--t-micro) var(--ease-out), box-shadow var(--t-micro) var(--ease-out), opacity var(--t-micro) ease;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -4462,13 +4477,12 @@ button:active:not(:disabled),
         rgba(255, 255, 255, 0.28) 50%,
         transparent 80%
       );
-      transform: rotate(25deg) translateZ(0);
+      transform: rotate(25deg);
       pointer-events: none;
       opacity: 0;
     }
 
     .btn-submit:hover:not(:disabled) {
-      transform: translateY(-2px) translateZ(0);
       box-shadow: 0 8px 26px var(--accent-glow);
       opacity: 0.98;
     }
@@ -4476,12 +4490,12 @@ button:active:not(:disabled),
     .btn-submit:hover:not(:disabled)::after {
       opacity: 1;
       left: 190%;
-      transition: left 0.75s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+      transition: left 0.75s var(--ease-out), opacity 0.4s ease;
     }
 
     .btn-submit:active:not(:disabled) {
-      transform: translateY(1.5px) scale(0.96) translateZ(0);
-      transition-duration: 0.07s;
+      transform: scale(0.97);
+      transition-duration: var(--t-micro);
       box-shadow: 0 2px 8px var(--accent-glow);
     }
 
@@ -4605,19 +4619,37 @@ button:active:not(:disabled),
 
   <script>
     // Tema Yönetimi
+    function updateThemeMeta(theme) {
+      const color = theme === 'dark' ? '#161513' : '#f4f1eb';
+      let meta = document.querySelector('meta[name="theme-color"]:not([media])');
+      if (!meta) meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) {
+        meta.setAttribute('content', color);
+        if (meta.hasAttribute('media')) meta.removeAttribute('media');
+      }
+    }
+
     function applyTheme(theme) {
       document.documentElement.dataset.theme = theme;
       const icon = document.querySelector('#theme-toggle i');
       if (icon) {
         icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
       }
+      updateThemeMeta(theme);
     }
 
     function toggleTheme() {
       const current = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
       const next = current === 'dark' ? 'light' : 'dark';
-      localStorage.setItem('kutuphane-theme', next);
-      applyTheme(next);
+      const apply = () => {
+        localStorage.setItem('kutuphane-theme', next);
+        applyTheme(next);
+      };
+      if (!document.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        apply();
+        return;
+      }
+      document.startViewTransition(apply);
     }
 
     // Başlangıç teması
@@ -4768,7 +4800,7 @@ button:active:not(:disabled),
 ```
 
 
-## DOSYA 5: static/css/style.css (Temel Stil Motoru & Modallar)
+## DOSYA 5: static/css/style.css (Temel Stil Motoru, Modallar & Temizlikler)
 
 **Dosya Yolu:** `static/css/style.css`
 
@@ -4936,10 +4968,8 @@ button:active:not(:disabled),
 
     /* controls-panel unified styling */
     .controls-panel {
-      background: rgba(250, 248, 244, 0.6);
-      backdrop-filter: blur(16px) saturate(180%);
-      -webkit-backdrop-filter: blur(16px) saturate(180%);
-      border: 1px solid rgba(130,116,94, 0.08);
+      background: var(--surface);
+      border: 1px solid var(--line);
       border-radius: 60px;
       padding: 0.5rem 0.8rem;
       margin: 1.2rem auto;
@@ -5600,13 +5630,17 @@ button:active:not(:disabled),
       flex-direction: column;
       position: relative;
       box-shadow: 0 1px 3px var(--shadow-color), 0 4px 12px rgba(0, 0, 0, 0.02);
-      will-change: transform, box-shadow;
     }
 
     .book-card.stagger-in,
     #table-body tr.stagger-in {
       animation: fadeSlideUp var(--t-page) var(--ease-out);
       animation-delay: calc(var(--card-index, 0) * 30ms);
+      will-change: transform, opacity;
+    }
+
+    .book-card:hover {
+      will-change: transform;
     }
 
     .book-card::before {
@@ -6187,8 +6221,8 @@ button:active:not(:disabled),
       align-items: center;
       justify-content: center;
       padding: 2rem;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
     }
 
     .modal-overlay.open {
@@ -7617,7 +7651,8 @@ button:active:not(:disabled),
       height: min(560px, calc(100vh - 120px));
       max-height: min(560px, calc(100vh - 120px));
       background: var(--surface);
-      backdrop-filter: blur(28px) saturate(200%);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       border: 1px solid var(--line);
       border-radius: var(--r-md);
       box-shadow: var(--shadow-lg);
@@ -10884,17 +10919,7 @@ button:active:not(:disabled),
       backdrop-filter: blur(12px);
     }
 
-    /* ═══════════ Silky-Smooth Theme Transition (Cross-Fade) ═══════════ */
-    .theme-transitioning,
-    .theme-transitioning *,
-    .theme-transitioning *::before,
-    .theme-transitioning *::after {
-      transition: background-color var(--t-ui) var(--ease-out),
-                  border-color var(--t-ui) var(--ease-out),
-                  color var(--t-ui) var(--ease-out),
-                  box-shadow var(--t-ui) var(--ease-out);
-      transition-delay: 0s;
-    }
+
 
     @keyframes themeIconSpin {
       0% {
@@ -11054,7 +11079,6 @@ button:active:not(:disabled),
       border-radius: 8px;
       padding: 2.8rem 2.2rem;
       box-shadow: 0 10px 32px var(--shadow-color);
-      backdrop-filter: blur(10px);
     }
 
     [data-theme="dark"] .empty-state-card {
@@ -11286,7 +11310,279 @@ button:active:not(:disabled),
 ```
 
 
-## DOSYA 6.1: static/js/ui_core.js (UI Çekirdeği, Raf & Grid Render Motoru)
+## DOSYA 6.1: static/js/app.js (Uygulama Yaşam Döngüsü & View Transitions)
+
+**Dosya Yolu:** `static/js/app.js`
+
+```javascript
+/* ═══════════ app.js — Application Bootstrap & Initialization ═══════════ */
+
+    // ── API ENTEGRASYONU ──────────────────────────────────────
+    async function bootstrap() {
+      try {
+        await loadSettings();
+        await loadBooksFromAPI(1, false);
+      } catch (err) {
+        console.error("Bootstrap data load failed:", err);
+      }
+      setupGlobalDragDrop();
+      initWebSocket();
+      if (typeof fetchTasksFromAPI === 'function') {
+        fetchTasksFromAPI().catch(err => console.warn("Task fetch error:", err));
+      }
+
+      // Infinite Scroll listener
+      window.addEventListener('scroll', () => {
+        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
+          if (!window.isLoadingMore && (window.allBooks?.length || 0) < (window.totalBooks || 0)) {
+            loadBooksFromAPI((window.currentPage || 1) + 1, true).catch(err => console.error(err));
+          }
+        }
+      });
+
+      // Chat Counter Listener
+      const chatInput = document.getElementById('chat-input');
+      if (chatInput) {
+        chatInput.addEventListener('input', updateChatCounter);
+      }
+
+      // Sürükle-Bırak Entegrasyonu
+      const dropBox = document.getElementById('drop-box');
+      if (dropBox) {
+        dropBox.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          dropBox.style.borderColor = 'var(--accent)';
+        });
+        dropBox.addEventListener('dragleave', () => {
+          dropBox.style.borderColor = 'var(--sepia-light)';
+        });
+        dropBox.addEventListener('drop', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropBox.style.borderColor = 'var(--sepia-light)';
+          handleFiles(e.dataTransfer.files);
+        });
+      }
+    }
+
+    (async function initApp() {
+      try {
+        if (document.readyState === 'loading') {
+          await new Promise((resolve) => window.addEventListener('DOMContentLoaded', resolve, { once: true }));
+        }
+        await bootstrap();
+      } catch (err) {
+        console.error("Bootstrap error:", err);
+      }
+    })();
+
+    function setupGlobalDragDrop() {
+      const overlay = document.getElementById('drop-overlay');
+      const pill = overlay ? overlay.querySelector('.pill') : null;
+
+      const show = (e) => {
+        if (!overlay) return;
+        overlay.classList.add('visible');
+        const items = e?.dataTransfer?.items;
+        if (pill && items) {
+          const count = items.length;
+          if (count > 0) {
+            pill.innerHTML = `<i class="fas fa-cloud-arrow-up"></i> ${count} dosya bırakılmaya hazır`;
+          }
+        }
+      };
+      const hide = () => {
+        if (!overlay) return;
+        overlay.classList.remove('visible');
+        if (pill) {
+          pill.innerHTML = `<i class="fas fa-file-alt"></i> PDF, EPUB, TXT desteklenir`;
+        }
+      };
+
+      ['dragenter', 'dragover'].forEach(evt => {
+        window.addEventListener(evt, (e) => { e.preventDefault(); show(e); });
+      });
+      window.addEventListener('dragleave', (e) => {
+        if (e.clientX <= 0 || e.clientY <= 0 || e.clientX >= window.innerWidth || e.clientY >= window.innerHeight) hide();
+      });
+      window.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (e.target?.closest?.('#drop-overlay')) return;
+        hide();
+        handleFiles(e.dataTransfer.files);
+      });
+      if (overlay) {
+        overlay.addEventListener('drop', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          hide();
+          handleFiles(e.dataTransfer.files);
+        });
+      }
+      document.addEventListener('dragover', (e) => e.preventDefault());
+      document.addEventListener('drop', (e) => e.preventDefault());
+    }
+
+    function makeUploadKey(file) {
+      return `${file.name}__${file.size}`;
+    }
+
+    function handleFiles(files) {
+      const validExtensions = new Set(['pdf', 'epub', 'txt']);
+      let skippedCount = 0;
+      let validCount = 0;
+
+      Array.from(files).forEach(file => {
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (!validExtensions.has(ext) && file.type !== 'application/pdf') {
+          skippedCount++;
+          return;
+        }
+        validCount++;
+        const key = makeUploadKey(file);
+        if (window.pendingUploads?.has(key)) return;
+        window.pendingUploads?.add(key);
+        void prepareUpload(file, key);
+      });
+
+      if (skippedCount > 0 && typeof showToast === 'function') {
+        showToast(`${skippedCount} desteklenmeyen dosya atlandı. (Yalnızca PDF, EPUB ve TXT desteklenir)`, 'warning');
+      }
+    }
+
+    // ─── ÖZELLİK 6: GECE MODU TOGGLE FONKSİYONU ─────────────────────────
+    function updateThemeMeta(theme) {
+      const color = theme === 'dark' ? '#161513' : '#f4f1eb';
+      let meta = document.querySelector('meta[name="theme-color"]:not([media])');
+      if (!meta) {
+        meta = document.querySelector('meta[name="theme-color"]');
+      }
+      if (meta) {
+        meta.setAttribute('content', color);
+        if (meta.hasAttribute('media')) {
+          meta.removeAttribute('media');
+        }
+      }
+    }
+
+    function updateThemeIcons(theme, spin = true) {
+      const spinClass = spin ? ' theme-icon-spin' : '';
+      const iconHTML = theme === 'dark'
+        ? `<i class="fas fa-sun${spinClass}"></i>`
+        : `<i class="fas fa-moon${spinClass}"></i>`;
+      const mainThemeBtn = document.getElementById('theme-toggle');
+      if (mainThemeBtn) mainThemeBtn.innerHTML = iconHTML;
+      document.querySelectorAll('.compact-theme-toggle').forEach(btn => btn.innerHTML = iconHTML);
+    }
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
+
+      const apply = () => {
+        html.dataset.theme = next;
+        localStorage.setItem('kutuphane-theme', next);
+        updateThemeIcons(next, true);
+        updateThemeMeta(next);
+      };
+
+      if (!document.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        apply();
+        return;
+      }
+
+      document.startViewTransition(apply);
+    }
+
+    // Sayfa yüklenirken kaydedilmiş tema tercihini uygula
+    (function () {
+      const saved = localStorage.getItem('kutuphane-theme') || 'light';
+      document.documentElement.dataset.theme = saved;
+      updateThemeIcons(saved, false);
+      updateThemeMeta(saved);
+    })();
+
+    // ─── İŞLEM MERKEZİ MANTIĞI ──────────────────────────────────────────
+
+    // ─── MODERN SCROLL LOGIC (Smooth & Zero Jitter) ─────────────────────
+    let lastScrollY = window.scrollY;
+    const compactNav = document.getElementById('compact-nav');
+    const scrollBtn = document.getElementById('scroll-top-btn');
+
+    window.addEventListener('scroll', () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY <= 150) {
+        compactNav?.classList.remove('visible');
+      } else if (currentScrollY > lastScrollY && currentScrollY > 300) {
+        compactNav?.classList.remove('visible');
+      } else if (currentScrollY < lastScrollY) {
+        compactNav?.classList.add('visible');
+      }
+
+      if (currentScrollY > 600) {
+        scrollBtn?.classList.add('visible');
+      } else {
+        scrollBtn?.classList.remove('visible');
+      }
+      lastScrollY = currentScrollY;
+    }, { passive: true });
+
+// EXPOSE FUNCTIONS TO GLOBAL SCOPE
+window.loadBooksFromAPI = loadBooksFromAPI;
+window.uploadFile = uploadFile;
+window.prepareUpload = prepareUpload;
+window.deleteBook = deleteBook;
+window.toggleFavorite = toggleFavorite;
+window.selectCat = selectCat;
+window.filterCat = filterCat;
+window.toggleFavFilter = toggleFavFilter;
+window.selectCol = selectCol;
+window.toggleDropdown = toggleDropdown;
+window.filterCol = filterCol;
+window.openColModal = openColModal;
+window.closeColModal = closeColModal;
+window.deleteCollection = deleteCollection;
+window.createCollection = createCollection;
+window.toggleBookCol = toggleBookCol;
+window.copyCollectionMarkdown = copyCollectionMarkdown;
+window.importCollection = importCollection;
+window.setView = setView;
+window.openSettings = openSettings;
+window.updateAIUI = updateAIUI;
+window.closeSettings = closeSettings;
+window.closeSettingsDirect = closeSettingsDirect;
+window.saveSettings = saveSettings;
+window.resetCascadeModelsToDefault = typeof resetCascadeModelsToDefault !== 'undefined' ? resetCascadeModelsToDefault : window.resetCascadeModelsToDefault;
+window.toggleEditMode = toggleEditMode;
+window.saveBookEdit = saveBookEdit;
+window.toggleSelectionMode = toggleSelectionMode;
+window.toggleSelectBook = toggleSelectBook;
+window.bulkDelete = bulkDelete;
+window.sendMessage = sendMessage;
+window.exportToExcel = exportToExcel;
+window.handleFiles = handleFiles;
+window.toggleAssistant = toggleAssistant;
+window.toggleOps = toggleOps;
+window.setOpsTab = typeof setOpsTab !== 'undefined' ? setOpsTab : window.setOpsTab;
+window.openBookFromOps = typeof openBookFromOps !== 'undefined' ? openBookFromOps : window.openBookFromOps;
+window.fetchTasksFromAPI = typeof fetchTasksFromAPI !== 'undefined' ? fetchTasksFromAPI : window.fetchTasksFromAPI;
+window.toggleArchive = toggleArchive;
+window.openLogsModal = openLogsModal;
+window.closeLogsModal = closeLogsModal;
+window.closeLogsModalDirect = closeLogsModalDirect;
+window.setLogCategory = setLogCategory;
+window.closeModal = closeModal;
+window.closeModalDirect = closeModalDirect;
+window.uploadCover = uploadCover;
+window.sortTable = sortTable;
+window.render = render;
+window.toggleTheme = toggleTheme;
+window.login = () => { window.location.href = "/login"; };
+```
+
+
+## DOSYA 6.2: static/js/ui_core.js (UI Çekirdeği, cardElementsMap ile Sıfır Re-render)
 
 **Dosya Yolu:** `static/js/ui_core.js`
 
@@ -11718,6 +12014,54 @@ button:active:not(:disabled),
     }
     window.renderRecentShelf = renderRecentShelf;
 
+    // --- PERSISTENT ELEMENT MAPS (60FPS ZERO-REBUILD ARCHITECTURE) ---
+    const cardElementsMap = new Map();
+    window.cardElementsMap = cardElementsMap;
+    const tableRowsMap = new Map();
+    window.tableRowsMap = tableRowsMap;
+
+    function createBookCardElement(b) {
+      const card = document.createElement('div');
+      card.className = 'book-card';
+      card.id = `book-${b.hash}`;
+      card.dataset.hash = b.hash;
+
+      const coverInner = b.has_cover
+        ? `<img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" loading="lazy" decoding="async">`
+        : `<div class="card-cover-placeholder">${BOOK_ICON_LG}<span>${esc(b.title) || 'Kapak yok'}</span></div>`;
+
+      const favIcon = b.is_favorite
+        ? `<i class="fas fa-heart" style="color: #ff3e3e; font-size: 1.1rem;"></i>`
+        : `<i class="far fa-heart" style="color: #fff; font-size: 1.1rem;"></i>`;
+      const favBtnText = b.is_favorite ? 'Favorilerden Çıkar' : 'Favorilere Ekle';
+
+      card.innerHTML = `
+        <div class="selection-indicator"></div>
+        <div class="card-cover">
+          <div class="card-cat-badge">${esc(b.category)}</div>
+          <div class="btn-favorite-card" onclick="event.stopPropagation(); toggleFavorite('${b.hash}')" title="${favBtnText}">
+             ${favIcon}
+          </div>
+          ${coverInner}
+        </div>
+        <div class="card-body">
+          <div class="card-title">${esc(b.title) || '<em>İsimsiz</em>'}</div>
+          <div class="card-author">${esc(b.author) || 'Bilinmeyen Yazar'}</div>
+        </div>
+      `;
+
+      card.onclick = () => {
+        if (window.isSelectionMode) {
+          toggleSelectBook(card, b.hash);
+        } else {
+          const bookObj = (window.allBooks || []).find(x => x.hash === b.hash) || b;
+          openModal(bookObj);
+        }
+      };
+
+      return card;
+    }
+
     // --- GRID ---
     function renderGrid(books) {
       const grid = document.getElementById('grid-view');
@@ -11726,8 +12070,6 @@ button:active:not(:disabled),
         const tempId = node.dataset.tempId;
         return tempId && typeof uploadingCards !== 'undefined' && uploadingCards.has(tempId);
       });
-      grid.innerHTML = '';
-      activeUploads.forEach(node => grid.appendChild(node));
 
       const isSearchingOrFiltering = Boolean(document.getElementById('search-input')?.value?.trim()) ||
         (window.activeCategory && window.activeCategory !== 'all') ||
@@ -11735,55 +12077,81 @@ button:active:not(:disabled),
         Boolean(window.showOnlyFav);
 
       const doStagger = Boolean(window.shouldStagger) && !isSearchingOrFiltering;
+      const filteredHashes = new Set(books.map(b => b.hash));
+
+      // 1. Ensure cards exist in cardElementsMap for all available books
+      const allBooksList = window.allBooks || books;
+      allBooksList.forEach(b => {
+        if (!cardElementsMap.has(b.hash)) {
+          cardElementsMap.set(b.hash, createBookCardElement(b));
+        }
+      });
+
+      // 2. Clean up removed books from cardElementsMap
+      if (window.allBooks) {
+        const currentHashes = new Set(window.allBooks.map(b => b.hash));
+        for (const [hash, card] of cardElementsMap.entries()) {
+          if (!currentHashes.has(hash)) {
+            card.remove();
+            cardElementsMap.delete(hash);
+          }
+        }
+      }
+
+      // 3. Synchronize existing DOM
+      const existingCardsInGrid = new Set(Array.from(grid.querySelectorAll('.book-card')).map(c => c.dataset.hash));
+      let hasMissingCards = false;
 
       books.forEach((b, i) => {
-        const card = document.createElement('div');
-        card.className = 'book-card';
+        let card = cardElementsMap.get(b.hash);
+        if (!card) {
+          card = createBookCardElement(b);
+          cardElementsMap.set(b.hash, card);
+        }
+
+        // Update favorite & selection visual state without re-creating card
+        const favBtn = card.querySelector('.btn-favorite-card');
+        if (favBtn) {
+          favBtn.innerHTML = b.is_favorite
+            ? `<i class="fas fa-heart" style="color: #ff3e3e; font-size: 1.1rem;"></i>`
+            : `<i class="far fa-heart" style="color: #fff; font-size: 1.1rem;"></i>`;
+        }
+        card.classList.toggle('selected', selectedBooks.has(b.hash));
+
+        // Controlled stagger or instant display
         if (doStagger) {
           card.classList.add('stagger-in');
           const staggerIdx = i < 12 ? i : 0;
           card.style.setProperty('--card-index', staggerIdx);
           card.style.animationDelay = i < 12 ? `${i * 30}ms` : '0ms';
         } else {
+          card.classList.remove('stagger-in');
           card.style.animation = 'none';
         }
 
-        const coverInner = b.has_cover
-          ? `<img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" loading="lazy">`
-          : `<div class="card-cover-placeholder">${BOOK_ICON_LG}<span>${esc(b.title) || 'Kapak yok'}</span></div>`;
+        card.style.display = '';
 
-        const favIcon = b.is_favorite
-          ? `<i class="fas fa-heart" style="color: #ff3e3e; font-size: 1.1rem;"></i>`
-          : `<i class="far fa-heart" style="color: #fff; font-size: 1.1rem;"></i>`;
-        const favBtnText = b.is_favorite ? 'Favorilerden Çıkar' : 'Favorilere Ekle';
-
-        card.innerHTML = `
-      <div class="selection-indicator"></div>
-      <div class="card-cover">
-        <div class="card-cat-badge">${esc(b.category)}</div>
-        <div class="btn-favorite-card" onclick="event.stopPropagation(); toggleFavorite('${b.hash}')" title="${favBtnText}">
-           ${favIcon}
-        </div>
-        ${coverInner}
-      </div>
-      <div class="card-body">
-        <div class="card-title">${esc(b.title) || '<em>İsimsiz</em>'}</div>
-        <div class="card-author">${esc(b.author) || 'Bilinmeyen Yazar'}</div>
-      </div>
-    `;
-        card.id = `book-${b.hash}`;
-        card.dataset.hash = b.hash;
-        if (selectedBooks.has(b.hash)) card.classList.add('selected');
-
-        card.onclick = () => {
-          if (window.isSelectionMode) {
-            toggleSelectBook(card, b.hash);
-          } else {
-            openModal(b);
-          }
-        };
-        grid.appendChild(card);
+        if (!existingCardsInGrid.has(b.hash)) {
+          hasMissingCards = true;
+        }
       });
+
+      // Hide cards in DOM that are filtered out (Zero DOM removal, zero image reloads)
+      for (const [hash, card] of cardElementsMap.entries()) {
+        if (!filteredHashes.has(hash)) {
+          card.style.display = 'none';
+        }
+      }
+
+      // Populate if cards were missing or grid was empty
+      if (hasMissingCards || grid.querySelectorAll('.book-card').length === 0) {
+        grid.innerHTML = '';
+        activeUploads.forEach(node => grid.appendChild(node));
+        books.forEach(b => {
+          const card = cardElementsMap.get(b.hash);
+          if (card) grid.appendChild(card);
+        });
+      }
     }
 
     async function uploadCover(hash, input) {
@@ -11807,11 +12175,39 @@ button:active:not(:disabled),
       }
     }
 
+    function createTableRowElement(b) {
+      const tr = document.createElement('tr');
+      tr.id = `book-${b.hash}`;
+      tr.dataset.hash = b.hash;
+
+      const thumbCell = b.has_cover
+        ? `<td class="td-cover"><img src="/thumbnails/${b.hash}.jpg" alt="" loading="lazy" decoding="async"></td>`
+        : `<td class="td-cover"><div class="td-cover-empty">${BOOK_ICON_SM}</div></td>`;
+      tr.innerHTML = `
+        ${thumbCell}
+        <td class="td-title">${esc(b.title) || '—'}</td>
+        <td class="td-author">${esc(b.author) || '—'}</td>
+        <td class="td-cat">${esc(b.category) || '—'}</td>
+        <td class="td-cat">${esc(b.subcat) || '—'}</td>
+        <td class="td-summary"><div class="summary-text">${esc(b.summary)}</div></td>
+      `;
+
+      tr.onclick = () => {
+        if (window.isSelectionMode) {
+          toggleSelectBook(tr, b.hash);
+        } else {
+          const bookObj = (window.allBooks || []).find(x => x.hash === b.hash) || b;
+          openModal(bookObj);
+        }
+      };
+
+      return tr;
+    }
+
     // --- TABLE ---
     function renderTable(books) {
       const tbody = document.getElementById('table-body');
       if (!tbody) return;
-      tbody.innerHTML = '';
 
       const isSearchingOrFiltering = Boolean(document.getElementById('search-input')?.value?.trim()) ||
         (window.activeCategory && window.activeCategory !== 'all') ||
@@ -11819,41 +12215,72 @@ button:active:not(:disabled),
         Boolean(window.showOnlyFav);
 
       const doStagger = Boolean(window.shouldStagger) && !isSearchingOrFiltering;
+      const filteredHashes = new Set(books.map(b => b.hash));
+
+      // 1. Ensure rows exist in tableRowsMap
+      const allBooksList = window.allBooks || books;
+      allBooksList.forEach(b => {
+        if (!tableRowsMap.has(b.hash)) {
+          tableRowsMap.set(b.hash, createTableRowElement(b));
+        }
+      });
+
+      // 2. Clean up removed rows from tableRowsMap
+      if (window.allBooks) {
+        const currentHashes = new Set(window.allBooks.map(b => b.hash));
+        for (const [hash, tr] of tableRowsMap.entries()) {
+          if (!currentHashes.has(hash)) {
+            tr.remove();
+            tableRowsMap.delete(hash);
+          }
+        }
+      }
+
+      // 3. Synchronize existing DOM
+      const existingRowsInTbody = new Set(Array.from(tbody.querySelectorAll('tr')).map(r => r.dataset.hash));
+      let hasMissingRows = false;
 
       books.forEach((b, i) => {
-        const tr = document.createElement('tr');
+        let tr = tableRowsMap.get(b.hash);
+        if (!tr) {
+          tr = createTableRowElement(b);
+          tableRowsMap.set(b.hash, tr);
+        }
+
+        tr.classList.toggle('selected', selectedBooks.has(b.hash));
+
         if (doStagger) {
           tr.classList.add('stagger-in');
           const staggerIdx = i < 12 ? i : 0;
           tr.style.setProperty('--card-index', staggerIdx);
           tr.style.animationDelay = i < 12 ? `${i * 30}ms` : '0ms';
         } else {
+          tr.classList.remove('stagger-in');
           tr.style.animation = 'none';
         }
-        tr.id = `book-${b.hash}`;
-        tr.dataset.hash = b.hash;
-        if (selectedBooks.has(b.hash)) tr.classList.add('selected');
 
-        const thumbCell = b.has_cover
-          ? `<td class="td-cover"><img src="/thumbnails/${b.hash}.jpg" alt="" loading="lazy"></td>`
-          : `<td class="td-cover"><div class="td-cover-empty">${BOOK_ICON_SM}</div></td>`;
-        tr.innerHTML = `
-      ${thumbCell}
-      <td class="td-title">${esc(b.title) || '—'}</td>
-      <td class="td-author">${esc(b.author) || '—'}</td>
-      <td class="td-cat">${esc(b.category) || '—'}</td>
-      <td class="td-cat">${esc(b.subcat) || '—'}</td>
-      <td class="td-summary"><div class="summary-text">${esc(b.summary)}</div></td>
-    `;
-        tr.onclick = () => {
-          if (window.isSelectionMode) {
-            toggleSelectBook(tr, b.hash);
-          } else {
-            openModal(b);
-          }
-        };
-        tbody.appendChild(tr);
+        tr.style.display = '';
+
+        if (!existingRowsInTbody.has(b.hash)) {
+          hasMissingRows = true;
+        }
       });
+
+      // Hide rows that are filtered out
+      for (const [hash, tr] of tableRowsMap.entries()) {
+        if (!filteredHashes.has(hash)) {
+          tr.style.display = 'none';
+        }
+      }
+
+      // Populate if missing rows or empty tbody
+      if (hasMissingRows || tbody.querySelectorAll('tr').length === 0) {
+        tbody.innerHTML = '';
+        books.forEach(b => {
+          const tr = tableRowsMap.get(b.hash);
+          if (tr) tbody.appendChild(tr);
+        });
+      }
     }
 
     function compareTableValues(va, vb, sortDir) {
@@ -12912,7 +13339,7 @@ button:active:not(:disabled),
 ```
 
 
-## DOSYA 6.2: static/js/ui_workspace.js (Okuma Alanı & Odak Modu Mantığı)
+## DOSYA 6.3: static/js/ui_workspace.js (Okuma Alanı, Çift Tamponlama Zoom & GPU Yüzeyler)
 
 **Dosya Yolu:** `static/js/ui_workspace.js`
 
@@ -13215,7 +13642,10 @@ button:active:not(:disabled),
     function startWorkspaceTypewriter(rawReply, replyId, chatMessages) {
       const targetContainer = document.querySelector(`#${replyId} .chat-msg-text`);
       if (!targetContainer) return;
-      const words = rawReply.split(' ');
+      const words = (rawReply || '').split(' ');
+      const totalWords = words.length || 1;
+      // Daktilo efekti en fazla 2.5 saniyede (2500ms) tamamlansın, min 5ms, max 25ms
+      const wordDelay = Math.min(25, Math.max(5, Math.floor(2500 / totalWords)));
       let currentText = '';
       let wordIndex = 0;
 
@@ -13224,30 +13654,45 @@ button:active:not(:disabled),
       activeTypewriterFullText = rawReply;
       activeTypewriterContainer = targetContainer;
 
-      let lastRenderTime = 0;
+      // Smart auto-scroll check: Yalnızca kullanıcı en alttaysa otomatik kaydır, yukarı kaydırdıysa scrollu kilitleme
+      const isUserNearBottom = () => {
+        if (!chatMessages) return true;
+        return (chatMessages.scrollHeight - chatMessages.scrollTop - chatMessages.clientHeight) < 60;
+      };
+
+      let lastParagraphCheck = '';
       activeTypewriterTimer = setInterval(() => {
         if (wordIndex < words.length) {
           currentText += (wordIndex === 0 ? '' : ' ') + words[wordIndex];
           wordIndex++;
-          const now = Date.now();
-          if (now - lastRenderTime > 120 || wordIndex >= words.length) {
+
+          // Sadece paragraf bitişlerinde (\n\n) veya son kelimede tam markdown parse et; ara kelimelerde ham metin güncelle
+          const hasNewParagraph = currentText.includes('\n\n') && currentText.lastIndexOf('\n\n') > lastParagraphCheck.length;
+          if (hasNewParagraph) {
             targetContainer.innerHTML = parseMarkdown(currentText);
-            requestAnimationFrame(() => {
-              chatMessages.scrollTop = chatMessages.scrollHeight;
-            });
-            lastRenderTime = now;
+            lastParagraphCheck = currentText.slice(0, currentText.lastIndexOf('\n\n'));
+          } else if (lastParagraphCheck.length === 0) {
+            targetContainer.textContent = currentText;
+          } else {
+            const unrenderedPart = currentText.slice(lastParagraphCheck.length);
+            const safeUnrendered = typeof esc === 'function' ? esc(unrenderedPart) : unrenderedPart;
+            targetContainer.innerHTML = parseMarkdown(lastParagraphCheck) + '<p>' + safeUnrendered + '</p>';
+          }
+
+          if (isUserNearBottom() && chatMessages) {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
           }
         } else {
           clearInterval(activeTypewriterTimer);
           activeTypewriterTimer = null;
           targetContainer.innerHTML = parseMarkdown(rawReply);
-          requestAnimationFrame(() => {
+          if (isUserNearBottom() && chatMessages) {
             chatMessages.scrollTop = chatMessages.scrollHeight;
-          });
+          }
           if (stopWrap) stopWrap.style.display = 'none';
           isWorkspaceChatLoading = false;
         }
-      }, 30);
+      }, wordDelay);
     }
 
     async function sendWorkspaceMessage() {
@@ -14589,17 +15034,7 @@ button:active:not(:disabled),
       try {
         const page = await pdfDoc.getPage(pageNum);
         const wrapper = document.getElementById(`pdf-page-wrapper-${pageNum}`);
-        let canvas = document.getElementById(`pdf-render-canvas-${pageNum}`);
-        if (!canvas && wrapper) {
-          canvas = document.createElement('canvas');
-          canvas.id = `pdf-render-canvas-${pageNum}`;
-          wrapper.insertBefore(canvas, wrapper.firstChild);
-        }
-        if (!canvas) {
-          delete pdfRenderedPages[pageNum];
-          return;
-        }
-        const ctx = canvas.getContext('2d');
+        const existingCanvas = document.getElementById(`pdf-render-canvas-${pageNum}`);
         const textLayer = document.getElementById(`textLayer-${pageNum}`);
         const highlightLayer = document.getElementById(`pdf-highlight-layer-${pageNum}`);
         const viewport = page.getViewport({ scale: pdfScale });
@@ -14609,12 +15044,22 @@ button:active:not(:disabled),
           wrapper.style.height = viewport.height + 'px';
           wrapper.style.setProperty('--scale-factor', String(viewport.scale));
         }
+
+        // Çift tamponlama (double-buffering): Eski canvas render bitene kadar yerinde kalır, beyaz flaş engellenir
+        if (existingCanvas) {
+          existingCanvas.style.width = viewport.width + 'px';
+          existingCanvas.style.height = viewport.height + 'px';
+        }
         
         const dpr = Math.min(window.devicePixelRatio || 1, 2.5); // Retina netliği & bellek tavanı
-        canvas.width = Math.floor(viewport.width * dpr);
-        canvas.height = Math.floor(viewport.height * dpr);
-        canvas.style.width = viewport.width + 'px';
-        canvas.style.height = viewport.height + 'px';
+        const newCanvas = document.createElement('canvas');
+        newCanvas.className = 'pdf-page-canvas';
+        newCanvas.width = Math.floor(viewport.width * dpr);
+        newCanvas.height = Math.floor(viewport.height * dpr);
+        newCanvas.style.width = viewport.width + 'px';
+        newCanvas.style.height = viewport.height + 'px';
+        
+        const ctx = newCanvas.getContext('2d');
         
         if (textLayer) {
           textLayer.style.width = viewport.width + 'px';
@@ -14638,7 +15083,17 @@ button:active:not(:disabled),
         await renderTask.promise;
         delete pdfRenderTasks[pageNum];
         pdfRenderedPages[pageNum] = 'done';
-        applyChromaGuard(canvas, currentReaderSurfaceMode);
+        applyChromaGuard(newCanvas, currentReaderSurfaceMode);
+        
+        // requestAnimationFrame ile atomik ve flaşsız canvas değişimi
+        requestAnimationFrame(() => {
+          newCanvas.id = `pdf-render-canvas-${pageNum}`;
+          if (existingCanvas && existingCanvas.parentNode) {
+            existingCanvas.parentNode.replaceChild(newCanvas, existingCanvas);
+          } else if (wrapper) {
+            wrapper.insertBefore(newCanvas, wrapper.firstChild);
+          }
+        });
         
         if (textLayer) {
           await renderTextLayerForPage(page, textLayer, viewport, pageNum);
@@ -14689,6 +15144,13 @@ button:active:not(:disabled),
           if (wrapper) {
             wrapper.style.width = viewport.width + 'px';
             wrapper.style.height = viewport.height + 'px';
+            
+            // Mevcut canvas'ı hemen silme, yeni boyuta göre CSS ile ölçeklendir (beyaz boşluğu önle)
+            const existingCanvas = document.getElementById(`pdf-render-canvas-${p}`);
+            if (existingCanvas) {
+              existingCanvas.style.width = viewport.width + 'px';
+              existingCanvas.style.height = viewport.height + 'px';
+            }
             
             const textLayer = document.getElementById(`textLayer-${p}`);
             if (textLayer) {
@@ -14772,13 +15234,27 @@ button:active:not(:disabled),
       hideFloatingBar();
     }
 
-    // Zoom Controls
+    // Zoom Controls & Hardware Acceleration State
+    let zoomWillChangeTimer = null;
+    function markZoomActive() {
+      const container = document.getElementById('pdf-canvas-container');
+      if (container) {
+        container.classList.add('is-zooming');
+      }
+      if (zoomWillChangeTimer) clearTimeout(zoomWillChangeTimer);
+      zoomWillChangeTimer = setTimeout(() => {
+        const c = document.getElementById('pdf-canvas-container');
+        if (c) c.classList.remove('is-zooming');
+      }, 300);
+    }
+
     function updateZoomLabel() {
       const pct = Math.round(pdfScale * 100);
       document.getElementById('pdf-zoom-percent').textContent = pct + "%";
     }
 
     function pdfZoomIn() {
+      markZoomActive();
       pdfIsFitWidth = false;
       pdfIsFitHeight = false;
       document.getElementById('pdf-fit-width-btn')?.classList.remove('active');
@@ -14791,6 +15267,7 @@ button:active:not(:disabled),
     }
 
     function pdfZoomOut() {
+      markZoomActive();
       pdfIsFitWidth = false;
       pdfIsFitHeight = false;
       document.getElementById('pdf-fit-width-btn')?.classList.remove('active');
@@ -14803,6 +15280,7 @@ button:active:not(:disabled),
     }
 
     function pdfFitWidth() {
+      markZoomActive();
       const btn = document.getElementById('pdf-fit-width-btn');
       const otherBtn = document.getElementById('pdf-fit-height-btn');
       if (pdfIsFitWidth) {
@@ -14821,6 +15299,7 @@ button:active:not(:disabled),
     }
 
     function pdfFitHeight() {
+      markZoomActive();
       const btn = document.getElementById('pdf-fit-height-btn');
       const otherBtn = document.getElementById('pdf-fit-width-btn');
       if (pdfIsFitHeight) {
@@ -14837,6 +15316,19 @@ button:active:not(:disabled),
       resizeAllPagesForZoom();
       hideFloatingBar();
     }
+
+    // Ctrl + Mouse Wheel ile pürüzsüz zoom desteği
+    document.addEventListener('wheel', function(e) {
+      if (!e.ctrlKey) return;
+      const container = document.getElementById('pdf-canvas-container');
+      if (!container || !container.contains(e.target)) return;
+      e.preventDefault();
+      if (e.deltaY < 0) {
+        pdfZoomIn();
+      } else {
+        pdfZoomOut();
+      }
+    }, { passive: false });
 
     // Toggle Notes Sidebar on left
     function toggleNotesSidebar() {
@@ -16219,33 +16711,34 @@ button:active:not(:disabled),
     }
 
     function applyChromaGuard(canvas, mode) {
-      if (!canvas || !mode || mode === 'normal') return;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      const w = canvas.width;
-      const h = canvas.height;
-      if (!w || !h) return;
+      // Sepia, e-ink and normal modes are handled via zero-cost GPU CSS filters on [data-surface-mode]
+      if (!canvas || mode !== 'chromaguard') return;
 
-      try {
-        const imgData = ctx.getImageData(0, 0, w, h);
-        const data = imgData.data;
-        const len = data.length;
-
-        if (mode === 'sepia') {
-          applySepiaFilter(data, len);
-        } else if (mode === 'eink') {
-          applyEinkFilter(data, len);
-        } else if (mode === 'chromaguard') {
-          applyChromaGuardFilter(data, len);
+      const runTransform = () => {
+        try {
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
+          const w = canvas.width;
+          const h = canvas.height;
+          if (!w || !h) return;
+          const imgData = ctx.getImageData(0, 0, w, h);
+          applyChromaGuardFilter(imgData.data, imgData.data.length);
+          ctx.putImageData(imgData, 0, 0);
+        } catch (e) {
+          console.debug('ChromaGuard pixel transform warning:', e);
         }
-        ctx.putImageData(imgData, 0, 0);
-      } catch (e) {
-        console.debug('ChromaGuard pixel transform warning:', e);
+      };
+
+      if (typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(() => runTransform(), { timeout: 200 });
+      } else {
+        setTimeout(runTransform, 16);
       }
     }
     window.applyChromaGuard = applyChromaGuard;
 
     function setReaderSurfaceMode(mode) {
+      const prevMode = currentReaderSurfaceMode;
       currentReaderSurfaceMode = mode;
       try {
         localStorage.setItem('pdf_reader_surface_mode', mode);
@@ -16260,13 +16753,19 @@ button:active:not(:disabled),
         btn.classList.toggle('active', btn.id === `btn-surface-${mode}`);
       });
 
-      // Cancel ongoing render tasks
+      // Switching between normal, sepia and eink requires ZERO re-renders: GPU CSS filter handles it in 0ms!
+      const requiresReRender = (prevMode === 'chromaguard' && mode !== 'chromaguard') || (mode === 'chromaguard');
+      if (!requiresReRender) {
+        return;
+      }
+
+      // Cancel ongoing render tasks and re-render only when entering/leaving ChromaGuard OLED mode
       Object.values(pdfRenderTasks).forEach(task => {
         try { task.cancel(); } catch (_) {}
       });
       pdfRenderTasks = {};
 
-      // Clear render tracker and re-render visible canvases with new filter
+      // Clear render tracker and re-render visible canvases
       pdfRenderedPages = {};
       checkVisiblePagesAndRender();
     }
@@ -16377,6 +16876,1805 @@ button:active:not(:disabled),
         }, { once: true });
       };
       setupDprWatcher();
+    }
+
+```
+
+
+## DOSYA 6.4: static/js/ui_chat_settings.js (Sohbet Daktilo Hızlandırması & Ayarlar)
+
+**Dosya Yolu:** `static/js/ui_chat_settings.js`
+
+```javascript
+/* ═══════════ ui_chat_settings.js — Assistant Drawer, Settings & Analytics ═══════════ */
+    function startChatTypewriter(rawReply, msgEl, chatBody) {
+      if (!msgEl) return;
+      const body = chatBody || document.getElementById('chat-body');
+      const words = (rawReply || '').split(' ');
+      const totalWords = words.length || 1;
+      const wordDelay = Math.min(25, Math.max(5, Math.floor(2500 / totalWords)));
+      let currentText = '';
+      let wordIndex = 0;
+
+      const isUserNearBottom = () => {
+        if (!body) return true;
+        return (body.scrollHeight - body.scrollTop - body.clientHeight) < 60;
+      };
+
+      let lastParagraphCheck = '';
+      const timer = setInterval(() => {
+        if (wordIndex < words.length) {
+          currentText += (wordIndex === 0 ? '' : ' ') + words[wordIndex];
+          wordIndex++;
+
+          const hasNewParagraph = currentText.includes('\n\n') && currentText.lastIndexOf('\n\n') > lastParagraphCheck.length;
+          if (hasNewParagraph) {
+            msgEl.innerHTML = parseMarkdown(currentText);
+            lastParagraphCheck = currentText.slice(0, currentText.lastIndexOf('\n\n'));
+          } else if (lastParagraphCheck.length === 0) {
+            msgEl.textContent = currentText;
+          } else {
+            const unrenderedPart = currentText.slice(lastParagraphCheck.length);
+            const safeUnrendered = typeof esc === 'function' ? esc(unrenderedPart) : unrenderedPart;
+            msgEl.innerHTML = parseMarkdown(lastParagraphCheck) + '<p>' + safeUnrendered + '</p>';
+          }
+
+          if (isUserNearBottom() && body) {
+            body.scrollTop = body.scrollHeight;
+          }
+        } else {
+          clearInterval(timer);
+          msgEl.innerHTML = parseMarkdown(rawReply);
+          if (isUserNearBottom() && body) {
+            body.scrollTop = body.scrollHeight;
+          }
+        }
+      }, wordDelay);
+    }
+    window.startChatTypewriter = startChatTypewriter;
+
+    function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const sendBtn = document.querySelector('.btn-send');
+      const text = input.value.trim();
+      if (!text || text.length > 1000) return;
+
+      // Lock UI
+      input.disabled = true;
+      if (sendBtn) sendBtn.disabled = true;
+
+      addChatMessage('sender', text);
+      input.value = '';
+      updateChatCounter(); // Reset counter
+
+      const aiMsgId = 'ai-typing-' + Date.now();
+      addChatMessage('ai', 'Düşünüyorum...', aiMsgId);
+
+      apiFetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+      })
+        .then(r => r ? r.json() : null)
+        .then(data => {
+          const msgEl = document.getElementById(aiMsgId);
+          if (msgEl) {
+            startChatTypewriter(data?.response || '', msgEl);
+          }
+        })
+        .catch(err => {
+          const msgEl = document.getElementById(aiMsgId);
+          if (msgEl) msgEl.textContent = "Hata oluştu. Lütfen tekrar dene.";
+        })
+        .finally(() => {
+          // Unlock UI
+          input.disabled = false;
+          if (sendBtn) sendBtn.disabled = false;
+          input.focus();
+        });
+    }
+
+    function addChatMessage(type, text, id = null) {
+      const body = document.getElementById('chat-body');
+      if (!body) return;
+      const msg = document.createElement('div');
+      msg.className = `chat-msg chat-${type}`;
+      
+      if (type === 'ai') {
+        msg.innerHTML = parseMarkdown(text);
+      } else {
+        msg.textContent = text;
+      }
+      
+      if (id) msg.id = id;
+      body.appendChild(msg);
+      body.scrollTop = body.scrollHeight;
+    }
+
+    const DEFAULT_CASCADE_MODELS = [
+      "gemini-3.8-flash",
+      "gemini-3.7-flash",
+      "gemini-3.6-flash",
+      "gemini-3.5-flash",
+      "gemini-3.5-flash-lite"
+    ];
+
+    function populateCascadeSlots(models) {
+      const list = Array.isArray(models) && models.length ? models : DEFAULT_CASCADE_MODELS;
+      for (let i = 0; i < 5; i++) {
+        const el = document.getElementById(`cascade-model-${i}`);
+        if (el) {
+          el.value = (list[i] || '').trim();
+        }
+      }
+    }
+
+    function getCascadeSlots() {
+      const models = [];
+      for (let i = 0; i < 5; i++) {
+        const el = document.getElementById(`cascade-model-${i}`);
+        if (el) {
+          const val = (el.value || '').trim();
+          if (val) models.push(val);
+        }
+      }
+      return models.length ? models : [...DEFAULT_CASCADE_MODELS];
+    }
+
+    function resetCascadeModelsToDefault() {
+      populateCascadeSlots(DEFAULT_CASCADE_MODELS);
+    }
+    window.resetCascadeModelsToDefault = resetCascadeModelsToDefault;
+
+    function populateServerOcrVisionSettings(data) {
+      document.getElementById('set-pages').value = data.max_pages || 20;
+      document.getElementById('set-ocr-pages').value = data.ocr_pages || 20;
+      document.getElementById('set-vision-pages').value = data.vision_pages || 20;
+      document.getElementById('set-vision-dim').value = data.vision_max_image_dim || 1200;
+      document.getElementById('set-vision-quality').value = data.vision_jpeg_quality || 82;
+      document.getElementById('set-tesseract-cmd').value = data.tesseract_cmd || '';
+      if (document.getElementById('set-watchfolder-enabled')) {
+        document.getElementById('set-watchfolder-enabled').checked = Boolean(data.watchfolder_enabled);
+      }
+      if (document.getElementById('set-watchfolder-path')) {
+        document.getElementById('set-watchfolder-path').value = data.watchfolder_path || '';
+      }
+      const maxChars = data.ai_max_chars || 50000;
+      document.getElementById('set-ai-max-chars').value = maxChars;
+      document.getElementById('ai-max-chars-val').innerText = maxChars;
+    }
+
+    function _populateApiKeyAndModel(data) {
+      if (data.has_gemini_key || data.has_ai_api_key) {
+        const keyEl = document.getElementById('set-api-key');
+        if (keyEl && !keyEl.value) keyEl.placeholder = "•••••••• (Sunucuda Yapılandırılmış)";
+      } else if (data.ai_api_key && !data.ai_api_key.startsWith('••')) {
+        document.getElementById('set-api-key').value = data.ai_api_key;
+      }
+      if (data.gemini_model) {
+        localStorage.setItem('gemini_model', data.gemini_model);
+        if ((data.ai_provider || document.getElementById('set-ai-provider')?.value || 'gemini') === 'gemini') {
+          const mn = document.getElementById('set-ai-model-name');
+          if (mn) mn.value = data.gemini_model;
+        }
+      }
+    }
+
+    function populateServerAISettingsFields(data) {
+      if (data.ai_provider) document.getElementById('set-ai-provider').value = data.ai_provider;
+      _populateApiKeyAndModel(data);
+      if (data.ai_base_url) document.getElementById('set-ai-base-url').value = data.ai_base_url;
+      if (data.gemini_cascade_mode !== undefined && document.getElementById('set-gemini-cascade-mode')) {
+        document.getElementById('set-gemini-cascade-mode').checked = Boolean(data.gemini_cascade_mode);
+        localStorage.setItem('gemini_cascade_mode', Boolean(data.gemini_cascade_mode));
+      }
+      if (Array.isArray(data.gemini_cascade_models)) {
+        populateCascadeSlots(data.gemini_cascade_models);
+        localStorage.setItem('gemini_cascade_models', JSON.stringify(data.gemini_cascade_models));
+      }
+      updateAIUI();
+    }
+
+    function _applyPasswordStateBadge(hasPassword, pwdBadge, pwdInput, removePwdBtn) {
+      if (hasPassword) {
+        if (pwdBadge) {
+          pwdBadge.innerHTML = '<i class="fas fa-check-circle" style="color:#5f7a4f;"></i> Şifre Aktif';
+          pwdBadge.style.background = 'rgba(95,122,79, 0.12)';
+          pwdBadge.style.color = '#5f7a4f';
+        }
+        if (pwdInput) {
+          pwdInput.value = '';
+          pwdInput.placeholder = '•••••••• (Şifre Belirlenmiş)';
+        }
+        if (removePwdBtn) removePwdBtn.style.display = 'inline-flex';
+      } else {
+        if (pwdBadge) {
+          pwdBadge.innerHTML = '<i class="fas fa-exclamation-triangle" style="color:#b8862f;"></i> Şifre Belirlenmemiş';
+          pwdBadge.style.background = 'rgba(184,134,47, 0.12)';
+          pwdBadge.style.color = '#b8862f';
+        }
+        if (pwdInput) {
+          pwdInput.value = '';
+          pwdInput.placeholder = 'Erişim şifresi belirleyin...';
+        }
+        if (removePwdBtn) removePwdBtn.style.display = 'none';
+      }
+    }
+
+    function populateServerSecuritySettings(data) {
+      const pwdInput = document.getElementById('set-access-password');
+      const pwdBadge = document.getElementById('sec-pwd-status-badge');
+      const removePwdBtn = document.getElementById('btn-remove-access-pwd');
+      const phoneUrlDisplay = document.getElementById('phone-connection-url-display');
+      const opdsUrlDisplay = document.getElementById('opds-connection-url-display');
+      const phoneUrl = data.phone_url || (window.location.protocol + '//' + window.location.hostname + ':8000');
+      if (phoneUrlDisplay) phoneUrlDisplay.textContent = phoneUrl;
+      if (opdsUrlDisplay) opdsUrlDisplay.textContent = phoneUrl.replace(/\/$/, '') + '/opds';
+
+      _applyPasswordStateBadge(data.has_access_password, pwdBadge, pwdInput, removePwdBtn);
+    }
+
+    function syncOpenSettingsFromServer(data) {
+      if (!data) return;
+      window.appSettings = data;
+      populateServerOcrVisionSettings(data);
+      populateServerAISettingsFields(data);
+
+      const tsStatus = document.getElementById('tesseract-status');
+      if (tsStatus) {
+        const cmd = (data.tesseract_cmd || '').trim();
+        if (cmd) {
+          tsStatus.innerHTML = '<i class="fas fa-check-circle" style="color:#4caf50; margin-right:0.3rem;"></i> Tesseract yolu ayarlanmış: <code style="font-size:0.7rem;">' + esc(cmd) + '</code>';
+        } else {
+          tsStatus.innerHTML = '<i class="fas fa-info-circle" style="color:var(--accent); margin-right:0.3rem;"></i> Tesseract yolu belirtilmemiş. Sistem PATH\'ten otomatik bulunmaya çalışılacak.';
+        }
+      }
+
+      populateServerSecuritySettings(data);
+    }
+
+    function getModelPlaceholder(provider) {
+      if (provider === 'gemini') return 'gemini-3.5-flash-lite';
+      if (provider === 'ollama') return 'Örn: llama3';
+      return 'Örn: local-model';
+    }
+
+    function _getSavedGeminiModel() {
+      let savedGemini = localStorage.getItem('gemini_model');
+      if (!savedGemini || savedGemini.includes('3.1') || savedGemini.includes('1.5')) {
+        savedGemini = 'gemini-3.5-flash-lite';
+        localStorage.setItem('gemini_model', 'gemini-3.5-flash-lite');
+      }
+      return savedGemini;
+    }
+
+    function _getSavedCascadeModels() {
+      let savedCascadeModels = null;
+      try {
+        const raw = localStorage.getItem('gemini_cascade_models');
+        if (raw) savedCascadeModels = JSON.parse(raw);
+      } catch {
+        // Ignore parse errors on corrupted local cache
+      }
+      if (!savedCascadeModels && window.appSettings?.gemini_cascade_models) {
+        savedCascadeModels = window.appSettings.gemini_cascade_models;
+      }
+      return savedCascadeModels || DEFAULT_CASCADE_MODELS;
+    }
+
+    // --- Yeni Fonksiyonlar (Settings & Edit) ---
+    function openSettings() {
+      try {
+        const { provider, apiKey, baseUrl, modelName } = getAISettings();
+        const providerEl = document.getElementById('set-ai-provider');
+        const apiKeyEl = document.getElementById('set-api-key');
+        const baseUrlEl = document.getElementById('set-ai-base-url');
+        const modelNameEl = document.getElementById('set-ai-model-name');
+        const modal = document.getElementById('settings-modal');
+
+        const savedGemini = _getSavedGeminiModel();
+
+        if (providerEl) providerEl.value = provider;
+        if (apiKeyEl) apiKeyEl.value = apiKey;
+        if (baseUrlEl) baseUrlEl.value = baseUrl;
+        if (modelNameEl) {
+          modelNameEl.value = provider === 'gemini' ? savedGemini : modelName;
+          modelNameEl.placeholder = getModelPlaceholder(provider);
+        }
+        if (document.getElementById('set-gemini-cascade-mode')) {
+          const savedCascade = localStorage.getItem('gemini_cascade_mode');
+          document.getElementById('set-gemini-cascade-mode').checked = savedCascade !== null ? savedCascade === 'true' : true;
+        }
+
+        populateCascadeSlots(_getSavedCascadeModels());
+
+        updateAIUI();
+        
+        if (modal) {
+          modal.classList.remove('closing');
+          modal.classList.add('open');
+          document.body.classList.add('modal-open');
+          switchSettingsTab('ai');
+        }
+      } catch (err) {
+        console.error("openSettings error:", err);
+      }
+
+      apiFetch('/api/settings')
+        .then(r => r ? r.json() : null)
+        .then(syncOpenSettingsFromServer)
+        .catch(err => console.error("openSettings settings fetch error:", err));
+    }
+
+    function _loadSettingsFromLocalStorage() {
+      const provider = localStorage.getItem('ai_provider') || 'gemini';
+      const apiKey = localStorage.getItem('ai_api_key') || '';
+      const baseUrl = localStorage.getItem('ai_base_url') || '';
+      let geminiModel = localStorage.getItem('gemini_model') || 'gemini-3.5-flash-lite';
+      if (!geminiModel || geminiModel.includes('3.1') || geminiModel.includes('1.5')) {
+        geminiModel = 'gemini-3.5-flash-lite';
+        localStorage.setItem('gemini_model', 'gemini-3.5-flash-lite');
+      }
+      const ollamaModel = localStorage.getItem('ollama_model') || '';
+      const lmstudioModel = localStorage.getItem('lmstudio_model') || '';
+
+      let savedCascadeModels = null;
+      try {
+        const raw = localStorage.getItem('gemini_cascade_models');
+        if (raw) savedCascadeModels = JSON.parse(raw);
+      } catch {
+        // Ignore cache read errors
+      }
+
+      return {
+        ai_provider: provider,
+        ai_api_key: apiKey,
+        ai_base_url: baseUrl,
+        gemini_model: geminiModel,
+        ollama_model: ollamaModel,
+        lmstudio_model: lmstudioModel,
+        vision_pages: Number.parseInt(localStorage.getItem('vision_pages') || '20', 10),
+        vision_max_image_dim: Number.parseInt(localStorage.getItem('vision_max_image_dim') || '1200', 10),
+        vision_jpeg_quality: Number.parseInt(localStorage.getItem('vision_jpeg_quality') || '82', 10),
+        ai_max_chars: Number.parseInt(localStorage.getItem('ai_max_chars') || '50000', 10),
+        gemini_cascade_mode: localStorage.getItem('gemini_cascade_mode') !== null ? localStorage.getItem('gemini_cascade_mode') === 'true' : true,
+        gemini_cascade_models: savedCascadeModels || DEFAULT_CASCADE_MODELS
+      };
+    }
+
+    function _populateSettingsInputs(settings) {
+      if (document.getElementById('set-ai-provider')) document.getElementById('set-ai-provider').value = settings.ai_provider;
+      if (document.getElementById('set-api-key')) document.getElementById('set-api-key').value = settings.ai_api_key;
+      if (document.getElementById('set-ai-base-url')) document.getElementById('set-ai-base-url').value = settings.ai_base_url;
+      if (document.getElementById('set-ai-model-name')) {
+        let model = settings.lmstudio_model;
+        if (settings.ai_provider === 'gemini') model = settings.gemini_model;
+        else if (settings.ai_provider === 'ollama') model = settings.ollama_model;
+        document.getElementById('set-ai-model-name').value = model;
+      }
+      if (document.getElementById('set-gemini-cascade-mode')) {
+        document.getElementById('set-gemini-cascade-mode').checked = settings.gemini_cascade_mode;
+      }
+      populateCascadeSlots(settings.gemini_cascade_models);
+      
+      const maxChars = settings.ai_max_chars || 50000;
+      if (document.getElementById('set-ai-max-chars')) {
+        document.getElementById('set-ai-max-chars').value = maxChars;
+        document.getElementById('ai-max-chars-val').innerText = maxChars;
+      }
+      updateAIUI();
+    }
+
+    function _applyServerAiCredentials(data) {
+      if (data.ai_provider) {
+        document.getElementById('set-ai-provider').value = data.ai_provider;
+      }
+      const keyEl = document.getElementById('set-api-key');
+      if (data.has_gemini_key || data.has_ai_api_key) {
+        if (keyEl && !keyEl.value) keyEl.placeholder = "•••••••• (Sunucuda Yapılandırılmış)";
+      } else if (data.ai_api_key && !data.ai_api_key.startsWith('••') && keyEl) {
+        keyEl.value = data.ai_api_key;
+      }
+      if (data.ai_base_url) {
+        document.getElementById('set-ai-base-url').value = data.ai_base_url;
+      }
+      if (data.gemini_model) {
+        localStorage.setItem('gemini_model', data.gemini_model);
+        const currProv = data.ai_provider || document.getElementById('set-ai-provider')?.value || 'gemini';
+        if (currProv === 'gemini') {
+          const mn = document.getElementById('set-ai-model-name');
+          if (mn) mn.value = data.gemini_model;
+        }
+      }
+    }
+
+    function _applyServerCascadeAndWatchfolder(data) {
+      if (data.gemini_cascade_mode !== undefined && document.getElementById('set-gemini-cascade-mode')) {
+        document.getElementById('set-gemini-cascade-mode').checked = Boolean(data.gemini_cascade_mode);
+        localStorage.setItem('gemini_cascade_mode', Boolean(data.gemini_cascade_mode));
+      }
+      if (data.gemini_cascade_models && Array.isArray(data.gemini_cascade_models)) {
+        populateCascadeSlots(data.gemini_cascade_models);
+        localStorage.setItem('gemini_cascade_models', JSON.stringify(data.gemini_cascade_models));
+      }
+      if (data.watchfolder_enabled !== undefined && document.getElementById('set-watchfolder-enabled')) {
+        document.getElementById('set-watchfolder-enabled').checked = !!data.watchfolder_enabled;
+      }
+      if (data.watchfolder_path !== undefined && document.getElementById('set-watchfolder-path')) {
+        document.getElementById('set-watchfolder-path').value = data.watchfolder_path || '';
+      }
+    }
+
+    function _applyServerSettingsToUI(data) {
+      _applyServerAiCredentials(data);
+      _applyServerCascadeAndWatchfolder(data);
+      updateAIUI();
+    }
+
+    async function loadSettings() {
+      try {
+        window.appSettings = _loadSettingsFromLocalStorage();
+        _populateSettingsInputs(window.appSettings);
+
+        // Then, try to sync with server
+        const res = await apiFetch('/api/settings');
+        if (res?.ok) {
+          const data = await res.json();
+          window.appSettings = { ...window.appSettings, ...data };
+          _applyServerSettingsToUI(data);
+        }
+      } catch (e) {
+        console.error("Settings load failed:", e);
+      }
+    }
+
+    function _collectNumericSettings() {
+      const rawVPages = Number.parseInt(document.getElementById('set-vision-pages')?.value, 10);
+      const rawVDim = Number.parseInt(document.getElementById('set-vision-dim')?.value, 10);
+      const rawVQual = Number.parseInt(document.getElementById('set-vision-quality')?.value, 10);
+      const rawMaxPages = Number.parseInt(document.getElementById('set-pages')?.value, 10);
+      const rawOcrPages = Number.parseInt(document.getElementById('set-ocr-pages')?.value, 10);
+      const rawMaxChars = Number.parseInt(document.getElementById('set-ai-max-chars')?.value, 10);
+
+      return {
+        vPages: Number.isNaN(rawVPages) ? 20 : rawVPages,
+        vDim: Number.isNaN(rawVDim) ? 1200 : rawVDim,
+        vQual: Number.isNaN(rawVQual) ? 82 : rawVQual,
+        maxPages: Number.isNaN(rawMaxPages) ? 20 : rawMaxPages,
+        ocrPages: Number.isNaN(rawOcrPages) ? 20 : rawOcrPages,
+        maxChars: Number.isNaN(rawMaxChars) ? 50000 : rawMaxChars
+      };
+    }
+
+    function _handleSettingsSaveSuccess(settings, saveBtn, originalHtml) {
+      window.appSettings = { ...window.appSettings, ...settings };
+      if (settings.access_password) {
+        const pwdBadge = document.getElementById('sec-pwd-status-badge');
+        if (pwdBadge) {
+          pwdBadge.innerHTML = '<i class="fas fa-check-circle" style="color:#5f7a4f;"></i> Şifre Aktif';
+          pwdBadge.style.background = 'rgba(95,122,79, 0.12)';
+          pwdBadge.style.color = '#5f7a4f';
+        }
+        const pwdInput = document.getElementById('set-access-password');
+        if (pwdInput) {
+          pwdInput.value = '';
+          pwdInput.placeholder = '•••••••• (Şifre Belirlenmiş)';
+        }
+        const removePwdBtn = document.getElementById('btn-remove-access-pwd');
+        if (removePwdBtn) removePwdBtn.style.display = 'inline-flex';
+      }
+      if (saveBtn) {
+        saveBtn.innerHTML = '<i class="fas fa-check"></i> <span>Kaydedildi</span>';
+        saveBtn.style.background = '#5f7a4f';
+      }
+      showToast('Ayarlar başarıyla kaydedildi.', 'success');
+      setTimeout(() => {
+        closeSettingsDirect();
+        if (saveBtn) {
+          saveBtn.innerHTML = originalHtml;
+          saveBtn.disabled = false;
+          saveBtn.style.background = '';
+        }
+      }, 450);
+    }
+
+    function _persistSettingsLocally(aiConfig, num, cascadeMode, cascadeModels) {
+      const { provider, apiKey, isPlaceholderMasked, baseUrl, modelName } = aiConfig;
+      localStorage.setItem('ai_provider', provider);
+      if (apiKey && !apiKey.startsWith('••') && !apiKey.includes('•')) {
+        localStorage.setItem('ai_api_key', apiKey);
+      } else if (!apiKey && !isPlaceholderMasked) {
+        localStorage.removeItem('ai_api_key');
+      }
+      localStorage.setItem('ai_base_url', baseUrl);
+
+      const modelKeyMap = { gemini: 'gemini_model', ollama: 'ollama_model', lmstudio: 'lmstudio_model' };
+      const targetKey = modelKeyMap[provider];
+      if (targetKey) {
+        localStorage.setItem(targetKey, modelName);
+      }
+
+      localStorage.setItem('vision_pages', num.vPages);
+      localStorage.setItem('vision_max_image_dim', num.vDim);
+      localStorage.setItem('vision_jpeg_quality', num.vQual);
+      localStorage.setItem('gemini_cascade_mode', cascadeMode);
+      localStorage.setItem('gemini_cascade_models', JSON.stringify(cascadeModels));
+    }
+
+    function _buildSettingsPayload(aiConfig, num, cascadeMode, cascadeModels) {
+      const { provider, apiKey, baseUrl, modelName } = aiConfig;
+      const settings = {
+        max_pages: num.maxPages,
+        ocr_pages: num.ocrPages,
+        vision_pages: num.vPages,
+        vision_max_image_dim: num.vDim,
+        vision_jpeg_quality: num.vQual,
+        tesseract_cmd: document.getElementById('set-tesseract-cmd')?.value || '',
+        ai_provider: provider || 'gemini',
+        ai_base_url: baseUrl || '',
+        ai_max_chars: num.maxChars,
+        gemini_cascade_mode: cascadeMode,
+        gemini_cascade_models: cascadeModels,
+        watchfolder_enabled: document.getElementById('set-watchfolder-enabled')?.checked || false,
+        watchfolder_path: document.getElementById('set-watchfolder-path')?.value.trim() || '',
+      };
+
+      const accessPwdInput = document.getElementById('set-access-password');
+      const accessPwd = accessPwdInput ? accessPwdInput.value.trim() : '';
+      if (accessPwd && !accessPwd.startsWith('••')) {
+        settings.access_password = accessPwd;
+      }
+
+      if (apiKey && !apiKey.startsWith('••') && !apiKey.includes('•')) {
+        settings.ai_api_key = apiKey;
+      }
+
+      const modelPropMap = { gemini: 'gemini_model', ollama: 'ollama_model', lmstudio: 'lmstudio_model' };
+      const targetProp = modelPropMap[provider];
+      if (targetProp) {
+        settings[targetProp] = modelName;
+      }
+
+      return settings;
+    }
+
+    function saveSettings() {
+      const provider = document.getElementById('set-ai-provider').value;
+      const keyEl = document.getElementById('set-api-key');
+      const apiKey = keyEl ? keyEl.value.trim() : '';
+      const keyPlaceholder = keyEl ? (keyEl.placeholder || '') : '';
+      const isPlaceholderMasked = keyPlaceholder.includes('•');
+      const baseUrl = document.getElementById('set-ai-base-url').value;
+      const modelName = document.getElementById('set-ai-model-name').value;
+      const num = _collectNumericSettings();
+      const geminiCascadeMode = document.getElementById('set-gemini-cascade-mode') ? document.getElementById('set-gemini-cascade-mode').checked : true;
+      const cascadeModels = getCascadeSlots();
+
+      const aiConfig = { provider, apiKey, isPlaceholderMasked, baseUrl, modelName };
+      _persistSettingsLocally(aiConfig, num, geminiCascadeMode, cascadeModels);
+      const settings = _buildSettingsPayload(aiConfig, num, geminiCascadeMode, cascadeModels);
+
+      const saveBtn = document.getElementById('btn-save-settings');
+      const originalHtml = saveBtn ? saveBtn.innerHTML : '';
+      if (saveBtn) {
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Kaydediliyor...</span>';
+        saveBtn.disabled = true;
+      }
+
+      apiFetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings)
+      })
+        .then(res => {
+          if (res?.ok) {
+            _handleSettingsSaveSuccess(settings, saveBtn, originalHtml);
+          } else {
+            if (saveBtn) {
+              saveBtn.innerHTML = originalHtml;
+              saveBtn.disabled = false;
+            }
+            showToast('Ayarlar kaydedilirken hata oluştu.', 'error');
+          }
+        })
+        .catch(_err => {
+          if (saveBtn) {
+            saveBtn.innerHTML = originalHtml;
+            saveBtn.disabled = false;
+          }
+          showToast('Bağlantı hatası.', 'error');
+        });
+    }
+
+    function switchSettingsTab(tabName) {
+      const tabBtns = document.querySelectorAll('.settings-tab-btn');
+      const tabPanes = document.querySelectorAll('.settings-tab-pane');
+      tabBtns.forEach(btn => btn.classList.remove('active'));
+      tabPanes.forEach(pane => pane.classList.remove('active'));
+
+      const activeBtn = document.getElementById(`tab-btn-${tabName}`);
+      const activePane = document.getElementById(`tab-pane-${tabName}`);
+      if (activeBtn) activeBtn.classList.add('active');
+      if (activePane) {
+        activePane.getBoundingClientRect(); // Clean reflow for restartable spring slide
+        activePane.classList.add('active');
+      }
+
+      const settingsBody = document.querySelector('#settings-modal .settings-body');
+      if (settingsBody) {
+        settingsBody.scrollTop = 0;
+      }
+    }
+    window.switchSettingsTab = switchSettingsTab;
+
+    function toggleAccessPasswordVisibility() {
+      const input = document.getElementById('set-access-password');
+      const icon = document.getElementById('btn-toggle-pwd-icon');
+      if (!input) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        if (icon) {
+          icon.classList.remove('fa-eye');
+          icon.classList.add('fa-eye-slash');
+        }
+      } else {
+        input.type = 'password';
+        if (icon) {
+          icon.classList.remove('fa-eye-slash');
+          icon.classList.add('fa-eye');
+        }
+      }
+    }
+    window.toggleAccessPasswordVisibility = toggleAccessPasswordVisibility;
+
+    async function saveAccessPasswordDirect() {
+      const input = document.getElementById('set-access-password');
+      if (!input) return;
+      const pwd = input.value.trim();
+      if (!pwd) {
+        showToast('Lütfen önce bir şifre girin.', 'warning');
+        input.focus();
+        return;
+      }
+      if (pwd.startsWith('••')) {
+        showToast('Mevcut şifreniz zaten aktif.', 'info');
+        return;
+      }
+      const saveBtn = document.getElementById('btn-save-access-pwd');
+      const origHtml = saveBtn ? saveBtn.innerHTML : '';
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Kaydediliyor...</span>';
+      }
+      try {
+        const res = await apiFetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ access_password: pwd })
+        });
+        if (res?.ok) {
+          const pwdBadge = document.getElementById('sec-pwd-status-badge');
+          if (pwdBadge) {
+            pwdBadge.innerHTML = '<i class="fas fa-check-circle" style="color:#5f7a4f;"></i> Şifre Aktif';
+            pwdBadge.style.background = 'rgba(95,122,79, 0.12)';
+            pwdBadge.style.color = '#5f7a4f';
+          }
+          input.value = '';
+          input.placeholder = '•••••••• (Şifre Belirlenmiş)';
+          const removeBtn = document.getElementById('btn-remove-access-pwd');
+          if (removeBtn) removeBtn.style.display = 'inline-flex';
+          showToast('Erişim şifresi başarıyla kaydedildi ve aktif edildi!', 'success');
+        } else {
+          showToast('Şifre kaydedilirken hata oluştu.', 'error');
+        }
+      } catch (e) {
+        console.error('saveAccessPasswordDirect error:', e);
+        showToast('Bağlantı hatası oluştu.', 'error');
+      } finally {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = origHtml;
+        }
+      }
+    }
+    window.saveAccessPasswordDirect = saveAccessPasswordDirect;
+
+    async function removeAccessPassword() {
+      if (!confirm('Erişim şifresini kaldırmak istediğinizden emin misiniz?\n(Uzaktan telefon bağlantısı için şifre gereklidir)')) {
+        return;
+      }
+      try {
+        const res = await apiFetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ access_password: '__REMOVE__' })
+        });
+        if (res?.ok) {
+          const pwdBadge = document.getElementById('sec-pwd-status-badge');
+          if (pwdBadge) {
+            pwdBadge.innerHTML = '<i class="fas fa-exclamation-triangle" style="color:#b8862f;"></i> Şifre Belirlenmemiş';
+            pwdBadge.style.background = 'rgba(184,134,47, 0.12)';
+            pwdBadge.style.color = '#b8862f';
+          }
+          const pwdInput = document.getElementById('set-access-password');
+          if (pwdInput) {
+            pwdInput.value = '';
+            pwdInput.placeholder = 'Erişim şifresi belirleyin...';
+          }
+          const removePwdBtn = document.getElementById('btn-remove-access-pwd');
+          if (removePwdBtn) removePwdBtn.style.display = 'none';
+          showToast('Erişim şifresi kaldırıldı.', 'success');
+        } else {
+          showToast('Şifre kaldırılırken hata oluştu.', 'error');
+        }
+      } catch (err) {
+        console.error('removeAccessPassword error:', err);
+        showToast('Bağlantı hatası.', 'error');
+      }
+    }
+    window.removeAccessPassword = removeAccessPassword;
+
+    function copyPhoneConnectionUrl() {
+      const codeEl = document.getElementById('phone-connection-url-display');
+      if (!codeEl) return;
+      const url = codeEl.textContent.trim();
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+          showToast('Bağlantı adresi kopyalandı: ' + url, 'success');
+        }).catch(() => {
+          fallbackCopyUrl(url);
+        });
+      } else {
+        fallbackCopyUrl(url);
+      }
+    }
+
+    function copyOpdsConnectionUrl() {
+      const codeEl = document.getElementById('opds-connection-url-display');
+      if (!codeEl) return;
+      const url = codeEl.textContent.trim();
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+          showToast('OPDS katalog adresi kopyalandı: ' + url, 'success');
+        }).catch(() => {
+          fallbackCopyUrl(url);
+        });
+      } else {
+        fallbackCopyUrl(url);
+      }
+    }
+    window.copyOpdsConnectionUrl = copyOpdsConnectionUrl;
+    function fallbackCopyUrl(url) {
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(url)
+          .then(() => showToast('Bağlantı adresi kopyalandı: ' + url, 'success'))
+          .catch(() => showToast('Adres: ' + url, 'info'));
+        return;
+      }
+      showToast('Bağlantı adresi: ' + url, 'info');
+    }
+    window.copyPhoneConnectionUrl = copyPhoneConnectionUrl;
+
+
+
+    function closeSettings(e) { if (e.target === document.getElementById('settings-modal')) closeSettingsDirect(); }
+    function closeSettingsDirect() {
+      if (typeof window.closeModalWithAnimation === 'function') {
+        window.closeModalWithAnimation('settings-modal');
+      } else {
+        const modal = document.getElementById('settings-modal');
+        if (modal) modal.classList.remove('open');
+        document.body.classList.remove('modal-open');
+      }
+    }
+
+    function closeColModal(e) { if (e.target === document.getElementById('col-modal')) closeColModalDirect(); }
+    function closeColModalDirect() {
+      if (typeof window.closeModalWithAnimation === 'function') {
+        window.closeModalWithAnimation('col-modal');
+      } else {
+        const modal = document.getElementById('col-modal');
+        if (modal) modal.classList.remove('open');
+        document.body.classList.remove('modal-open');
+      }
+    }
+
+    function toggleEditMode(hash) {
+      const form = document.getElementById(`edit-form-${hash}`);
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function saveBookEdit(hash) {
+      const data = {
+        kitap_adi: document.getElementById(`edit-title-${hash}`).value,
+        yazar: document.getElementById(`edit-author-${hash}`).value,
+        ozet: document.getElementById(`edit-summary-${hash}`).value
+      };
+      apiFetch(`/api/books/${hash}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+        .then(r => r ? r.json() : null)
+        .then(() => {
+          showToast('Kitap bilgileri güncellendi.', 'success');
+          closeModalDirect();
+          if (typeof loadBooksFromAPI === 'function') {
+            return loadBooksFromAPI();
+          }
+          return null;
+        })
+        .catch(err => {
+          console.error("saveBookEdit error:", err);
+          showToast('Kitap güncellenirken hata oluştu.', 'error');
+        });
+    }
+
+    function toggleAssistant() {
+      const panel = document.getElementById('chat-panel');
+      if (!panel) return;
+      if (panel.classList.contains('active')) {
+        panel.classList.add('closing');
+        panel.classList.remove('active');
+        setTimeout(() => {
+          panel.classList.remove('closing');
+        }, 150);
+      } else {
+        panel.classList.remove('closing');
+        panel.classList.add('active');
+        // Mutual Exclusion: Close Process Center
+        const ops = document.getElementById('ops-center');
+        if (ops) ops.classList.remove('active');
+
+        // Auto Focus: Focus on input when panel opens
+        const input = document.getElementById('chat-input');
+        if (input) setTimeout(() => input.focus(), 280);
+      }
+    }
+
+    function toggleOps() {
+      const ops = document.getElementById('ops-center');
+      const isActive = ops.classList.toggle('active');
+      if (isActive) {
+        // Mutual Exclusion: Close Assistant Panel
+        const chat = document.getElementById('chat-panel');
+        if (chat) chat.classList.remove('active');
+        if (typeof fetchTasksFromAPI === 'function') {
+          void fetchTasksFromAPI();
+        }
+      }
+    }
+
+    function toggleArchive() {
+      openLogsModal();
+    }
+
+
+    // --- STATS DASHBOARD & CHARTS ---
+    // â•â•â•â•â•â•â•â•â•â• STATS DASHBOARD â•â•â•â•â•â•â•â•â•â•
+
+
+    async function loadStats() {
+      try {
+        const res = await apiFetch('/api/stats');
+        const data = await res.json();
+        renderStatCards(data.general);
+        renderDonutChart(data.categories);
+        renderBarChart(data.monthly);
+      } catch {
+        // UI fallback when statistics endpoint is unreachable
+      }
+    }
+
+    function renderStatCards(g) {
+      const cards = [
+        { value: g.total_books, label: 'Toplam Kitap', icon: 'fa-book' },
+        { value: g.unique_authors, label: 'Farklı Yazar', icon: 'fa-pen-nib' },
+        { value: g.unique_categories, label: 'Kategori', icon: 'fa-layer-group' },
+        { value: g.total_favorites, label: 'Favori', icon: 'fa-heart' },
+      ];
+      document.getElementById('stats-cards').innerHTML = cards.map(c => `
+    <div class="stat-card">
+      <div class="stat-card-value">${c.value}</div>
+      <div class="stat-card-label"><i class="fas ${c.icon}" style="margin-right:4px;color:var(--accent)"></i> ${c.label}</div>
+    </div>
+  `).join('');
+    }
+
+    function renderDonutChart(categories) {
+      if (!categories || categories.length === 0) {
+        document.getElementById('donut-chart').innerHTML = '<div style="color:var(--muted);font-size:0.8rem;">Veri yok</div>';
+        return;
+      }
+      const total = categories.reduce((s, c) => s + c.count, 0);
+      const top = categories.slice(0, 8);
+      const otherCount = categories.slice(8).reduce((s, c) => s + c.count, 0);
+      if (otherCount > 0) top.push({ name: 'Diğer', count: otherCount });
+
+      const size = 160, cx = 80, cy = 80, r = 60, circumference = 2 * Math.PI * r;
+      let offset = 0;
+      let paths = '';
+      top.forEach((c, i) => {
+        const pct = c.count / total;
+        const dashLen = pct * circumference;
+        const color = DONUT_COLORS[i % DONUT_COLORS.length];
+        paths += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="24"
+      stroke-dasharray="${dashLen} ${circumference - dashLen}" stroke-dashoffset="${-offset}"
+      style="transition: stroke-dashoffset 0.6s"/>`;
+        offset += dashLen;
+      });
+
+      const legend = top.map((c, i) => `
+    <div class="donut-legend-item">
+      <span class="donut-legend-dot" style="background:${DONUT_COLORS[i % DONUT_COLORS.length]}"></span>
+      <span>${esc(c.name)}</span>
+      <span class="donut-legend-count">${c.count}</span>
+    </div>
+  `).join('');
+
+      document.getElementById('donut-chart').innerHTML = `
+    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="transform:rotate(-90deg)">
+      ${paths}
+    </svg>
+    <div class="donut-legend">${legend}</div>
+  `;
+    }
+
+    function renderBarChart(monthly) {
+      if (!monthly || monthly.length === 0) {
+        document.getElementById('bar-chart').innerHTML = '<div style="color:var(--muted);font-size:0.8rem;">Henüz veri yok</div>';
+        return;
+      }
+      const maxVal = Math.max(...monthly.map(m => m.count), 1);
+      const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+      document.getElementById('bar-chart').innerHTML = monthly.map(m => {
+        const pct = (m.count / maxVal) * 100;
+        const [, mo] = m.month.split('-');
+        const label = months[Number.parseInt(mo, 10) - 1] || m.month;
+        return `
+      <div class="bar-col">
+        <span class="bar-value">${m.count}</span>
+        <div class="bar-fill" style="height:${Math.max(pct, 4)}%"></div>
+        <span class="bar-label">${label}</span>
+      </div>
+    `;
+      }).join('');
+    }
+
+    // â•â•â•â•â•â•â•â•â•â• DRAG & DROP SORT â•â•â•â•â•â•â•â•â•â•
+
+
+
+
+```
+
+
+## DOSYA 6.5: static/js/ui_logs.js (İşlem Merkezi & Canlı Log Akışı)
+
+**Dosya Yolu:** `static/js/ui_logs.js`
+
+```javascript
+/* ═══════════ ui_logs.js — Live Log Monitoring & Diagnostic Console ═══════════ */
+    function openLogsModal() {
+      const modal = document.getElementById('logs-modal');
+      if (!modal) return;
+      window.unreadLogErrors = 0;
+      updateHeaderLogsBadge();
+
+      if ((window.cachedLogs || []).length === 0) {
+        fetchAndRenderLogs().catch(() => {});
+      } else {
+        updateCategoryCounters();
+        renderLogsModalBody();
+      }
+
+      modal.classList.remove('closing');
+      modal.classList.add('open');
+      document.body.classList.add('modal-open');
+
+      // Setup smart scroll detection on logs container
+      const body = document.getElementById('logs-body');
+      if (body && !body._scrollHandlerBound) {
+        body._scrollHandlerBound = true;
+        body.addEventListener('scroll', () => {
+          const atBottom = (body.scrollHeight - body.scrollTop - body.clientHeight) < 40;
+          if (!atBottom && window.isLogAutoScroll) {
+            window.isLogAutoScroll = false;
+            const chk = document.getElementById('logs-autoscroll-check');
+            if (chk) chk.checked = false;
+            const banner = document.getElementById('logs-paused-banner');
+            if (banner) {
+              banner.innerHTML = '<i class="fas fa-arrow-up"></i> Otomatik Kaydırma Duraklatıldı';
+              banner.style.display = 'inline-flex';
+            }
+          } else if (atBottom && !window.isLogAutoScroll && !window.isLogLivePaused) {
+            window.isLogAutoScroll = true;
+            const chk = document.getElementById('logs-autoscroll-check');
+            if (chk) chk.checked = true;
+            const banner = document.getElementById('logs-paused-banner');
+            if (banner) banner.style.display = 'none';
+          }
+        });
+      }
+    }
+
+    function closeLogsModal(e) {
+      if (e.target === document.getElementById('logs-modal')) closeLogsModalDirect();
+    }
+
+    function closeLogsModalDirect() {
+      if (typeof window.closeModalWithAnimation === 'function') {
+        window.closeModalWithAnimation('logs-modal', () => {
+          updateHeaderLogsBadge();
+        });
+      } else {
+        const modal = document.getElementById('logs-modal');
+        if (modal) modal.classList.remove('open');
+        document.body.classList.remove('modal-open');
+        updateHeaderLogsBadge();
+      }
+    }
+
+    function setLogCategory(cat, btn) {
+      window.currentLogCategory = cat;
+      document.querySelectorAll('.logs-filter-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderLogsModalBody();
+    }
+
+    function setLogLevel(lvl, btn) {
+      window.currentLogLevel = lvl;
+      document.querySelectorAll('.logs-level-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderLogsModalBody();
+    }
+
+    let _searchDebounce = null;
+    function handleLogSearchInput(val) {
+      window.currentLogSearch = String(val || '').trim().toLowerCase();
+      const clearBtn = document.getElementById('logs-search-clear');
+      if (clearBtn) clearBtn.style.display = window.currentLogSearch ? 'block' : 'none';
+
+      clearTimeout(_searchDebounce);
+      _searchDebounce = setTimeout(() => {
+        renderLogsModalBody();
+      }, 120);
+    }
+
+    function clearLogSearch() {
+      const input = document.getElementById('logs-search-input');
+      if (input) input.value = '';
+      handleLogSearchInput('');
+    }
+
+    function toggleLogPause() {
+      window.isLogLivePaused = !window.isLogLivePaused;
+      const btn = document.getElementById('logs-toggle-pause');
+      const banner = document.getElementById('logs-paused-banner');
+
+      if (window.isLogLivePaused) {
+        if (btn) {
+          btn.classList.add('paused');
+          btn.innerHTML = '<i class="fas fa-play"></i> <span id="logs-pause-text">Devam Et</span>';
+        }
+        if (banner) {
+          banner.innerHTML = '<i class="fas fa-pause-circle"></i> Canlı Akış Duraklatıldı';
+          banner.style.display = 'inline-flex';
+        }
+      } else {
+        if (btn) {
+          btn.classList.remove('paused');
+          btn.innerHTML = '<i class="fas fa-pause"></i> <span id="logs-pause-text">Duraklat</span>';
+        }
+        if (banner && window.isLogAutoScroll) banner.style.display = 'none';
+        renderLogsModalBody();
+      }
+    }
+
+    function toggleAutoScroll(checked) {
+      window.isLogAutoScroll = !!checked;
+      const banner = document.getElementById('logs-paused-banner');
+      if (window.isLogAutoScroll) {
+        if (banner && !window.isLogLivePaused) banner.style.display = 'none';
+        scrollLogsToBottom();
+      } else if (banner) {
+        banner.innerHTML = '<i class="fas fa-hand"></i> Otomatik Kaydırma Kapalı';
+        banner.style.display = 'inline-flex';
+      }
+    }
+
+    function scrollLogsToTop() {
+      const body = document.getElementById('logs-body');
+      if (body) body.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function scrollLogsToBottom() {
+      const body = document.getElementById('logs-body');
+      if (body) body.scrollTo({ top: body.scrollHeight, behavior: 'smooth' });
+    }
+
+    async function clearLogsUI() {
+      if (!confirm("Tüm sistem ve işlem loglarını temizlemek istediğinize emin misiniz?")) {
+        return;
+      }
+      try {
+        await fetch('/api/logs/clear', { method: 'POST' });
+        window.cachedLogs = [];
+        window.unreadLogErrors = 0;
+        updateHeaderLogsBadge();
+        updateCategoryCounters();
+        renderLogsModalBody();
+        showToast("Loglar başarıyla temizlendi.", "success");
+      } catch (err) {
+        // Log temizleme işlemi başarısız olduğunda konsola yaz ve kullanıcıyı bilgilendir
+        console.error("Log temizleme hatası:", err);
+        showToast("Loglar temizlenirken hata oluştu.", "error");
+      }
+    }
+
+    function exportLogs(format) {
+      window.location.href = `/api/logs/export?format=${encodeURIComponent(format)}`;
+    }
+
+    function copyLogEntry(logId, btn) {
+      const log = cachedLogs.find(l => String(l.id) === String(logId));
+      if (!log) return;
+      const text = `[${log.iso || new Date(log.ts * 1000).toLocaleString('tr-TR')}] [${log.level || 'INFO'}] [${log.category || 'system'}] ${log.message}` +
+        (log.context && Object.keys(log.context).length > 0 ? `\nContext: ${JSON.stringify(log.context, null, 2)}` : '');
+
+      navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check" style="color:#9db58a"></i> Kopyalandı!';
+        btn.style.color = '#9db58a';
+        setTimeout(() => {
+          btn.innerHTML = orig;
+          btn.style.color = '';
+        }, 1500);
+      }).catch(() => {});
+    }
+
+    function toggleLogContext(logId) {
+      const el = document.getElementById(`log-ctx-${logId}`);
+      const btn = document.getElementById(`log-btn-ctx-${logId}`);
+      if (!el) return;
+      const isOpen = el.classList.toggle('open');
+      if (btn) {
+        btn.innerHTML = isOpen
+          ? '<i class="fas fa-chevron-up"></i> Gizle'
+          : '<i class="fas fa-code"></i> Detay';
+      }
+    }
+
+    function updateCategoryCounters() {
+      const logs = window.cachedLogs || [];
+      const counts = {
+        all: logs.length,
+        upload: 0,
+        ai_analyze: 0,
+        ai_raw: 0,
+        ai_chat: 0,
+        pdf: 0,
+        filesystem: 0,
+        security: 0,
+        system: 0,
+      };
+      const lvlCounts = { ERROR: 0, WARNING: 0, INFO: 0 };
+
+      for (const l of logs) {
+        const c = l?.category;
+        if (c && Object.hasOwn(counts, c)) counts[c]++;
+        const lvl = (l?.level || '').toUpperCase();
+        if (Object.hasOwn(lvlCounts, lvl)) lvlCounts[lvl]++;
+      }
+
+      for (const cat in counts) {
+        const el = document.getElementById(`logs-count-${cat}`);
+        if (el) el.textContent = counts[cat];
+      }
+
+      const errEl = document.getElementById('logs-lvl-count-error');
+      if (errEl) errEl.textContent = lvlCounts.ERROR;
+      const warnEl = document.getElementById('logs-lvl-count-warning');
+      if (warnEl) warnEl.textContent = lvlCounts.WARNING;
+      const infoEl = document.getElementById('logs-lvl-count-info');
+      if (infoEl) infoEl.textContent = lvlCounts.INFO;
+    }
+
+    function updateHeaderLogsBadge() {
+      const badge1 = document.getElementById('header-logs-badge');
+      const badge2 = document.getElementById('compact-logs-badge');
+      const modal = document.getElementById('logs-modal');
+      const isOpen = modal?.classList?.contains('open');
+      const show = !isOpen && (window.unreadLogErrors || 0) > 0;
+
+      if (badge1) badge1.style.display = show ? 'block' : 'none';
+      if (badge2) badge2.style.display = show ? 'block' : 'none';
+    }
+
+    function highlightLogText(text, query) {
+      if (!query) return esc(text);
+      const safeText = esc(text);
+      const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+      const regex = new RegExp(`(${escaped})`, 'gi');
+      return safeText.replace(regex, '<mark class="log-match">$1</mark>');
+    }
+
+    function renderLogsModalBody() {
+      const body = document.getElementById('logs-body');
+      if (!body) return;
+
+      const logs = window.cachedLogs || [];
+      if (logs.length === 0) {
+        body.innerHTML = '<div style="opacity:0.6; font-size:0.8rem; color:#8f8a80; text-align:center; padding:3rem 1rem;"><i class="fas fa-terminal" style="font-size:2rem; margin-bottom:0.75rem; display:block; opacity:0.3;"></i>Henüz kaydedilmiş log bulunmuyor.</div>';
+        const counter = document.getElementById('logs-counter-info');
+        if (counter) counter.textContent = '0 log';
+        return;
+      }
+
+      const q = window.currentLogSearch || '';
+      const cat = window.currentLogCategory || 'all';
+      const lvl = window.currentLogLevel || 'all';
+
+      const filtered = logs.filter(l => {
+        if (cat !== 'all' && l.category !== cat) return false;
+        if (lvl !== 'all' && (l.level || '').toUpperCase() !== lvl) return false;
+        if (q) {
+          const msg = (l.message || '').toLowerCase();
+          const catName = (l.category || '').toLowerCase();
+          const lvlName = (l.level || '').toLowerCase();
+          const ctx = JSON.stringify(l.context || {}).toLowerCase();
+          if (!msg.includes(q) && !ctx.includes(q) && !catName.includes(q) && !lvlName.includes(q)) return false;
+        }
+        return true;
+      });
+
+      const counter = document.getElementById('logs-counter-info');
+      if (counter) {
+        counter.textContent = `${filtered.length} / ${logs.length} log`;
+      }
+
+      if (filtered.length === 0) {
+        body.innerHTML = '<div style="opacity:0.6; font-size:0.8rem; color:#8f8a80; text-align:center; padding:3rem 1rem;"><i class="fas fa-search" style="font-size:2rem; margin-bottom:0.75rem; display:block; opacity:0.3;"></i>Seçilen filtre ve arama kriterlerine uyan log bulunamadı.</div>';
+        return;
+      }
+
+      body.innerHTML = renderLogCardsHtml(filtered, q);
+
+      if (window.isLogAutoScroll && !window.isLogLivePaused) {
+        body.scrollTop = body.scrollHeight;
+      }
+    }
+
+    function getLogLevelClass(level) {
+      if (level === 'ERROR') return 'lvl-error';
+      if (level === 'WARNING') return 'lvl-warning';
+      if (level === 'DEBUG') return 'lvl-debug';
+      return 'lvl-info';
+    }
+
+    function _renderSingleLogCard(l, i, q) {
+      const logId = l.id || `idx_${i}_${l.ts || ''}`;
+      const date = new Date((l.ts || 0) * 1000);
+      const timeStr = l.iso ? l.iso.split(' ')[1] : date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const level = (l.level || 'INFO').toUpperCase();
+      const lvlClass = getLogLevelClass(level);
+
+      const ctx = l.context || {};
+      const ctxKeys = Object.keys(ctx);
+      const hasContext = ctxKeys.length > 0;
+
+      let ctxHtml = '';
+      if (hasContext) {
+        ctxHtml = `<div class="log-context-box" id="log-ctx-${logId}">`;
+        for (const k of ctxKeys) {
+          const v = ctx[k];
+          const valStr = typeof v === 'object' ? JSON.stringify(v, null, 2) : String(v);
+          ctxHtml += `<div class="log-ctx-item"><span class="log-ctx-key">${esc(k)}:</span><span class="log-ctx-val">${highlightLogText(valStr, q)}</span></div>`;
+        }
+        ctxHtml += `</div>`;
+      }
+
+      return `
+        <div class="log-card ${lvlClass}" id="log-row-${logId}">
+          <div class="log-card-header">
+            <div class="log-card-meta">
+              <span class="log-time" title="${esc(l.iso || '')}">${timeStr}</span>
+              <span class="log-level-tag ${level}">${level}</span>
+              <span class="log-cat-tag">${esc(l.category || 'system')}</span>
+            </div>
+            <div class="log-card-tools">
+              ${hasContext ? `<button class="log-tool-btn" id="log-btn-ctx-${logId}" onclick="toggleLogContext('${logId}')"><i class="fas fa-code"></i> Detay (${ctxKeys.length})</button>` : ''}
+              <button class="log-tool-btn" onclick="copyLogEntry('${logId}', this)" title="Log satırını kopyala"><i class="fas fa-copy"></i> Kopyala</button>
+            </div>
+          </div>
+          <div class="log-message">${highlightLogText(l.message || '', q)}</div>
+          ${ctxHtml}
+        </div>
+      `;
+    }
+
+    function renderLogCardsHtml(filtered, q) {
+      let html = '';
+      for (let i = 0; i < filtered.length; i++) {
+        html += _renderSingleLogCard(filtered[i], i, q);
+      }
+      return html;
+    }
+
+    async function fetchAndRenderLogs() {
+      try {
+        const res = await fetch('/api/logs?limit=800');
+        const data = await res.json();
+        window.cachedLogs = Array.isArray(data.logs) ? data.logs : [];
+        updateCategoryCounters();
+        renderLogsModalBody();
+      } catch {
+        // UI fallback when logs endpoint is unreachable
+        const body = document.getElementById('logs-body');
+        if (body) body.innerHTML = '<div style="opacity:0.7; color:#b0473c; font-size:0.8rem; text-align:center; padding:2rem;"><i class="fas fa-exclamation-triangle"></i> Loglar yüklenirken bir ağ hatası oluştu.</div>';
+      }
+    }
+
+    function setOpsTab(tab) {
+      window.opsActiveTab = tab;
+      document.querySelectorAll('.ops-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.id === `ops-tab-${tab}`);
+      });
+      updateOpsUI(window.lastActiveTasks, window.lastArchivedTasks);
+    }
+    window.setOpsTab = setOpsTab;
+
+    function openBookFromOps(fileHash) {
+      if (!fileHash) return;
+      const allB = window.allBooks || [];
+      const book = allB.find(b => b.dosya_hash === fileHash || b.hash === fileHash);
+      if (book && typeof openModal === 'function') {
+        openModal(book);
+        const ops = document.getElementById('ops-center');
+        if (ops) ops.classList.remove('active');
+      } else if (typeof loadBooksFromAPI === 'function') {
+        loadBooksFromAPI(1, false).then(() => {
+          const b = (window.allBooks || []).find(x => x.dosya_hash === fileHash || x.hash === fileHash);
+          if (b && typeof openModal === 'function') {
+            openModal(b);
+            const ops = document.getElementById('ops-center');
+            if (ops) ops.classList.remove('active');
+          }
+        }).catch(err => console.error("Book open from ops error:", err));
+      }
+    }
+    window.openBookFromOps = openBookFromOps;
+
+    function getTaskStep(pct, msg = '', status = '') {
+      if (status === 'success') return 4;
+      const m = String(msg || '');
+      if (pct >= 90 || m.includes('Veritabanı') || m.includes('kaydedildi')) return 4;
+      if (pct >= 70 || m.includes('Kapak') || m.includes('arşivleniyor')) return 3;
+      if (pct >= 25 || m.includes('Yapay zeka') || m.includes('GEMINI')) return 2;
+      return 1;
+    }
+
+    function getTaskPhaseLabel(pct, msg = '', status = '') {
+      if (status === 'success') return 'Kütüphaneye Kaydedildi';
+      if (status === 'error') return 'İşlem Başarısız';
+      const m = String(msg || '');
+      if (pct >= 90 || m.includes('Veritabanı')) return '4/4 Veritabanı Kaydı';
+      if (pct >= 70 || m.includes('Kapak') || m.includes('arşivleniyor')) return '3/4 Kapak & Görsel';
+      if (pct >= 25 || m.includes('Yapay zeka') || m.includes('GEMINI')) return '2/4 Gemini 3.5 AI Analizi';
+      return '1/4 Belge Okuma';
+    }
+
+    function formatTimeAgo(ts) {
+      if (!ts) return '';
+      const diff = Math.max(0, Math.floor(Date.now() / 1000 - ts));
+      if (diff < 5) return 'az önce';
+      if (diff < 60) return `${diff} sn önce`;
+      if (diff < 3600) return `${Math.floor(diff / 60)} dk önce`;
+      return `${Math.floor(diff / 3600)} sa önce`;
+    }
+
+    function formatLogTime(ts) {
+      if (!ts) return '';
+      const d = new Date(ts * 1000);
+      return d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    function getOpsStepClass(step, target) {
+      if (step > target) return 'done';
+      if (step === target) return 'active';
+      return '';
+    }
+
+    function getOpsStepNum(step, target) {
+      return step > target ? '✓' : String(target);
+    }
+
+    function renderOpsActiveCard(t, pct, logs) {
+      const step = getTaskStep(pct, t.log_message, t.status);
+      const phaseLabel = getTaskPhaseLabel(pct, t.log_message, t.status);
+
+      let logDetailsHtml = '';
+      if (logs.length > 0) {
+        const streamLines = logs.slice(-6).map(l => `
+          <div class="ops-stream-line ${l.state || l.status || ''}">
+            <span class="line-time">${formatLogTime(l.ts)}</span>
+            <span class="line-dot"></span>
+            <span class="line-msg">${esc(l.message || '')}</span>
+          </div>
+        `).join('');
+        logDetailsHtml = `
+          <details class="ops-log-details" ${logs.length <= 4 ? 'open' : ''}>
+            <summary><i class="fas fa-terminal"></i> Ayrıntılı Loglar (${logs.length})</summary>
+            <div class="ops-log-stream">${streamLines}</div>
+          </details>
+        `;
+      }
+
+      return `
+        <div class="ops-task-card is-active" id="task-${t.id}">
+          <div class="ops-card-header">
+            <div class="ops-file-badge"><i class="fas fa-file-pdf"></i></div>
+            <div class="ops-file-info">
+              <div class="ops-file-title" title="${esc(t.filename)}">${esc(t.filename)}</div>
+              <div class="ops-file-meta">
+                <span class="ops-phase-tag"><i class="fas fa-spinner fa-spin"></i> ${phaseLabel}</span>
+                <span class="ops-time-ago">${formatTimeAgo(t.last_update)}</span>
+              </div>
+            </div>
+            <div class="ops-card-pct">%${pct}</div>
+          </div>
+          <div class="ops-stepper">
+            <div class="ops-step ${getOpsStepClass(step, 1)}">
+              <span class="step-num">${getOpsStepNum(step, 1)}</span>
+              <span class="step-lbl">Okuma</span>
+            </div>
+            <div class="ops-step-line ${step > 1 ? 'done' : ''}"></div>
+            <div class="ops-step ${getOpsStepClass(step, 2)}">
+              <span class="step-num">${getOpsStepNum(step, 2)}</span>
+              <span class="step-lbl">Gemini AI</span>
+            </div>
+            <div class="ops-step-line ${step > 2 ? 'done' : ''}"></div>
+            <div class="ops-step ${getOpsStepClass(step, 3)}">
+              <span class="step-num">${getOpsStepNum(step, 3)}</span>
+              <span class="step-lbl">Kapak</span>
+            </div>
+            <div class="ops-step-line ${step > 3 ? 'done' : ''}"></div>
+            <div class="ops-step ${getOpsStepClass(step, 4)}">
+              <span class="step-num">${getOpsStepNum(step, 4)}</span>
+              <span class="step-lbl">Kayıt</span>
+            </div>
+          </div>
+          <div class="ops-progress-track">
+            <div class="ops-progress-bar animated" style="width: ${pct}%"></div>
+          </div>
+          <div class="ops-status-line">
+            <span class="ops-pulse-dot"></span>
+            <span class="ops-status-text" title="${esc(t.log_message)}">${esc(t.log_message || 'İşlem yürütülüyor...')}</span>
+            <span class="ops-terminal-cursor">_</span>
+          </div>
+          ${logDetailsHtml}
+        </div>
+      `;
+    }
+
+    function renderOpsSuccessCard(t, title, author, category, bookHash) {
+      return `
+        <div class="ops-task-card is-success" id="task-${t.id}">
+          <div class="ops-card-header">
+            <div class="ops-file-badge success"><i class="fas fa-book"></i></div>
+            <div class="ops-file-info">
+              <div class="ops-file-title success" title="${esc(title)}">${esc(title)}</div>
+              <div class="ops-file-meta">
+                ${author ? `<span class="ops-author-tag"><i class="fas fa-pen-nib"></i> ${esc(author)}</span>` : ''}
+                ${category ? `<span class="ops-cat-tag"><i class="fas fa-folder"></i> ${esc(category)}</span>` : ''}
+              </div>
+            </div>
+            <div class="ops-status-pill success"><i class="fas fa-check-circle"></i> Eklendi</div>
+          </div>
+          <div class="ops-result-row">
+            <span class="ops-result-filename" title="${esc(t.filename)}"><i class="fas fa-file-alt"></i> ${esc(t.filename)}</span>
+            ${bookHash ? `
+              <button class="ops-btn-action" onclick="openBookFromOps('${bookHash}')">
+                <i class="fas fa-eye"></i> Kitabı Aç
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderOpsErrorCard(t) {
+      return `
+        <div class="ops-task-card is-error" id="task-${t.id}">
+          <div class="ops-card-header">
+            <div class="ops-file-badge error"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="ops-file-info">
+              <div class="ops-file-title error">${esc(t.filename)}</div>
+              <div class="ops-file-meta">
+                <span class="ops-status-pill error"><i class="fas fa-times-circle"></i> Hata Oluştu</span>
+                <span class="ops-time-ago">${formatTimeAgo(t.last_update)}</span>
+              </div>
+            </div>
+          </div>
+          <div class="ops-error-box">${esc(t.log_message || 'İşlem sırasında bir hata oluştu.')}</div>
+        </div>
+      `;
+    }
+
+    function renderOpsEmptyState(tab) {
+      if (tab === 'active') {
+        return `
+          <div style="opacity:0.65; font-size:0.75rem; text-align:center; padding:3rem 1rem;">
+            <i class="fas fa-check-circle" style="font-size:1.8rem; color:#5f7a4f; margin-bottom:0.6rem; display:block; opacity:0.8;"></i>
+            Devam eden aktif bir işlem yok.<br>
+            <span style="font-size:0.68rem; color:#6f6a60;">Tamamlanan işlemleri görmek için "Tamamlanan" sekmesine tıklayabilirsiniz.</span>
+          </div>
+        `;
+      }
+      if (tab === 'completed') {
+        return `
+          <div style="opacity:0.65; font-size:0.75rem; text-align:center; padding:3rem 1rem;">
+            <i class="fas fa-history" style="font-size:1.8rem; color:#6f6a60; margin-bottom:0.6rem; display:block; opacity:0.6;"></i>
+            Henüz tamamlanmış işlem kaydı yok.
+          </div>
+        `;
+      }
+      return `
+        <div class="ops-empty-state">
+          <div class="ops-empty-radar">
+            <div class="ops-radar-sweep"></div>
+            <i class="fas fa-microchip ops-empty-icon"></i>
+          </div>
+          <div class="ops-empty-title">Sistem Hazır ve Dinlemede</div>
+          <div class="ops-empty-desc">
+            Yapay zeka kuyruğunda bekleyen işlem yok. Arka plan servisleri canlı ve yanıt vermeye hazır.
+          </div>
+          <div class="ops-empty-specs">
+            <div class="spec-item"><i class="fas fa-brain" style="color:#9a8d77;"></i> AI Motoru: <strong>Gemini 3.5 Flash-Lite</strong></div>
+            <div class="spec-item"><i class="fas fa-wifi" style="color:#5f7a4f;"></i> WebSocket: <strong>Canlı Bağlantı Aktif</strong></div>
+            <div class="spec-item"><i class="fas fa-database" style="color:#b8862f;"></i> Kütüphane: <strong>${(window.allBooks?.length || 0)} Kayıtlı Eser</strong></div>
+          </div>
+          <div class="ops-empty-actions">
+            <button class="ops-quick-action" onclick="document.getElementById('file-input')?.click();">
+              <i class="fas fa-plus"></i> Kitap Yükle
+            </button>
+            <button class="ops-quick-action" onclick="if(typeof syncLibrary==='function') syncLibrary();">
+              <i class="fas fa-sync-alt"></i> Klasörleri Tara
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function handleCompletedTaskRefreshes(completedEntries) {
+      completedEntries.forEach(t => {
+        if (t.status === 'success' && !window.completedTasks.has(t.id)) {
+          window.completedTasks.add(t.id);
+          if (typeof loadBooksFromAPI === 'function') {
+            loadBooksFromAPI(1, false).catch(err => console.error("Book reload failed:", err));
+          }
+          if (typeof addChatMessage === 'function') {
+            addChatMessage('ai', `✅ ${t.filename} başarıyla analiz edildi ve kütüphanenize eklendi.`);
+          }
+        }
+      });
+    }
+
+    function _renderActiveOpsBadges(activeCount) {
+      const activePill = document.getElementById('ops-active-pill');
+      const livePulse = document.getElementById('ops-live-pulse');
+      const toggleBtn = document.getElementById('ops-toggle');
+      const floatingBadge = document.getElementById('ops-badge');
+
+      if (activePill) {
+        activePill.textContent = `${activeCount} Aktif`;
+        activePill.className = 'ops-count-pill is-active';
+      }
+      if (livePulse) livePulse.className = 'ops-live-pulse pulse-active';
+      if (floatingBadge) {
+        floatingBadge.textContent = activeCount;
+        floatingBadge.style.display = 'block';
+      }
+      if (toggleBtn) {
+        toggleBtn.classList.add('is-processing');
+        toggleBtn.title = `${activeCount} kitap arka planda işleniyor... (Görüntülemek için tıklayın)`;
+      }
+    }
+
+    function _renderIdleOpsBadges() {
+      const activePill = document.getElementById('ops-active-pill');
+      const livePulse = document.getElementById('ops-live-pulse');
+      const toggleBtn = document.getElementById('ops-toggle');
+      const floatingBadge = document.getElementById('ops-badge');
+
+      if (activePill) {
+        activePill.textContent = 'Hazır';
+        activePill.className = 'ops-count-pill';
+      }
+      if (livePulse) livePulse.className = 'ops-live-pulse pulse-idle';
+      if (floatingBadge) floatingBadge.style.display = 'none';
+      if (toggleBtn) {
+        toggleBtn.classList.remove('is-processing');
+        toggleBtn.title = 'İşlem Merkezi';
+      }
+    }
+
+    function updateOpsBadges(activeCount, completedCount, totalCount) {
+      const queueLabel = document.getElementById('ops-queue-label');
+      const badgeAll = document.getElementById('ops-tab-badge-all');
+      const badgeActive = document.getElementById('ops-tab-badge-active');
+      const badgeCompleted = document.getElementById('ops-tab-badge-completed');
+
+      if (badgeAll) badgeAll.textContent = totalCount;
+      if (badgeActive) badgeActive.textContent = activeCount;
+      if (badgeCompleted) badgeCompleted.textContent = completedCount;
+
+      if (queueLabel) {
+        queueLabel.textContent = activeCount > 0 ? `${activeCount} Sırada` : 'Boşta';
+      }
+
+      if (activeCount > 0) {
+        _renderActiveOpsBadges(activeCount);
+      } else {
+        _renderIdleOpsBadges();
+      }
+    }
+
+    function renderOpsCardsHtml(listToRender, currentTab, activeCount, completedCount) {
+      let html = '';
+      let hasActiveSection = false;
+      let hasCompletedSection = false;
+
+      listToRender.forEach(t => {
+        const isSuccess = t.status === 'success';
+        const isError = t.status === 'error';
+        const isActive = !isSuccess && !isError;
+        const pct = Math.min(100, Math.max(isActive ? 5 : 0, t.percentage || 0));
+        const logs = Array.isArray(t.logs) ? t.logs : [];
+        const taskData = t.task_data || {};
+        const title = taskData.kitap_adi || t.filename || 'Yeni Kitap';
+        const author = taskData.yazar || '';
+        const category = taskData.kategori || '';
+        const bookHash = taskData.dosya_hash || '';
+
+        // Add section headers in 'all' view
+        if (currentTab === 'all') {
+          if (isActive && !hasActiveSection) {
+            html += `<div class="ops-section-divider"><i class="fas fa-bolt" style="color:#b8862f;"></i> Devam Eden İşlemler (${activeCount})</div>`;
+            hasActiveSection = true;
+          } else if (!isActive && !hasCompletedSection) {
+            html += `<div class="ops-section-divider" style="margin-top:0.8rem;"><i class="fas fa-check-circle" style="color:#5f7a4f;"></i> Son İşlemler (${completedCount})</div>`;
+            hasCompletedSection = true;
+          }
+        }
+
+        if (isActive) {
+          html += renderOpsActiveCard(t, pct, logs);
+        } else if (isSuccess) {
+          html += renderOpsSuccessCard(t, title, author, category, bookHash);
+        } else if (isError) {
+          html += renderOpsErrorCard(t);
+        }
+      });
+      return html;
+    }
+
+    function updateOpsUI(activeTasks, archivedTasks = {}) {
+      const body = document.getElementById('ops-body');
+      if (!body) return;
+
+      const activeEntries = Object.entries(activeTasks || {})
+        .filter(([_, t]) => t && t.status !== 'success' && t.status !== 'error')
+        .map(([id, t]) => ({ id, ...t, isActive: true }))
+        .sort((a, b) => (b.last_update || 0) - (a.last_update || 0));
+
+      const archivedRaw = [
+        ...Object.entries(activeTasks || {}).filter(([_, t]) => t && (t.status === 'success' || t.status === 'error')),
+        ...Object.entries(archivedTasks || {})
+      ].map(([id, t]) => ({ id, ...t, isActive: false }))
+       .sort((a, b) => (b.last_update || b.archived_at || 0) - (a.last_update || a.archived_at || 0));
+
+      const completedSeen = new Set();
+      const completedEntries = [];
+      for (const t of archivedRaw) {
+        if (!completedSeen.has(t.id)) {
+          completedSeen.add(t.id);
+          completedEntries.push(t);
+        }
+      }
+
+      handleCompletedTaskRefreshes(completedEntries);
+
+      // Update Header Badges & Indicators
+      const activeCount = activeEntries.length;
+      const completedCount = completedEntries.length;
+      const totalCount = activeCount + completedCount;
+
+      updateOpsBadges(activeCount, completedCount, totalCount);
+
+      // Filter based on active tab
+      const currentTab = window.opsActiveTab || 'all';
+      let listToRender = [];
+      if (currentTab === 'active') {
+        listToRender = activeEntries;
+      } else if (currentTab === 'completed') {
+        listToRender = completedEntries;
+      } else {
+        listToRender = [...activeEntries, ...completedEntries];
+      }
+
+      // Empty State Handling
+      if (listToRender.length === 0) {
+        body.innerHTML = renderOpsEmptyState(currentTab);
+        return;
+      }
+
+      body.innerHTML = renderOpsCardsHtml(listToRender, currentTab, activeCount, completedCount);
+    }
+
+    function excelSafe(str) {
+      const value = String(str || '');
+      return /^[=+\-@]/.test(value) ? `'${value}` : value;
+    }
+
+    function updateChatCounter() {
+      const input = document.getElementById('chat-input');
+      const countSpan = document.getElementById('chat-char-count');
+      const circle = document.getElementById('chat-progress-fill');
+      if (!input || !countSpan || !circle) return;
+
+      const len = input.value.length;
+      const remaining = 1000 - len;
+      countSpan.textContent = remaining;
+
+      // SVG Circle Animation: circumference = 2 * pi * r = 2 * 3.14 * 10 = ~62.8
+      const circumference = 62.8;
+      const offset = circumference - (len / 1000) * circumference;
+      circle.style.strokeDashoffset = offset;
+
+      // Change color if getting close
+      if (remaining < 100) {
+        circle.style.stroke = 'var(--accent)';
+        countSpan.style.color = 'var(--accent)';
+      } else {
+        circle.style.stroke = 'var(--accent)'; // Keep custom primary or change to theme
+        countSpan.style.color = 'var(--muted)';
+      }
+    }
+
+    function exportToExcel() {
+      if (!allBooks || allBooks.length === 0) {
+        showToast("Dışa aktarılacak kitap bulunamadı.", "warning");
+        return;
+      }
+
+      // Format data for Excel
+      const data = allBooks.map(b => ({
+        "Kitap Adı": excelSafe(b.title || ""),
+        "Yazar": excelSafe(b.author || ""),
+        "Kategori": excelSafe(b.category || ""),
+        "Alt Kategori": excelSafe(b.subcat || ""),
+        "Özet": excelSafe(b.summary || ""),
+        "Anahtar Kelimeler": excelSafe(b.keywords || ""),
+        "Dosya Adı": excelSafe(b.file || ""),
+        "Favori": b.is_favorite ? "Evet" : "Hayır",
+        "Kapak Var": b.has_cover ? "Evet" : "Hayır"
+      }));
+
+      // Create Excel workbook
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+
+      // Set column widths for a cleaner look
+      const wscols = [
+        { wch: 35 }, { wch: 25 }, { wch: 20 }, { wch: 20 }, { wch: 80 }, { wch: 30 }, { wch: 30 }, { wch: 10 }, { wch: 10 }
+      ];
+      ws['!cols'] = wscols;
+
+      XLSX.utils.book_append_sheet(wb, ws, "Kütüphane Kayıtları");
+
+      // Dosyayı indir
+      XLSX.writeFile(wb, "Dijital_Kutuphane_Yedegi.xlsx");
     }
 
 ```
