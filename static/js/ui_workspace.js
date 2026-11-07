@@ -2470,15 +2470,14 @@
       renderNotesSidebar();
     }
 
-    // Auto-save read progress on scroll (Page numbering indicator sync fallback)
-    let scrollTimeout = null;
+    // 60FPS fluid virtual page rendering & progress tracking on scroll
+    let scrollRaf = 0;
     function onPdfContainerScroll() {
-      if (scrollTimeout) {
-        clearTimeout(scrollTimeout);
-      }
-      scrollTimeout = setTimeout(() => {
+      if (scrollRaf) return;
+      scrollRaf = requestAnimationFrame(() => {
+        scrollRaf = 0;
         checkVisiblePagesAndRender();
-      }, 50);
+      });
     }
 
     // ═════════════════════════════════════════════════════════════
