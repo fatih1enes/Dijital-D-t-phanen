@@ -823,13 +823,17 @@
       flex-direction: column;
       position: relative;
       box-shadow: 0 1px 3px var(--shadow-color), 0 4px 12px rgba(0, 0, 0, 0.02);
-      will-change: transform, box-shadow;
     }
 
     .book-card.stagger-in,
     #table-body tr.stagger-in {
       animation: fadeSlideUp var(--t-page) var(--ease-out);
       animation-delay: calc(var(--card-index, 0) * 30ms);
+      will-change: transform, opacity;
+    }
+
+    .book-card:hover {
+      will-change: transform;
     }
 
     .book-card::before {
