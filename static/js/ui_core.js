@@ -373,10 +373,11 @@
       const container = document.getElementById('recent-shelf-container');
       if (!container) return;
 
-      const isFilterActive = (window.currentSearchTerm && window.currentSearchTerm.trim() !== '') ||
-        (window.currentCategory && window.currentCategory !== 'all') ||
-        (window.currentCollection && window.currentCollection !== 'all') ||
-        window.isFavoriteFilterActive;
+      const searchVal = document.getElementById('search-input')?.value?.trim() || '';
+      const isFilterActive = (searchVal !== '') ||
+        (window.activeCategory && window.activeCategory !== 'all') ||
+        (window.activeCollection && window.activeCollection !== 'all') ||
+        Boolean(window.showOnlyFav);
 
       if (window.currentView !== 'grid' || isFilterActive || !window.allBooks || window.allBooks.length <= 4) {
         container.style.display = 'none';
