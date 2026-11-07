@@ -12,8 +12,8 @@
         renderLogsModalBody();
       }
 
+      modal.classList.remove('closing');
       modal.classList.add('open');
-      document.body.classList.add('modal-open');
       document.body.classList.add('modal-open');
 
       // Setup smart scroll detection on logs container
@@ -47,11 +47,16 @@
     }
 
     function closeLogsModalDirect() {
-      const modal = document.getElementById('logs-modal');
-      if (modal) modal.classList.remove('open');
-      document.body.classList.remove('modal-open');
-      document.body.classList.remove('modal-open');
-      updateHeaderLogsBadge();
+      if (typeof window.closeModalWithAnimation === 'function') {
+        window.closeModalWithAnimation('logs-modal', () => {
+          updateHeaderLogsBadge();
+        });
+      } else {
+        const modal = document.getElementById('logs-modal');
+        if (modal) modal.classList.remove('open');
+        document.body.classList.remove('modal-open');
+        updateHeaderLogsBadge();
+      }
     }
 
     function setLogCategory(cat, btn) {

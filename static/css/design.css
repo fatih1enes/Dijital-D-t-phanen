@@ -408,6 +408,16 @@ h1 em {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes toolsMenuFadeOut {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-4px); }
+}
+
+.header-tools-menu.closing {
+  pointer-events: none;
+  animation: toolsMenuFadeOut var(--t-micro) var(--ease-out) forwards;
+}
+
 .tools-menu-label {
   font-family: var(--font-mono);
   font-size: 0.65rem;
@@ -607,7 +617,18 @@ h1 em {
   border-color: var(--ink);
 }
 
-/* Akıcı Dropdown Animasyonu */
+/* Akıcı Dropdown Animasyonu (Standard Micro-Motion) */
+@keyframes dropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .dropdown-menu {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -616,16 +637,19 @@ h1 em {
   padding: var(--sp-1);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-6px) scale(0.98);
+  transform: translateY(-4px);
   transition: opacity var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out), visibility var(--t-micro);
   pointer-events: none;
 }
 
-.custom-dropdown.open .dropdown-menu {
+.custom-dropdown.open .dropdown-menu,
+.dropdown.open .dropdown-menu,
+.open > .dropdown-menu {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0) scale(1);
+  transform: translateY(0);
   pointer-events: auto;
+  animation: dropdownIn var(--t-micro) var(--ease-out);
 }
 
 .dropdown-item {
@@ -1156,10 +1180,72 @@ h1 em {
 }
 
 /* ═══════════════ 10. MODAL VE AYARLAR PENCERELERİ ═══════════════ */
+@keyframes modalOverlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalOverlayOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes modalPopIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modalPopOut {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.98) translateY(4px);
+  }
+}
+
 .modal-overlay {
   background: rgba(22, 21, 19, 0.5);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+}
+
+.modal-overlay.open {
+  display: flex;
+  animation: modalOverlayIn var(--t-ui) var(--ease-out) forwards;
+}
+
+.modal-overlay.open .modal {
+  animation: modalPopIn var(--t-ui) var(--ease-out) forwards;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-overlay.closing {
+  display: flex;
+  pointer-events: none;
+  animation: modalOverlayOut var(--t-micro) var(--ease-out) forwards;
+}
+
+.modal-overlay.closing .modal {
+  pointer-events: none;
+  animation: modalPopOut var(--t-micro) var(--ease-out) forwards;
 }
 
 .modal {
@@ -1247,6 +1333,19 @@ h1 em {
   color: var(--ink);
   left: 1.75rem;
   bottom: 4.8rem;
+  transform: translateY(8px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out), visibility var(--t-micro);
+}
+
+#ops-center.active {
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  animation: opsCenterIn var(--t-ui) var(--ease-out);
 }
 
 .ops-header {

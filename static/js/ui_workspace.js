@@ -2201,18 +2201,27 @@
       document.getElementById('pdf-note-textarea').value = "";
       
       // Show Modal
-      document.getElementById('pdf-note-modal').classList.add('open');
+      const noteModal = document.getElementById('pdf-note-modal');
+      if (noteModal) {
+        noteModal.classList.remove('closing');
+        noteModal.classList.add('open');
+      }
       document.body.classList.add('modal-open');
-      document.body.classList.add('modal-open');
-      setTimeout(() => document.getElementById('pdf-note-textarea').focus(), 150);
+      setTimeout(() => document.getElementById('pdf-note-textarea')?.focus(), 150);
     }
 
     function closePdfNoteModalDirect() {
-      document.getElementById('pdf-note-modal').classList.remove('open');
-      document.body.classList.remove('modal-open');
-      document.body.classList.remove('modal-open');
-      pdfActiveHighlightIdForNote = null;
-      clearSelection();
+      if (typeof window.closeModalWithAnimation === 'function') {
+        window.closeModalWithAnimation('pdf-note-modal', () => {
+          pdfActiveHighlightIdForNote = null;
+          clearSelection();
+        });
+      } else {
+        document.getElementById('pdf-note-modal')?.classList.remove('open');
+        document.body.classList.remove('modal-open');
+        pdfActiveHighlightIdForNote = null;
+        clearSelection();
+      }
     }
 
     function closePdfNoteModal(e) {
@@ -3355,8 +3364,10 @@
       const timerEl = document.getElementById('handoff-timer');
       if (!modal || !qrContainer) return;
 
+      modal.classList.remove('closing');
       modal.style.display = 'flex';
       modal.classList.add('open');
+      document.body.classList.add('modal-open');
       qrContainer.innerHTML = '<div style="padding:3rem 1rem; color:#888;"><i class="fas fa-spinner fa-spin"></i> QR Kod Üretiliyor...</div>';
       if (urlText) urlText.textContent = '';
 
@@ -3396,14 +3407,19 @@
     window.openHandoffModal = openHandoffModal;
 
     function closeHandoffModal() {
-      const modal = document.getElementById('handoff-modal');
-      if (modal) {
-        modal.style.display = 'none';
-        modal.classList.remove('open');
-      }
       if (handoffCountdownTimer) {
         clearInterval(handoffCountdownTimer);
         handoffCountdownTimer = null;
+      }
+      if (typeof window.closeModalWithAnimation === 'function') {
+        window.closeModalWithAnimation('handoff-modal');
+      } else {
+        const modal = document.getElementById('handoff-modal');
+        if (modal) {
+          modal.style.display = 'none';
+          modal.classList.remove('open');
+        }
+        document.body.classList.remove('modal-open');
       }
     }
     window.closeHandoffModal = closeHandoffModal;

@@ -257,8 +257,8 @@
         updateAIUI();
         
         if (modal) {
+          modal.classList.remove('closing');
           modal.classList.add('open');
-          document.body.classList.add('modal-open');
           document.body.classList.add('modal-open');
           switchSettingsTab('ai');
         }
@@ -725,18 +725,24 @@
 
     function closeSettings(e) { if (e.target === document.getElementById('settings-modal')) closeSettingsDirect(); }
     function closeSettingsDirect() {
-      const modal = document.getElementById('settings-modal');
-      if (modal) modal.classList.remove('open');
-      document.body.classList.remove('modal-open');
-      document.body.classList.remove('modal-open');
+      if (typeof window.closeModalWithAnimation === 'function') {
+        window.closeModalWithAnimation('settings-modal');
+      } else {
+        const modal = document.getElementById('settings-modal');
+        if (modal) modal.classList.remove('open');
+        document.body.classList.remove('modal-open');
+      }
     }
 
     function closeColModal(e) { if (e.target === document.getElementById('col-modal')) closeColModalDirect(); }
     function closeColModalDirect() {
-      const modal = document.getElementById('col-modal');
-      if (modal) modal.classList.remove('open');
-      document.body.classList.remove('modal-open');
-      document.body.classList.remove('modal-open');
+      if (typeof window.closeModalWithAnimation === 'function') {
+        window.closeModalWithAnimation('col-modal');
+      } else {
+        const modal = document.getElementById('col-modal');
+        if (modal) modal.classList.remove('open');
+        document.body.classList.remove('modal-open');
+      }
     }
 
     function toggleEditMode(hash) {
@@ -772,15 +778,23 @@
 
     function toggleAssistant() {
       const panel = document.getElementById('chat-panel');
-      const isActive = panel.classList.toggle('active');
-      if (isActive) {
+      if (!panel) return;
+      if (panel.classList.contains('active')) {
+        panel.classList.add('closing');
+        panel.classList.remove('active');
+        setTimeout(() => {
+          panel.classList.remove('closing');
+        }, 150);
+      } else {
+        panel.classList.remove('closing');
+        panel.classList.add('active');
         // Mutual Exclusion: Close Process Center
         const ops = document.getElementById('ops-center');
         if (ops) ops.classList.remove('active');
 
         // Auto Focus: Focus on input when panel opens
         const input = document.getElementById('chat-input');
-        if (input) setTimeout(() => input.focus(), 300);
+        if (input) setTimeout(() => input.focus(), 280);
       }
     }
 

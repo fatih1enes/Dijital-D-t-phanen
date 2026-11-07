@@ -713,12 +713,41 @@
       document.body.classList.add('modal-open');
       document.body.classList.add('modal-open');
     }
+
+    // ── Unified Modal Exit Animation (Apple/Tesla Standard) ──
+    function closeModalWithAnimation(modalRef, callback) {
+      let modal = modalRef;
+      if (typeof modalRef === 'string') {
+        modal = document.getElementById(modalRef);
+      }
+      if (!modal || modal.classList.contains('closing')) return;
+
+      const isOpen = modal.classList.contains('open') || (modal.style.display && modal.style.display !== 'none');
+      if (!isOpen) {
+        if (typeof callback === 'function') callback();
+        return;
+      }
+
+      modal.classList.add('closing');
+      modal.classList.remove('open');
+
+      setTimeout(() => {
+        modal.classList.remove('closing');
+        modal.style.display = '';
+        const anyModal = document.querySelector('.modal-overlay.open, .modal-overlay.closing');
+        if (!anyModal) {
+          document.body.classList.remove('modal-open');
+        }
+        if (typeof callback === 'function') callback();
+      }, 150);
+    }
+    window.closeModalWithAnimation = closeModalWithAnimation;
+
     function closeModal(e) { if (e.target === document.getElementById('modal')) closeModalDirect(); }
     function closeModalDirect() {
-      document.getElementById('modal').classList.remove('open');
-      document.body.classList.remove('modal-open');
-      document.body.classList.remove('modal-open');
-      window.currentModalHash = null;
+      closeModalWithAnimation('modal', () => {
+        window.currentModalHash = null;
+      });
     }
 
     // --- BULK OPERATIONS ---
@@ -801,18 +830,14 @@
     function openShortcutsModal() {
       const m = document.getElementById('shortcuts-modal');
       if (m) {
+        m.classList.remove('closing');
         m.style.display = 'flex';
         m.classList.add('open');
         document.body.classList.add('modal-open');
       }
     }
     function closeShortcutsModal() {
-      const m = document.getElementById('shortcuts-modal');
-      if (m) {
-        m.classList.remove('open');
-        m.style.display = 'none';
-        document.body.classList.remove('modal-open');
-      }
+      closeModalWithAnimation('shortcuts-modal');
     }
     window.openShortcutsModal = openShortcutsModal;
     window.closeShortcutsModal = closeShortcutsModal;
@@ -1351,6 +1376,7 @@
       const container = document.getElementById('duplicates-container');
       if (!modal || !container) return;
 
+      modal.classList.remove('closing');
       modal.style.display = 'flex';
       modal.classList.add('open');
       document.body.classList.add('modal-open');
@@ -1377,12 +1403,7 @@
     window.openDuplicatesModal = openDuplicatesModal;
 
     function closeDuplicatesModal() {
-      const modal = document.getElementById('duplicates-modal');
-      if (modal) {
-        modal.style.display = 'none';
-        modal.classList.remove('open');
-      }
-      document.body.classList.remove('modal-open');
+      closeModalWithAnimation('duplicates-modal');
     }
     window.closeDuplicatesModal = closeDuplicatesModal;
 
@@ -1538,13 +1559,23 @@
       const menu = document.getElementById('header-tools-menu');
       if (!menu) return;
       const isHidden = menu.style.display === 'none' || !menu.style.display;
-      menu.style.display = isHidden ? 'flex' : 'none';
+      if (isHidden) {
+        menu.classList.remove('closing');
+        menu.style.display = 'flex';
+      } else {
+        closeToolsMenu();
+      }
     }
     window.toggleToolsMenu = toggleToolsMenu;
 
     function closeToolsMenu() {
       const menu = document.getElementById('header-tools-menu');
-      if (menu) menu.style.display = 'none';
+      if (!menu || menu.style.display === 'none' || menu.classList.contains('closing')) return;
+      menu.classList.add('closing');
+      setTimeout(() => {
+        menu.classList.remove('closing');
+        menu.style.display = 'none';
+      }, 150);
     }
     window.closeToolsMenu = closeToolsMenu;
 

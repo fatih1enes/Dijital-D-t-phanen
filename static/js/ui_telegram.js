@@ -126,8 +126,8 @@ async function openTelegramModal() {
   const errEl = document.getElementById('tg-modal-error');
   if (errEl) errEl.style.display = 'none';
 
+  modal.classList.remove('closing');
   modal.classList.add('open');
-  document.body.classList.add('modal-open');
   document.body.classList.add('modal-open');
 
   // Check connection status
@@ -147,10 +147,13 @@ async function openTelegramModal() {
 }
 
 function closeTelegramModal() {
-  const modal = document.getElementById('telegram-modal');
-  if (modal) modal.classList.remove('open');
-  document.body.classList.remove('modal-open');
-  document.body.classList.remove('modal-open');
+  if (typeof window.closeModalWithAnimation === 'function') {
+    window.closeModalWithAnimation('telegram-modal');
+  } else {
+    const modal = document.getElementById('telegram-modal');
+    if (modal) modal.classList.remove('open');
+    document.body.classList.remove('modal-open');
+  }
 }
 
 function closeTelegramModalBackdrop(e) {
