@@ -2137,6 +2137,22 @@ button:active:not(:disabled),
   .compact-actions .btn-primary-action span {
     display: none !important;
   }
+
+  /* Mobile Floating Action Pills: Sitting in their respective corners */
+  #chat-panel:not(.active) {
+    left: auto;
+    right: 1rem;
+    bottom: 1rem;
+    width: auto;
+    max-width: fit-content;
+  }
+
+  #ops-toggle {
+    left: 1rem;
+    right: auto;
+    bottom: 1rem;
+    width: auto;
+  }
 }
 
 
