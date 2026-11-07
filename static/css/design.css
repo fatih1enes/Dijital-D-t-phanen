@@ -65,16 +65,16 @@ body {
 .theme-transitioning input,
 .theme-transitioning select,
 .theme-transitioning textarea {
-  transition: background-color 0.28s var(--ease-out),
-              border-color 0.28s var(--ease-out),
-              color 0.24s var(--ease-out),
-              box-shadow 0.28s var(--ease-out),
-              fill 0.24s ease;
+  transition: background-color var(--t-ui) var(--ease-out),
+              border-color var(--t-ui) var(--ease-out),
+              color var(--t-ui) var(--ease-out),
+              box-shadow var(--t-ui) var(--ease-out),
+              fill var(--t-ui) var(--ease-out);
 }
 
 .theme-icon-spin {
   display: inline-block;
-  animation: themeIconSpin 0.4s var(--ease-out) both;
+  animation: themeIconSpin var(--t-ui) var(--ease-out) both;
 }
 
 @keyframes themeIconSpin {
@@ -97,11 +97,11 @@ button,
   position: relative;
   cursor: pointer;
   user-select: none;
-  transition: transform 0.16s var(--ease-out),
-              background-color 0.2s var(--ease-out),
-              border-color 0.2s var(--ease-out),
-              box-shadow 0.22s var(--ease-out),
-              color 0.18s ease;
+  transition: transform var(--t-micro) var(--ease-out),
+              background-color var(--t-micro) var(--ease-out),
+              border-color var(--t-micro) var(--ease-out),
+              box-shadow var(--t-ui) var(--ease-out),
+              color var(--t-micro) var(--ease-out);
 }
 
 .modal-close {
@@ -120,9 +120,9 @@ button,
   cursor: pointer;
   z-index: 20;
   font-size: 0.95rem;
-  transition: transform 0.16s var(--ease-out),
-              background-color 0.2s var(--ease-out),
-              color 0.18s ease;
+  transition: transform var(--t-micro) var(--ease-out),
+              background-color var(--t-micro) var(--ease-out),
+              color var(--t-micro) var(--ease-out);
 }
 
 .modal-close:hover {
@@ -136,7 +136,7 @@ button,
 }
 
 .modal-close i {
-  transition: transform 0.25s var(--ease-out);
+  transition: transform var(--t-ui) var(--ease-out);
 }
 
 .modal-close:hover i {
@@ -236,7 +236,7 @@ button:active:not(:disabled),
   font-size: var(--fs-sm);
   letter-spacing: 0;
   text-transform: none;
-  transition: all 0.2s var(--ease-out);
+  transition: all var(--t-micro) var(--ease-out);
 }
 
 .btn-modal-danger:hover {
@@ -313,7 +313,7 @@ h1 em {
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  transition: transform 0.12s ease, box-shadow 0.15s ease, background 0.15s ease;
+  transition: transform var(--t-micro) var(--ease-out), box-shadow var(--t-micro) var(--ease-out), background var(--t-micro) var(--ease-out);
   white-space: nowrap;
 }
 
@@ -400,7 +400,7 @@ h1 em {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  animation: toolsMenuFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: toolsMenuFadeIn var(--t-micro) var(--ease-out);
 }
 
 @keyframes toolsMenuFadeIn {
@@ -431,7 +431,7 @@ h1 em {
   cursor: pointer;
   color: var(--ink);
   font-family: var(--font-ui);
-  transition: background 0.12s ease;
+  transition: background var(--t-micro) var(--ease-out);
 }
 
 .tools-menu-item:hover {
@@ -617,7 +617,7 @@ h1 em {
   opacity: 0;
   visibility: hidden;
   transform: translateY(-6px) scale(0.98);
-  transition: opacity 0.2s var(--ease-out), transform 0.2s var(--ease-out), visibility 0.2s;
+  transition: opacity var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out), visibility var(--t-micro);
   pointer-events: none;
 }
 
@@ -699,7 +699,7 @@ h1 em {
   overflow: visible;
   display: flex;
   flex-direction: column;
-  transition: transform 0.25s var(--ease-out);
+  transition: transform var(--t-ui) var(--ease-out);
 }
 
 .book-card::before,
@@ -714,7 +714,7 @@ h1 em {
   border-radius: var(--r-xs);
   background: var(--sepia-pale);
   box-shadow: inset 0 0 0 1px var(--line), var(--shadow-sm);
-  transition: box-shadow 0.3s var(--ease-out);
+  transition: box-shadow var(--t-ui) var(--ease-out);
   position: relative;
   overflow: hidden;
 }
@@ -742,7 +742,7 @@ h1 em {
 }
 
 .card-cover img {
-  transition: transform 0.3s var(--ease-out);
+  transition: transform var(--t-ui) var(--ease-out);
 }
 
 .book-card:hover .card-cover img {
@@ -764,7 +764,7 @@ h1 em {
   box-shadow: var(--shadow-sm);
   opacity: 0;
   transform: translateY(4px);
-  transition: opacity 0.2s var(--ease-out), transform 0.2s var(--ease-out);
+  transition: opacity var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out);
 }
 
 .book-card:hover .card-cat-badge {
@@ -783,7 +783,7 @@ h1 em {
   backdrop-filter: none;
   box-shadow: var(--shadow-sm);
   opacity: 0;
-  transition: opacity 0.2s var(--ease-out), transform 0.2s var(--ease-out), background 0.2s;
+  transition: opacity var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out), background var(--t-micro);
 }
 
 .book-card:hover .btn-favorite-card,
@@ -848,7 +848,7 @@ h1 em {
 
 /* ═══════════════ 8. VIEW GEÇİŞ ANİMASYONU (PÜRÜZSÜZ & AKICI) ═══════════════ */
 .view-fade-in {
-  animation: smoothViewReveal 0.28s var(--ease-out) both;
+  animation: smoothViewReveal var(--t-ui) var(--ease-out) both;
 }
 
 @keyframes smoothViewReveal {
@@ -867,7 +867,7 @@ h1 em {
   background: rgba(22, 21, 19, 0.5);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  transition: opacity 0.25s var(--ease-out);
+  transition: opacity var(--t-ui) var(--ease-out);
 }
 
 .logs-panel {
@@ -1039,7 +1039,7 @@ h1 em {
   border-left: 3px solid var(--line-strong);
   border-radius: 0;
   padding: var(--sp-3) var(--sp-4);
-  transition: background 0.15s ease;
+  transition: background var(--t-micro) var(--ease-out);
 }
 
 .log-card:hover {
@@ -1263,10 +1263,10 @@ h1 em {
   cursor: pointer;
   z-index: 2100;
   transform: none;
-  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-              box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-              background-color 0.18s ease,
-              border-color 0.18s ease;
+  transition: transform var(--t-ui) var(--ease-out),
+              box-shadow var(--t-ui) var(--ease-out),
+              background-color var(--t-micro) var(--ease-out),
+              border-color var(--t-micro) var(--ease-out);
 }
 
 .ops-toggle:hover {
@@ -1288,7 +1288,7 @@ h1 em {
   background: var(--ok);
   box-shadow: 0 0 0 3px var(--ok-bg);
   flex-shrink: 0;
-  transition: all 0.3s ease;
+  transition: all var(--t-ui) var(--ease-out);
 }
 
 .ops-toggle.is-processing .ops-status-dot {
@@ -1338,10 +1338,10 @@ h1 em {
   background: var(--surface);
   border: 1px solid var(--line-strong);
   box-shadow: var(--shadow-md);
-  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-              box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-              border-color 0.18s ease,
-              background-color 0.18s ease;
+  transition: transform var(--t-ui) var(--ease-out),
+              box-shadow var(--t-ui) var(--ease-out),
+              border-color var(--t-micro) var(--ease-out),
+              background-color var(--t-micro) var(--ease-out);
 }
 
 #chat-panel:not(.active):hover {
@@ -1408,7 +1408,7 @@ h1 em {
   color: var(--muted);
   display: inline-flex;
   align-items: center;
-  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform var(--t-ui) var(--ease-out);
 }
 
 /* Açık Durum: Yaylanarak Açılan Modern Sohbet Paneli */
@@ -1433,7 +1433,7 @@ h1 em {
   border: 1px solid var(--line-strong);
   box-shadow: var(--shadow-lg);
   overflow: hidden;
-  animation: chatPanelExpand 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: chatPanelExpand var(--t-ui) var(--ease-out) both;
 }
 
 #chat-panel.active .chat-header {
@@ -1869,11 +1869,11 @@ h1 em {
   font-weight: 500;
   letter-spacing: 0;
   text-transform: none;
-  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-              box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-              background-color 0.18s ease,
-              border-color 0.18s ease,
-              color 0.18s ease;
+  transition: transform var(--t-ui) var(--ease-out),
+              box-shadow var(--t-ui) var(--ease-out),
+              background-color var(--t-micro) var(--ease-out),
+              border-color var(--t-micro) var(--ease-out),
+              color var(--t-micro) var(--ease-out);
 }
 
 .btn-import:hover:not(:disabled),
@@ -1911,11 +1911,11 @@ h1 em {
   font-weight: 500;
   letter-spacing: 0;
   text-transform: none;
-  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-              box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-              background-color 0.18s ease,
-              border-color 0.18s ease,
-              color 0.18s ease;
+  transition: transform var(--t-ui) var(--ease-out),
+              box-shadow var(--t-ui) var(--ease-out),
+              background-color var(--t-micro) var(--ease-out),
+              border-color var(--t-micro) var(--ease-out),
+              color var(--t-micro) var(--ease-out);
 }
 
 .btn-modal-secondary:hover:not(:disabled),
@@ -1946,16 +1946,16 @@ button:active:not(:disabled),
 .header-icon-btn:active:not(:disabled) {
   transform: translateY(0px) scale(0.975);
   box-shadow: var(--shadow-sm);
-  transition-duration: 0.08s;
+  transition-duration: var(--t-micro);
 }
 
 /* Header İkon Butonları Akıcı Hover */
 .header-icon-btn {
-  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
-              box-shadow 0.2s cubic-bezier(0.22, 1, 0.36, 1),
-              background-color 0.18s ease,
-              border-color 0.18s ease,
-              color 0.18s ease;
+  transition: transform var(--t-micro) var(--ease-out),
+              box-shadow var(--t-micro) var(--ease-out),
+              background-color var(--t-micro) var(--ease-out),
+              border-color var(--t-micro) var(--ease-out),
+              color var(--t-micro) var(--ease-out);
 }
 
 .header-icon-btn:hover {
@@ -1979,11 +1979,11 @@ button:active:not(:disabled),
 }
 
 .zero-state-hero {
-  animation: heroCardReveal 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: heroCardReveal var(--t-page) var(--ease-out) both;
   box-shadow: var(--shadow-md);
-  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
-              box-shadow 0.28s cubic-bezier(0.22, 1, 0.36, 1),
-              border-color 0.2s ease;
+  transition: transform var(--t-ui) var(--ease-out),
+              box-shadow var(--t-ui) var(--ease-out),
+              border-color var(--t-micro) var(--ease-out);
 }
 
 .zero-state-hero:hover,
@@ -1994,7 +1994,7 @@ button:active:not(:disabled),
 
 /* Kitap Kartları İpeksi Hover */
 .book-card {
-  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform var(--t-ui) var(--ease-out);
 }
 
 .book-card:hover {
@@ -2002,7 +2002,7 @@ button:active:not(:disabled),
 }
 
 .card-cover img {
-  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform var(--t-page) var(--ease-out);
 }
 
 .book-card:hover .card-cover img {
@@ -2079,7 +2079,7 @@ button:active:not(:disabled),
 .workspace-chat-pane {
   background: var(--surface);
   border-left: 1px solid var(--line);
-  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), min-width 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+  transition: width var(--t-ui) var(--ease-out), min-width var(--t-ui) var(--ease-out), opacity var(--t-ui) var(--ease-out);
 }
 
 .workspace-chat-pane.collapsed {

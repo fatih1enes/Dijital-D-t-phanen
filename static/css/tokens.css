@@ -58,20 +58,27 @@
   --radius-xl: 20px;
   --radius-full: var(--r-full);
 
-  /* Motion & Physics (Single Motion Standard) */
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-out-smooth: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.2);
-  --t-fast: 150ms;
-  --t-base: 240ms;
-  --duration-instant: 100ms;
-  --duration-fast: 150ms;
-  --duration-normal: 240ms;
-  --duration-slow: 380ms;
+  /* ═══════════════ UNIFIED MOTION SYSTEM (Apple Books / Linear Standard) ═══════════════ */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);   /* Varsayılan akıcı çıkış */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* Büyük geçişler */
+  --ease-spring: linear(0, 0.402 7.4%, 0.711 15.3%, 0.929 23.7%, 1.008 33.3%,
+                        1.067 41.6%, 1.059 49.2%, 1.015 61.5%, 0.999 74%, 1);
+  --t-micro: 150ms;  /* Hover, renk, basma */
+  --t-ui:    280ms;  /* Dropdown, panel, kart, modal */
+  --t-page:  600ms;  /* Okuyucu, hero, büyük geçişler */
 
-  --transition-fast: var(--t-fast) var(--ease-out);
-  --transition-smooth: var(--t-base) var(--ease-out);
-  --transition-spring: 0.35s var(--ease-spring);
+  /* Aliases for System Backwards Compatibility */
+  --t-fast: var(--t-micro);
+  --t-base: var(--t-ui);
+  --duration-instant: 100ms;
+  --duration-fast: var(--t-micro);
+  --duration-normal: var(--t-ui);
+  --duration-slow: var(--t-page);
+  --ease-out-smooth: var(--ease-out);
+
+  --transition-fast: var(--t-micro) var(--ease-out);
+  --transition-smooth: var(--t-ui) var(--ease-out);
+  --transition-spring: var(--t-ui) var(--ease-spring);
 
   /* ═══════════════ 2. LIGHT MODE SEMANTIC COLORS ═══════════════ */
   /* Surfaces */
