@@ -2491,7 +2491,7 @@
     let isPdfSearchOpen = false;
     let isPdfSearchDrawerOpen = false;
     let pdfSearchDebounceTimer = null;
-    let pdfSearchScanAbort = false;
+    let pdfSearchToken = 0; // Incremental cancellation token preventing search race conditions
 
     // Toggle search bar
     function togglePdfSearch(forceOpen) {
@@ -2555,6 +2555,7 @@
       pdfSearchResults = [];
       pdfSearchCurrentMatchIdx = -1;
       pdfSearchPageMatchesCount = {};
+      ++pdfSearchToken; // Invalidate any running background page scans
 
       // Remove all search highlight elements across all rendered highlight layers
       document.querySelectorAll('.pdf-search-highlight').forEach(el => el.remove());
@@ -2627,32 +2628,38 @@
       }
     }
 
-    async function scanPagesRecursively(p, pageCount, query, normalizedQuery) {
-      if (p > pageCount || pdfSearchScanAbort) return;
+    // Iterative fast page scanner with token-based cancellation
+    async function scanPagesIteratively(myToken, pageCount, query, normalizedQuery) {
+      for (let p = 1; p <= pageCount; p++) {
+        if (myToken !== pdfSearchToken) return false;
 
-      let pageData = pdfSearchTextCache[p];
-      if (!pageData) {
-        try {
-          const page = await pdfDoc.getPage(p);
-          const textContent = await page.getTextContent();
-          const textParts = textContent.items.map(item => item.str || "");
-          const fullText = textParts.join(" ");
-          pageData = {
-            text: fullText,
-            textLower: fullText.toLocaleLowerCase('tr-TR'),
-            items: textContent.items
-          };
-          pdfSearchTextCache[p] = pageData;
-        } catch (err) {
-          console.warn("Sayfa metni taranamadı:", p, err);
+        let pageData = pdfSearchTextCache[p];
+        if (!pageData) {
+          try {
+            const page = await pdfDoc.getPage(p);
+            if (myToken !== pdfSearchToken) return false;
+            const textContent = await page.getTextContent();
+            if (myToken !== pdfSearchToken) return false;
+            const textParts = textContent.items.map(item => item.str || "");
+            const fullText = textParts.join(" ");
+            pageData = {
+              text: fullText,
+              textLower: fullText.toLocaleLowerCase('tr-TR'),
+              items: textContent.items
+            };
+            pdfSearchTextCache[p] = pageData;
+          } catch (err) {
+            console.warn("Sayfa metni taranamadı:", p, err);
+          }
+        }
+
+        if (myToken !== pdfSearchToken) return false;
+
+        if (pageData) {
+          collectMatchesForPage(p, pageData, query, normalizedQuery);
         }
       }
-
-      if (pageData) {
-        collectMatchesForPage(p, pageData, query, normalizedQuery);
-      }
-
-      await scanPagesRecursively(p + 1, pageCount, query, normalizedQuery);
+      return true;
     }
 
     function _applyPdfSearchResults(totalMatches, query) {
@@ -2696,23 +2703,26 @@
       document.querySelectorAll('.pdf-search-highlight').forEach(el => el.remove());
     }
 
-    // Main search executor
+    // Main search executor with race-condition immune token architecture
     async function executePdfSearch(query) {
       if (!pdfDoc || !query || query.length < 1) {
         clearPdfSearch(true);
         return;
       }
 
+      const myToken = ++pdfSearchToken;
       pdfSearchQuery = query;
       const normalizedQuery = query.toLocaleLowerCase('tr-TR');
       const counter = document.getElementById('pdf-search-counter');
       if (counter) counter.textContent = '...';
 
+      // Clear previous search visual artifacts & results
       pdfSearchResults = [];
       pdfSearchPageMatchesCount = {};
-      pdfSearchScanAbort = false;
+      document.querySelectorAll('.pdf-search-highlight').forEach(el => el.remove());
 
-      await scanPagesRecursively(1, pdfPageCount, query, normalizedQuery);
+      const completed = await scanPagesIteratively(myToken, pdfPageCount, query, normalizedQuery);
+      if (!completed || myToken !== pdfSearchToken) return;
 
       const totalMatches = pdfSearchResults.length;
       if (totalMatches > 0) {
