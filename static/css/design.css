@@ -2494,3 +2494,45 @@ button:active:not(:disabled),
     transform: translateX(100%);
   }
 }
+
+/* ═══════════════ D3: SMOOTH COVER LOADING & CALM SHIMMER ═══════════════ */
+.card-cover {
+  position: relative;
+  background: var(--paper-dark);
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+}
+
+.card-cover img,
+.shelf-item-cover img,
+.modal-cover-wrap img {
+  opacity: 0;
+  transition: opacity var(--t-ui) var(--ease-out);
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-cover img.loaded,
+.card-cover img[complete],
+.shelf-item-cover img.loaded,
+.modal-cover-wrap img.loaded {
+  opacity: 1;
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, var(--paper-dark) 20%, rgba(255, 255, 255, 0.05) 50%, var(--paper-dark) 80%);
+  background-size: 200% 100%;
+  animation: calmShimmer 2.2s var(--ease-out) infinite;
+}
+
+[data-theme="light"] .skeleton-shimmer {
+  background: linear-gradient(90deg, var(--paper-dark) 20%, rgba(0, 0, 0, 0.03) 50%, var(--paper-dark) 80%);
+  background-size: 200% 100%;
+  animation: calmShimmer 2.2s var(--ease-out) infinite;
+}
+
+@keyframes calmShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

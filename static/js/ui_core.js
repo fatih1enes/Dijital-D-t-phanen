@@ -405,7 +405,7 @@
         <div class="recent-shelf-grid">
           ${recentBooks.map(b => {
             const cover = b.has_cover
-              ? `<img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" loading="lazy">`
+              ? `<img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" loading="lazy" decoding="async" onload="this.classList.add('loaded')">`
               : `<div class="shelf-cover-placeholder"><i class="fas fa-book"></i></div>`;
             return `
               <div class="shelf-item" onclick="const target = (window.allBooks || []).find(x => x.hash === '${b.hash}'); if (target) { if (typeof openBookWithMorph === 'function') openBookWithMorph(this, target); else openWorkspace(target); }">
@@ -438,7 +438,7 @@
       card.dataset.hash = b.hash;
 
       const coverInner = b.has_cover
-        ? `<img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" loading="lazy" decoding="async">`
+        ? `<img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" loading="lazy" decoding="async" onload="this.classList.add('loaded')">`
         : `<div class="card-cover-placeholder">${BOOK_ICON_LG}<span>${esc(b.title) || 'Kapak yok'}</span></div>`;
 
       const favIcon = b.is_favorite
@@ -757,7 +757,7 @@
         : '';
 
       const coverHtml = b.has_cover
-        ? `<div class="modal-cover-wrap"><img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" style="width:200px; height:266px; object-fit:cover; border-radius:8px; box-shadow:0 10px 30px var(--shadow);"></div>`
+        ? `<div class="modal-cover-wrap"><img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" loading="lazy" decoding="async" onload="this.classList.add('loaded')" style="width:200px; height:266px; object-fit:cover; border-radius:8px; box-shadow:0 10px 30px var(--shadow);"></div>`
         : `<div class="modal-cover-wrap"><div class="modal-cover-empty" style="width:200px; height:266px; background:var(--sepia-pale); border-radius:8px; display:flex; align-items:center; justify-content:center;">${BOOK_ICON_LG}</div></div>`;
 
       document.getElementById('modal-content').innerHTML = `
