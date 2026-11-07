@@ -296,7 +296,10 @@
     function startWorkspaceTypewriter(rawReply, replyId, chatMessages) {
       const targetContainer = document.querySelector(`#${replyId} .chat-msg-text`);
       if (!targetContainer) return;
-      const words = rawReply.split(' ');
+      const words = (rawReply || '').split(' ');
+      const totalWords = words.length || 1;
+      // Daktilo efekti en fazla 2.5 saniyede (2500ms) tamamlansın, min 5ms, max 25ms
+      const wordDelay = Math.min(25, Math.max(5, Math.floor(2500 / totalWords)));
       let currentText = '';
       let wordIndex = 0;
 
@@ -305,30 +308,45 @@
       activeTypewriterFullText = rawReply;
       activeTypewriterContainer = targetContainer;
 
-      let lastRenderTime = 0;
+      // Smart auto-scroll check: Yalnızca kullanıcı en alttaysa otomatik kaydır, yukarı kaydırdıysa scrollu kilitleme
+      const isUserNearBottom = () => {
+        if (!chatMessages) return true;
+        return (chatMessages.scrollHeight - chatMessages.scrollTop - chatMessages.clientHeight) < 60;
+      };
+
+      let lastParagraphCheck = '';
       activeTypewriterTimer = setInterval(() => {
         if (wordIndex < words.length) {
           currentText += (wordIndex === 0 ? '' : ' ') + words[wordIndex];
           wordIndex++;
-          const now = Date.now();
-          if (now - lastRenderTime > 120 || wordIndex >= words.length) {
+
+          // Sadece paragraf bitişlerinde (\n\n) veya son kelimede tam markdown parse et; ara kelimelerde ham metin güncelle
+          const hasNewParagraph = currentText.includes('\n\n') && currentText.lastIndexOf('\n\n') > lastParagraphCheck.length;
+          if (hasNewParagraph) {
             targetContainer.innerHTML = parseMarkdown(currentText);
-            requestAnimationFrame(() => {
-              chatMessages.scrollTop = chatMessages.scrollHeight;
-            });
-            lastRenderTime = now;
+            lastParagraphCheck = currentText.slice(0, currentText.lastIndexOf('\n\n'));
+          } else if (lastParagraphCheck.length === 0) {
+            targetContainer.textContent = currentText;
+          } else {
+            const unrenderedPart = currentText.slice(lastParagraphCheck.length);
+            const safeUnrendered = typeof esc === 'function' ? esc(unrenderedPart) : unrenderedPart;
+            targetContainer.innerHTML = parseMarkdown(lastParagraphCheck) + '<p>' + safeUnrendered + '</p>';
+          }
+
+          if (isUserNearBottom() && chatMessages) {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
           }
         } else {
           clearInterval(activeTypewriterTimer);
           activeTypewriterTimer = null;
           targetContainer.innerHTML = parseMarkdown(rawReply);
-          requestAnimationFrame(() => {
+          if (isUserNearBottom() && chatMessages) {
             chatMessages.scrollTop = chatMessages.scrollHeight;
-          });
+          }
           if (stopWrap) stopWrap.style.display = 'none';
           isWorkspaceChatLoading = false;
         }
-      }, 30);
+      }, wordDelay);
     }
 
     async function sendWorkspaceMessage() {

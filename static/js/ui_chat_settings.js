@@ -1,4 +1,50 @@
 /* ═══════════ ui_chat_settings.js — Assistant Drawer, Settings & Analytics ═══════════ */
+    function startChatTypewriter(rawReply, msgEl, chatBody) {
+      if (!msgEl) return;
+      const body = chatBody || document.getElementById('chat-body');
+      const words = (rawReply || '').split(' ');
+      const totalWords = words.length || 1;
+      const wordDelay = Math.min(25, Math.max(5, Math.floor(2500 / totalWords)));
+      let currentText = '';
+      let wordIndex = 0;
+
+      const isUserNearBottom = () => {
+        if (!body) return true;
+        return (body.scrollHeight - body.scrollTop - body.clientHeight) < 60;
+      };
+
+      let lastParagraphCheck = '';
+      const timer = setInterval(() => {
+        if (wordIndex < words.length) {
+          currentText += (wordIndex === 0 ? '' : ' ') + words[wordIndex];
+          wordIndex++;
+
+          const hasNewParagraph = currentText.includes('\n\n') && currentText.lastIndexOf('\n\n') > lastParagraphCheck.length;
+          if (hasNewParagraph) {
+            msgEl.innerHTML = parseMarkdown(currentText);
+            lastParagraphCheck = currentText.slice(0, currentText.lastIndexOf('\n\n'));
+          } else if (lastParagraphCheck.length === 0) {
+            msgEl.textContent = currentText;
+          } else {
+            const unrenderedPart = currentText.slice(lastParagraphCheck.length);
+            const safeUnrendered = typeof esc === 'function' ? esc(unrenderedPart) : unrenderedPart;
+            msgEl.innerHTML = parseMarkdown(lastParagraphCheck) + '<p>' + safeUnrendered + '</p>';
+          }
+
+          if (isUserNearBottom() && body) {
+            body.scrollTop = body.scrollHeight;
+          }
+        } else {
+          clearInterval(timer);
+          msgEl.innerHTML = parseMarkdown(rawReply);
+          if (isUserNearBottom() && body) {
+            body.scrollTop = body.scrollHeight;
+          }
+        }
+      }, wordDelay);
+    }
+    window.startChatTypewriter = startChatTypewriter;
+
     function sendMessage() {
       const input = document.getElementById('chat-input');
       const sendBtn = document.querySelector('.btn-send');
@@ -25,7 +71,7 @@
         .then(data => {
           const msgEl = document.getElementById(aiMsgId);
           if (msgEl) {
-            msgEl.innerHTML = parseMarkdown(data?.response || '');
+            startChatTypewriter(data?.response || '', msgEl);
           }
         })
         .catch(err => {
