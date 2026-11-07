@@ -197,9 +197,15 @@
       // Reset copy chat button if active
       resetCopyButtonUI();
       
-      // Sync meta text
+      // Sync meta text and cover slot
       document.getElementById('workspace-book-cat').textContent = book.category || 'Belge';
       document.getElementById('workspace-book-title').textContent = book.title || 'İsimsiz';
+      const coverSlot = document.getElementById('workspace-cover-slot');
+      if (coverSlot) {
+        coverSlot.innerHTML = book.has_cover
+          ? `<img src="/thumbnails/${book.hash}.jpg" alt="${esc(book.title || '')}">`
+          : `<i class="fas fa-book-open" style="font-size:0.75rem; color:var(--muted);"></i>`;
+      }
       
       // Reset banner
       resetBannerState();
@@ -240,33 +246,88 @@
       }, 300);
     }
 
+    function openBookWithMorph(cardOrCover, book) {
+      const targetBook = book || (typeof allBooks !== 'undefined' ? allBooks.find(b => b.hash === cardOrCover?.dataset?.hash) : null);
+      if (!targetBook) return;
+
+      const card = (cardOrCover instanceof HTMLElement) ? (cardOrCover.closest('.book-card') || cardOrCover) : document.querySelector(`.book-card[data-hash="${targetBook.hash}"]`);
+      const cover = card ? (card.querySelector('.card-cover') || card) : null;
+
+      if (!document.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        if (typeof closeModalDirect === 'function') closeModalDirect();
+        openWorkspace(targetBook);
+        return;
+      }
+
+      if (cover) cover.style.viewTransitionName = 'book-cover';
+      if (typeof closeModalDirect === 'function') closeModalDirect();
+
+      const transition = document.startViewTransition(() => {
+        openWorkspace(targetBook);
+        const slot = document.getElementById('workspace-cover-slot');
+        if (slot) slot.style.viewTransitionName = 'book-cover';
+        if (cover) cover.style.viewTransitionName = '';
+      });
+
+      transition.finished.finally(() => {
+        const slot = document.getElementById('workspace-cover-slot');
+        if (slot) slot.style.removeProperty('view-transition-name');
+        if (cover) cover.style.removeProperty('view-transition-name');
+      });
+    }
+    window.openBookWithMorph = openBookWithMorph;
+
     function closeWorkspace() {
-      document.getElementById('workspace-reader').classList.remove('open');
-      document.body.classList.remove('modal-open');
-      
-      // Stop ongoing typewriter or TTS
-      if (activeTypewriterTimer) {
-        clearInterval(activeTypewriterTimer);
-        activeTypewriterTimer = null;
-      }
-      const stopWrap = document.getElementById('workspace-stop-wrap');
-      if (stopWrap) stopWrap.style.display = 'none';
+      const currentBook = activeWorkspaceBook;
+      const card = currentBook ? document.querySelector(`.book-card[data-hash="${currentBook.hash}"]`) : null;
+      const cover = card ? (card.querySelector('.card-cover') || card) : null;
+      const slot = document.getElementById('workspace-cover-slot');
 
-      if (window.speechSynthesis?.speaking) {
-        window.speechSynthesis.cancel();
-      }
-      isSpeaking = false;
-      const ttsBtn = document.getElementById('pdf-tts-btn');
-      if (ttsBtn) {
-        ttsBtn.classList.remove('active');
-        ttsBtn.innerHTML = '<i class="fas fa-volume-high"></i> Dinle';
+      const doClose = () => {
+        document.getElementById('workspace-reader').classList.remove('open');
+        document.body.classList.remove('modal-open');
+        
+        // Stop ongoing typewriter or TTS
+        if (activeTypewriterTimer) {
+          clearInterval(activeTypewriterTimer);
+          activeTypewriterTimer = null;
+        }
+        const stopWrap = document.getElementById('workspace-stop-wrap');
+        if (stopWrap) stopWrap.style.display = 'none';
+
+        if (window.speechSynthesis?.speaking) {
+          window.speechSynthesis.cancel();
+        }
+        isSpeaking = false;
+        const ttsBtn = document.getElementById('pdf-tts-btn');
+        if (ttsBtn) {
+          ttsBtn.classList.remove('active');
+          ttsBtn.innerHTML = '<i class="fas fa-volume-high"></i> Dinle';
+        }
+
+        // Cleanup custom HTML5 PDF.js Reader resources
+        cleanupCustomPdfViewer();
+        
+        activeWorkspaceBook = null;
+        isFullBookLoaded = false;
+      };
+
+      if (!document.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches || !cover) {
+        doClose();
+        return;
       }
 
-      // Cleanup custom HTML5 PDF.js Reader resources
-      cleanupCustomPdfViewer();
-      
-      activeWorkspaceBook = null;
-      isFullBookLoaded = false;
+      if (slot) slot.style.viewTransitionName = 'book-cover';
+      const transition = document.startViewTransition(() => {
+        doClose();
+        if (cover) cover.style.viewTransitionName = 'book-cover';
+        if (slot) slot.style.viewTransitionName = '';
+      });
+
+      transition.finished.finally(() => {
+        if (cover) cover.style.removeProperty('view-transition-name');
+        if (slot) slot.style.removeProperty('view-transition-name');
+      });
     }
 
     function handleWorkspaceChatKey(e) {

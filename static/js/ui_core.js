@@ -408,7 +408,7 @@
               ? `<img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" loading="lazy">`
               : `<div class="shelf-cover-placeholder"><i class="fas fa-book"></i></div>`;
             return `
-              <div class="shelf-item" onclick="const target = (window.allBooks || []).find(x => x.hash === '${b.hash}'); if (target) openWorkspace(target);">
+              <div class="shelf-item" onclick="const target = (window.allBooks || []).find(x => x.hash === '${b.hash}'); if (target) { if (typeof openBookWithMorph === 'function') openBookWithMorph(this, target); else openWorkspace(target); }">
                 <div class="shelf-item-cover">
                   ${cover}
                 </div>
@@ -746,7 +746,7 @@
       <div class="modal-left" style="width: 220px; flex-shrink: 0; display: flex; flex-direction: column; gap: 1rem;">
         ${coverHtml}
         <div class="modal-actions" id="modal-actions-sidebar" style="display: flex; flex-direction: column; gap: 0.75rem;">
-          <button class="btn-modal-primary" onclick="closeModalDirect(); const target = (window.allBooks || []).find(x => x.hash === '${b.hash}'); if (target) openWorkspace(target);">
+          <button class="btn-modal-primary" onclick="closeModalDirect(); const target = (window.allBooks || []).find(x => x.hash === '${b.hash}'); const card = document.querySelector('.book-card[data-hash=\\'${b.hash}\\']'); if (target) { if (typeof openBookWithMorph === 'function') openBookWithMorph(card, target); else openWorkspace(target); }">
             <i class="fas fa-book-open"></i> Kitabı Oku
           </button>
           <button id="btn-modal-fav" class="${b.is_favorite ? 'btn-modal-fav is-fav' : 'btn-modal-fav'}" onclick="toggleFavorite('${b.hash}')">

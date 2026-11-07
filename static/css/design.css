@@ -2385,3 +2385,29 @@ button:active:not(:disabled),
 #pdf-canvas-container.is-zooming .pdf-page-wrapper {
   will-change: transform;
 }
+
+/* ═══════════════ D1: SHARED ELEMENT MORPH (CARD <-> WORKSPACE) ═══════════════ */
+::view-transition-group(book-cover) {
+  animation-duration: var(--t-page);
+  animation-timing-function: var(--ease-spring);
+}
+
+.workspace-cover-slot {
+  width: 28px;
+  height: 38px;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  background: var(--paper-dark);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  margin-left: var(--sp-2);
+}
+
+.workspace-cover-slot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
