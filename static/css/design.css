@@ -2536,3 +2536,51 @@ button:active:not(:disabled),
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* ═══════════════ D4: CARD READING PROGRESS BAR ═══════════════ */
+.card-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: var(--accent);
+  z-index: 10;
+  transition: width var(--t-ui) var(--ease-out);
+}
+
+.card-progress-badge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-glow);
+  padding: 1px 5px;
+  border-radius: var(--r-full);
+  margin-left: auto;
+}
+
+.modal-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-top: var(--sp-2);
+  margin-bottom: var(--sp-3);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.modal-progress-track {
+  flex: 1;
+  height: 4px;
+  background: var(--paper-dark);
+  border-radius: var(--r-full);
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+
+.modal-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: var(--r-full);
+}

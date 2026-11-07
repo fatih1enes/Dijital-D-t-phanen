@@ -407,13 +407,20 @@
             const cover = b.has_cover
               ? `<img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" loading="lazy" decoding="async" onload="this.classList.add('loaded')">`
               : `<div class="shelf-cover-placeholder"><i class="fas fa-book"></i></div>`;
+            const progress = (typeof getBookReadingProgress === 'function') ? getBookReadingProgress(b) : null;
+            const progressBar = progress ? `<div class="card-progress-bar" style="width: ${progress.pct}%;"></div>` : '';
+            const progressBadge = progress ? `<span class="card-progress-badge" style="font-size:0.6rem; padding:0 4px; margin-left:6px;">%${progress.pct}</span>` : '';
             return `
               <div class="shelf-item" onclick="const target = (window.allBooks || []).find(x => x.hash === '${b.hash}'); if (target) { if (typeof openBookWithMorph === 'function') openBookWithMorph(this, target); else openWorkspace(target); }">
                 <div class="shelf-item-cover">
                   ${cover}
+                  ${progressBar}
                 </div>
                 <div class="shelf-item-info">
-                  <span class="shelf-item-cat">${esc(b.category) || 'Genel'}</span>
+                  <div style="display:flex; align-items:center; justify-content:space-between;">
+                    <span class="shelf-item-cat">${esc(b.category) || 'Genel'}</span>
+                    ${progressBadge}
+                  </div>
                   <h4 class="shelf-item-title">${esc(b.title) || 'İsimsiz'}</h4>
                   <span class="shelf-item-author">${esc(b.author) || 'Bilinmeyen Yazar'}</span>
                 </div>
@@ -426,6 +433,18 @@
     window.renderRecentShelf = renderRecentShelf;
 
     // --- PERSISTENT ELEMENT MAPS (60FPS ZERO-REBUILD ARCHITECTURE) ---
+    function getBookReadingProgress(b) {
+      if (!b) return null;
+      const readPage = Number.parseInt(b.okunulan_sayfa || b.read_page || 0, 10);
+      const totalPages = Number.parseInt(b.sayfa_sayisi || b.pages || b.page_count || 0, 10);
+      if (readPage > 0 && totalPages > 0) {
+        const pct = Math.min(100, Math.max(1, Math.round((readPage / totalPages) * 100)));
+        return { readPage, totalPages, pct };
+      }
+      return null;
+    }
+    window.getBookReadingProgress = getBookReadingProgress;
+
     const cardElementsMap = new Map();
     window.cardElementsMap = cardElementsMap;
     const tableRowsMap = new Map();
@@ -446,6 +465,14 @@
         : `<i class="far fa-heart" style="color: #fff; font-size: 1.1rem;"></i>`;
       const favBtnText = b.is_favorite ? 'Favorilerden Çıkar' : 'Favorilere Ekle';
 
+      const progress = getBookReadingProgress(b);
+      const progressBarHtml = progress
+        ? `<div class="card-progress-bar" style="width: ${progress.pct}%;" title="%${progress.pct} okundu (${progress.readPage}/${progress.totalPages} sayfa)"></div>`
+        : '';
+      const progressBadgeHtml = progress
+        ? `<span class="card-progress-badge">%${progress.pct}</span>`
+        : '';
+
       card.innerHTML = `
         <div class="selection-indicator"></div>
         <div class="card-cover">
@@ -454,10 +481,14 @@
              ${favIcon}
           </div>
           ${coverInner}
+          ${progressBarHtml}
         </div>
         <div class="card-body">
           <div class="card-title">${esc(b.title) || '<em>İsimsiz</em>'}</div>
-          <div class="card-author">${esc(b.author) || 'Bilinmeyen Yazar'}</div>
+          <div class="card-author" style="display:flex; align-items:center; justify-content:space-between;">
+            <span>${esc(b.author) || 'Bilinmeyen Yazar'}</span>
+            ${progressBadgeHtml}
+          </div>
         </div>
       `;
 
@@ -760,10 +791,21 @@
         ? `<div class="modal-cover-wrap"><img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" loading="lazy" decoding="async" onload="this.classList.add('loaded')" style="width:200px; height:266px; object-fit:cover; border-radius:8px; box-shadow:0 10px 30px var(--shadow);"></div>`
         : `<div class="modal-cover-wrap"><div class="modal-cover-empty" style="width:200px; height:266px; background:var(--sepia-pale); border-radius:8px; display:flex; align-items:center; justify-content:center;">${BOOK_ICON_LG}</div></div>`;
 
+      const progress = getBookReadingProgress(b);
+      const progressModalHtml = progress ? `
+        <div class="modal-progress-wrap">
+          <div class="modal-progress-track">
+            <div class="modal-progress-fill" style="width: ${progress.pct}%;"></div>
+          </div>
+          <span>%${progress.pct} (${progress.readPage} / ${progress.totalPages} sayfa)</span>
+        </div>
+      ` : '';
+
       document.getElementById('modal-content').innerHTML = `
     <div class="modal-layout" style="display: flex; gap: 2.5rem; padding: 2.5rem;">
       <div class="modal-left" style="width: 220px; flex-shrink: 0; display: flex; flex-direction: column; gap: 1rem;">
         ${coverHtml}
+        ${progressModalHtml}
         <div class="modal-actions" id="modal-actions-sidebar" style="display: flex; flex-direction: column; gap: 0.75rem;">
           <button class="btn-modal-primary" onclick="closeModalDirect(); const target = (window.allBooks || []).find(x => x.hash === '${b.hash}'); const card = document.querySelector('.book-card[data-hash=\\'${b.hash}\\']'); if (target) { if (typeof openBookWithMorph === 'function') openBookWithMorph(card, target); else openWorkspace(target); }">
             <i class="fas fa-book-open"></i> Kitabı Oku
