@@ -381,7 +381,7 @@
         }
       } catch (error) {
         console.error("Yükleme hatası:", error);
-        addChatMessage('ai', "❌ Sunucuya bağlanılamadı.");
+        addChatMessage('ai', "Sunucuya bağlanılamadı.");
         removeUploadingCard(tempId, true);
       }
     }
@@ -530,12 +530,12 @@
         if (holder) {
           if (holder.badge) {
             holder.badge.innerHTML = '<i class="fas fa-check-circle"></i> Zaten Kayıtlı';
-            holder.badge.style.background = '#059669';
+            holder.badge.style.background = 'var(--accent)';
           }
           if (holder.label) holder.label.textContent = 'Kütüphanede mevcut (Atlandı)';
           if (holder.bar) {
             holder.bar.style.width = '100%';
-            holder.bar.style.background = '#5f7a4f';
+            holder.bar.style.background = 'var(--accent)';
           }
           setTimeout(() => removeUploadingCard(tempId, false), 1200);
         } else {
@@ -706,7 +706,7 @@
         }
 
         if (response?.ok || result.status === 'deleted' || result.success === true) {
-          addChatMessage('ai', '✅ Kitap sistemden silindi.');
+          addChatMessage('ai', 'Kitap sistemden silindi.');
           // Listeyi anında güncelle
           window.allBooks = (window.allBooks || []).filter(b => b.hash !== hash);
           updateStats();
@@ -715,11 +715,11 @@
           updateLibraryZoneVisibility((window.allBooks && window.allBooks.length > 0) || uploadingCards.size > 0);
         } else {
           const msg = result.message || result.status || response?.statusText || 'Bilinmeyen hata.';
-          addChatMessage('ai', `❌ Silme işlemi başarısız oldu: ${msg}`);
+          addChatMessage('ai', `Silme işlemi başarısız oldu: ${msg}`);
         }
       } catch (error) {
         console.error("Silme hatası:", error);
-        addChatMessage('ai', "❌ Silme işlemi başarısız oldu. Sunucuya ulaşılamadı.");
+        addChatMessage('ai', "Silme işlemi başarısız oldu. Sunucuya ulaşılamadı.");
       }
     }
 
@@ -727,8 +727,8 @@
       const heartIconWrap = card.querySelector('.btn-favorite-card');
       if (heartIconWrap) {
         heartIconWrap.innerHTML = isFav
-          ? `<i class="fas fa-heart" style="color: #ff3e3e; font-size: 1.1rem;"></i>`
-          : `<i class="far fa-heart" style="color: #fff; font-size: 1.1rem;"></i>`;
+          ? `<i class="fas fa-heart" style="color: var(--danger); font-size: 1.1rem;"></i>`
+          : `<i class="far fa-heart" style="color: var(--paper); font-size: 1.1rem;"></i>`;
         heartIconWrap.title = isFav ? 'Favorilerden Çıkar' : 'Favorilere Ekle';
         if (isFav) {
           heartIconWrap.classList.remove('heart-pulse');
@@ -781,7 +781,7 @@
         const data = await res.json();
         const books = data.kitaplar || [];
         
-        let md = `### 📚 ${colName} Koleksiyonu\n\n`;
+        let md = `### ${colName} Koleksiyonu\n\n`;
         md += `| Kitap Adı | Yazar | Kategori |\n`;
         md += `| :--- | :--- | :--- |\n`;
         books.forEach(b => {

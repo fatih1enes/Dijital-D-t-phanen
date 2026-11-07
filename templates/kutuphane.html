@@ -334,10 +334,10 @@
         Tümü <span class="ops-tab-badge" id="ops-tab-badge-all">0</span>
       </button>
       <button class="ops-tab-btn" id="ops-tab-active" onclick="setOpsTab('active')">
-        ⚡ Aktif <span class="ops-tab-badge active-tag" id="ops-tab-badge-active">0</span>
+        Aktif <span class="ops-tab-badge active-tag" id="ops-tab-badge-active">0</span>
       </button>
       <button class="ops-tab-btn" id="ops-tab-completed" onclick="setOpsTab('completed')">
-        ✓ Tamamlanan <span class="ops-tab-badge" id="ops-tab-badge-completed">0</span>
+        Tamamlanan <span class="ops-tab-badge" id="ops-tab-badge-completed">0</span>
       </button>
     </div>
 
@@ -540,13 +540,13 @@
           </button>
           <div id="workspace-export-menu" class="export-menu" style="display:none; position:absolute; top:120%; right:0; width:180px; background:var(--color-surface, #fff); border:1px solid var(--line); border-radius:8px; box-shadow:0 8px 16px rgba(0,0,0,0.12); z-index:1000; overflow:hidden;">
             <button type="button" class="export-menu-item" style="display:flex; width:100%; border:none; background:none; cursor:pointer; align-items:center; gap:0.5rem; padding:0.6rem 0.8rem; font-size:0.75rem; color:var(--ink); text-decoration:none;" onclick="exportCurrentWorkspaceBook('obsidian')">
-              <i class="fas fa-gem" style="color:#7c3aed;"></i> Obsidian (.md)
+              <i class="fas fa-gem" style="color:var(--accent);"></i> Obsidian (.md)
             </button>
             <button type="button" class="export-menu-item" style="display:flex; width:100%; border:none; background:none; cursor:pointer; align-items:center; gap:0.5rem; padding:0.6rem 0.8rem; font-size:0.75rem; color:var(--ink); text-decoration:none; border-top:1px solid var(--line);" onclick="exportCurrentWorkspaceBook('anki')">
-              <i class="fas fa-clone" style="color:#2563eb;"></i> Anki Kartları (.tsv)
+              <i class="fas fa-clone" style="color:var(--accent);"></i> Anki Kartları (.tsv)
             </button>
             <button type="button" class="export-menu-item" style="display:flex; width:100%; border:none; background:none; cursor:pointer; align-items:center; gap:0.5rem; padding:0.6rem 0.8rem; font-size:0.75rem; color:var(--ink); text-decoration:none; border-top:1px solid var(--line);" onclick="exportCurrentWorkspaceBook('bibtex')">
-              <i class="fas fa-graduation-cap" style="color:#059669;"></i> BibTeX (.bib)
+              <i class="fas fa-graduation-cap" style="color:var(--accent);"></i> BibTeX (.bib)
             </button>
           </div>
         </div>
@@ -708,10 +708,10 @@
             </button>
           </div>
           <div class="workspace-prompt-chips" id="workspace-prompt-chips" style="display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; margin-bottom:6px;">
-            <button type="button" class="prompt-chip" onclick="insertPromptChip('Bu kitabı ana hatlarıyla özetler misin?')">📝 Özetle</button>
-            <button type="button" class="prompt-chip" onclick="insertPromptChip('Kitabın ana fikirleri ve kilit temaları nelerdir?')">💡 Ana Temalar</button>
-            <button type="button" class="prompt-chip" onclick="insertPromptChip('Bu kitabın ana mesajını 5 yaşındaki birine anlatır gibi basitçe açıkla.')">👶 Basitçe Açıkla</button>
-            <button type="button" class="prompt-chip" onclick="insertPromptChip('Bu kitaptan akılda kalıcı en çarpıcı 3 alıntıyı sayfa referansıyla listele.')">✨ Çarpıcı Alıntılar</button>
+            <button type="button" class="prompt-chip" onclick="insertPromptChip('Bu kitabı ana hatlarıyla özetler misin?')">Özetle</button>
+            <button type="button" class="prompt-chip" onclick="insertPromptChip('Kitabın ana fikirleri ve kilit temaları nelerdir?')">Ana Temalar</button>
+            <button type="button" class="prompt-chip" onclick="insertPromptChip('Bu kitabın ana mesajını 5 yaşındaki birine anlatır gibi basitçe açıkla.')">Basitçe Açıkla</button>
+            <button type="button" class="prompt-chip" onclick="insertPromptChip('Bu kitaptan akılda kalıcı en çarpıcı 3 alıntıyı sayfa referansıyla listele.')">Çarpıcı Alıntılar</button>
           </div>
           <div class="workspace-input-wrapper">
             <textarea id="workspace-chat-input" placeholder="Bu kitap hakkında soru sor..." aria-label="Kitap hakkında soru sor" rows="1" onkeydown="handleWorkspaceChatKey(event)"></textarea>
@@ -1102,10 +1102,10 @@
             <span class="settings-section-label">Veri ve sistem araçları</span>
             <div style="display: flex; flex-direction: column; gap: 0.75rem;">
               <button type="button" class="btn-modal-secondary" style="width:100%; padding: 0.8rem 1rem; border-radius: var(--radius-xs); display: flex; align-items: center; justify-content: center; gap: 0.6rem;" onclick="exportToExcel()">
-                <i class="fas fa-file-excel" style="color: #5f7a4f; font-size: 1.05rem;"></i> Kütüphaneyi Excel'e Aktar (.xlsx)
+                <i class="fas fa-file-excel" style="color: var(--accent); font-size: 1.05rem;"></i> Kütüphaneyi Excel'e Aktar (.xlsx)
               </button>
               <button type="button" class="btn-modal-secondary" style="width:100%; padding: 0.8rem 1rem; border-radius: var(--radius-xs); display: flex; align-items: center; justify-content: center; gap: 0.6rem;" onclick="openDuplicatesModal()">
-                <i class="fas fa-copy" style="color: #ea580c; font-size: 1.05rem;"></i> Mükerrer / Çift Kitapları Tara ve Temizle
+                <i class="fas fa-copy" style="color: var(--accent); font-size: 1.05rem;"></i> Mükerrer / Çift Kitapları Tara ve Temizle
               </button>
               <button type="button" class="btn-modal-secondary" style="width:100%; padding: 0.8rem 1rem; border-radius: var(--radius-xs); display: flex; align-items: center; justify-content: center; gap: 0.6rem;" onclick="exportFullLibraryZip()">
                 <i class="fas fa-file-archive" style="color: var(--accent); font-size: 1.05rem;"></i> Taşınabilir Tam Kütüphane Yedeği (.zip)
@@ -1447,7 +1447,7 @@
         <div style="padding:3rem 1rem; color:#888;"><i class="fas fa-spinner fa-spin"></i> QR Kod Üretiliyor...</div>
       </div>
       <div id="handoff-url-text" style="font-size:0.75rem; color:var(--muted); word-break:break-all; margin-bottom:0.8rem;"></div>
-      <div style="font-size:0.75rem; color:var(--accent); font-weight:600;" id="handoff-timer">⏱️ Kod süresi: 120 sn</div>
+      <div style="font-size:0.75rem; color:var(--accent); font-weight:600;" id="handoff-timer">Kod süresi: 120 sn</div>
     </div>
   </div>
 

@@ -33,17 +33,17 @@ function showTelegramToast(msg, type = 'info') {
   const isError = type === 'error';
   const isWarning = type === 'warning';
 
-  let bg = '#2563eb'; // Telegram blue
+  let bg = 'var(--accent)';
   let icon = 'fab fa-telegram-plane';
 
   if (isSuccess) {
-    bg = '#5f7a4f';
+    bg = 'var(--ok-bg)';
     icon = 'fas fa-check-circle';
   } else if (isError) {
-    bg = '#b0473c';
+    bg = 'var(--danger-bg)';
     icon = 'fas fa-exclamation-triangle';
   } else if (isWarning) {
-    bg = '#b8862f';
+    bg = 'var(--warn-bg)';
     icon = 'fas fa-info-circle';
   }
 

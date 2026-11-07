@@ -431,7 +431,7 @@
     }
 
     function getOpsStepNum(step, target) {
-      return step > target ? '✓' : String(target);
+      return step > target ? '<i class="fas fa-check" style="font-size:0.65em;"></i>' : String(target);
     }
 
     function renderOpsActiveCard(t, pct, logs) {
@@ -599,7 +599,7 @@
             loadBooksFromAPI(1, false).catch(err => console.error("Book reload failed:", err));
           }
           if (typeof addChatMessage === 'function') {
-            addChatMessage('ai', `✅ ${t.filename} başarıyla analiz edildi ve kütüphanenize eklendi.`);
+            addChatMessage('ai', `${t.filename} başarıyla analiz edildi ve kütüphanenize eklendi.`);
           }
         }
       });

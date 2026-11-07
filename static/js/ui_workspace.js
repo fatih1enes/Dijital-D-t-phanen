@@ -3582,7 +3582,7 @@
         if (handoffCountdownTimer) clearInterval(handoffCountdownTimer);
         handoffCountdownTimer = setInterval(() => {
           remaining -= 1;
-          if (timerEl) timerEl.textContent = `⏱️ Kod süresi: ${remaining} sn`;
+          if (timerEl) timerEl.textContent = `Kod süresi: ${remaining} sn`;
           if (remaining <= 0) {
             clearInterval(handoffCountdownTimer);
             qrContainer.innerHTML = '<div style="color:var(--muted); padding:3rem 1rem;">QR kodun süresi doldu.<br><button class="btn-empty-add" onclick="openHandoffModal()" style="margin-top:0.8rem; font-size:0.8rem;">Yenile</button></div>';

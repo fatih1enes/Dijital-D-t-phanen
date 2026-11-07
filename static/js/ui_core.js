@@ -235,7 +235,7 @@
              </div>
            </div>
 
-           <button type="button" onclick="event.stopPropagation(); deleteCollection(${c.id})" style="background:none; color:var(--muted); border:none; width:34px; height:34px; border-radius:50%; cursor:pointer; font-size: 0.9rem; transition: all 0.2s; display:flex; align-items:center; justify-content:center;" onmouseover="this.style.background='rgba(255,62,62,0.1)'; this.style.color='#ff3e3e'" onmouseout="this.style.background='none'; this.style.color='var(--muted)'" title="Koleksiyonu Sil">
+           <button type="button" onclick="event.stopPropagation(); deleteCollection(${c.id})" style="background:none; color:var(--muted); border:none; width:34px; height:34px; border-radius:50%; cursor:pointer; font-size: 0.9rem; transition: all 0.2s; display:flex; align-items:center; justify-content:center;" onmouseover="this.style.background='var(--danger-bg)'; this.style.color='var(--danger)'" onmouseout="this.style.background='none'; this.style.color='var(--muted)'" title="Koleksiyonu Sil">
                <i class="fas fa-trash-alt"></i>
            </button>
          </div>
@@ -565,8 +565,8 @@
         : `<div class="card-cover-placeholder">${BOOK_ICON_LG}<span>${esc(b.title) || 'Kapak yok'}</span></div>`;
 
       const favIcon = b.is_favorite
-        ? `<i class="fas fa-heart" style="color: #ff3e3e; font-size: 1.1rem;"></i>`
-        : `<i class="far fa-heart" style="color: #fff; font-size: 1.1rem;"></i>`;
+        ? `<i class="fas fa-heart" style="color: var(--danger); font-size: 1.1rem;"></i>`
+        : `<i class="far fa-heart" style="color: var(--paper); font-size: 1.1rem;"></i>`;
       const favBtnText = b.is_favorite ? 'Favorilerden Çıkar' : 'Favorilere Ekle';
 
       const progress = getBookReadingProgress(b);
@@ -678,8 +678,8 @@
         const favBtn = card.querySelector('.btn-favorite-card');
         if (favBtn) {
           favBtn.innerHTML = b.is_favorite
-            ? `<i class="fas fa-heart" style="color: #ff3e3e; font-size: 1.1rem;"></i>`
-            : `<i class="far fa-heart" style="color: #fff; font-size: 1.1rem;"></i>`;
+            ? `<i class="fas fa-heart" style="color: var(--danger); font-size: 1.1rem;"></i>`
+            : `<i class="far fa-heart" style="color: var(--paper); font-size: 1.1rem;"></i>`;
         }
         card.classList.toggle('selected', selectedBooks.has(b.hash));
 
@@ -928,7 +928,7 @@
             <i class="fas fa-edit"></i> Düzenle
           </button>
           ${!isAnalyzed ? `
-          <button class="btn-modal-secondary" id="btn-reanalyze-${b.hash}" onclick="reanalyzeBookModal('${b.hash}')" style="background:rgba(234,88,12,0.1); border:1.5px solid #ea580c; color:#ea580c; font-weight:700;">
+          <button class="btn-modal-secondary" id="btn-reanalyze-${b.hash}" onclick="reanalyzeBookModal('${b.hash}')" style="background:var(--warn-bg); border:1px solid var(--warn); color:var(--warn); font-weight:600;">
             <i class="fas fa-magic"></i> Yapay Zeka ile Analiz Et
           </button>
           ` : ''}
@@ -941,13 +941,13 @@
             </button>
             <div id="export-menu-${b.hash}" class="export-menu" style="display:none; position:absolute; top:100%; left:0; right:0; background:var(--color-surface, #fff); border:1px solid var(--line); border-radius:8px; box-shadow:0 8px 16px rgba(0,0,0,0.12); z-index:100; margin-top:4px; overflow:hidden;">
               <a href="/api/books/${b.hash}/export/obsidian" download class="export-menu-item" style="display:flex; align-items:center; gap:0.5rem; padding:0.6rem 0.8rem; font-size:0.75rem; color:var(--ink); text-decoration:none; cursor:pointer;" onclick="toggleExportMenu('${b.hash}')">
-                <i class="fas fa-gem" style="color:#7c3aed;"></i> Obsidian Notu (.md)
+                <i class="fas fa-gem" style="color:var(--accent);"></i> Obsidian Notu (.md)
               </a>
               <a href="/api/books/${b.hash}/export/anki" download class="export-menu-item" style="display:flex; align-items:center; gap:0.5rem; padding:0.6rem 0.8rem; font-size:0.75rem; color:var(--ink); text-decoration:none; cursor:pointer; border-top:1px solid var(--line);" onclick="toggleExportMenu('${b.hash}')">
-                <i class="fas fa-clone" style="color:#2563eb;"></i> Anki Kartları (.tsv)
+                <i class="fas fa-clone" style="color:var(--accent);"></i> Anki Kartları (.tsv)
               </a>
               <a href="/api/books/${b.hash}/export/bibtex" download class="export-menu-item" style="display:flex; align-items:center; gap:0.5rem; padding:0.6rem 0.8rem; font-size:0.75rem; color:var(--ink); text-decoration:none; cursor:pointer; border-top:1px solid var(--line);" onclick="toggleExportMenu('${b.hash}')">
-                <i class="fas fa-graduation-cap" style="color:#059669;"></i> BibTeX Akademik (.bib)
+                <i class="fas fa-graduation-cap" style="color:var(--accent);"></i> BibTeX Akademik (.bib)
               </a>
             </div>
           </div>
@@ -961,7 +961,7 @@
           </button>
         </div>
         <div class="modal-meta-left" style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.4rem;">
-          <span class="meta-chip" style="font-size: 0.6rem; opacity: 0.85; word-break: break-all; white-space: normal; line-height: 1.4; padding: 0.5rem; text-align: center;">📄 ${esc(b.file)}</span>
+          <span class="meta-chip" style="font-size: 0.6rem; opacity: 0.85; word-break: break-all; white-space: normal; line-height: 1.4; padding: 0.5rem; text-align: center;">${esc(b.file)}</span>
         </div>
       </div>
       <div class="modal-right" style="flex: 1; border-left: 1px solid var(--line); padding-left: 2rem;">
@@ -970,17 +970,17 @@
         <div class="modal-author" style="margin-bottom: 1.5rem; font-style: italic; font-size: 1.1rem; color: var(--muted); opacity: 0.9;">${esc(b.author) || 'Bilinmeyen Yazar'}</div>
 
         ${(!b.category || b.category === 'Bilinmeyen' || b.summary?.includes('Analiz başarısız')) ? `
-          <div style="background: rgba(234, 88, 12, 0.08); border: 1.5px dashed #ea580c; border-radius: 12px; padding: 1.2rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+          <div style="background: var(--warn-bg); border: 1px solid var(--warn); border-radius: var(--r-md); padding: 1.2rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
             <div>
-              <div style="font-weight: 700; color: #ea580c; font-size: 0.95rem; display:flex; align-items:center; gap:0.5rem;">
+              <div style="font-weight: 600; color: var(--warn); font-size: 0.95rem; display:flex; align-items:center; gap:0.5rem;">
                 <i class="fas fa-exclamation-triangle"></i> Yapay Zeka Analizi Bekliyor
               </div>
               <div style="font-size: 0.82rem; color: var(--muted); margin-top: 0.3rem;">
                 Bu kitabın başlığı, yazarı ve özeti henüz yapay zeka ile incelenmedi.
               </div>
             </div>
-            <button id="btn-reanalyze-banner-${b.hash}" onclick="reanalyzeBookModal('${b.hash}')" style="background: #ea580c; color: #fff; border: none; padding: 0.75rem 1.4rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; white-space: nowrap; box-shadow: 0 4px 12px rgba(234,88,12,0.35); transition: all 0.2s;">
-              <i class="fas fa-magic"></i> Şimdi Analiz Et
+            <button id="btn-reanalyze-banner-${b.hash}" onclick="reanalyzeBookModal('${b.hash}')" class="btn btn--primary" style="white-space: nowrap;">
+              <i class="fas fa-wand-magic-sparkles"></i> Şimdi Analiz Et
             </button>
           </div>
         ` : ''}
@@ -1208,7 +1208,7 @@
         }
       }
 
-      addChatMessage('ai', `✅ ${successCount} kitap başarıyla silindi.`);
+      addChatMessage('ai', `${successCount} kitap başarıyla silindi.`);
       if (failedBooks.length > 0) {
         addChatMessage('ai', `⚠️ Şu kitaplar silinemedi: ${failedBooks.join(', ')}`);
       }
@@ -1490,14 +1490,14 @@
         const res = await apiReanalyzeBook(fileHash);
         if (res.status === 'success') {
           const d = res.data || {};
-          showToast(`✅ Yapay zeka analizi başarıyla tamamlandı!\nKitap: ${d.kitap_adi || ''}\nYazar: ${d.yazar || ''}`, 'success');
+          showToast(`Yapay zeka analizi başarıyla tamamlandı!\nKitap: ${d.kitap_adi || ''}\nYazar: ${d.yazar || ''}`, 'success');
           closeModalDirect();
           if (typeof loadBooksFromAPI === 'function') await loadBooksFromAPI();
         } else {
-          showToast(`⚠️ Analiz tamamlanamadı: ${res.message || 'API anahtarınızı kontrol edin.'}`, 'warning');
+          showToast(`Analiz tamamlanamadı: ${res.message || 'API anahtarınızı kontrol edin.'}`, 'warning');
         }
       } catch (err) {
-        showToast(`❌ Hata: ${err.message || 'Analiz sırasında sorun oluştu.'}`, 'error');
+        showToast(`Hata: ${err.message || 'Analiz sırasında sorun oluştu.'}`, 'error');
       } finally {
         if (btn) {
           btn.disabled = false;
@@ -1751,17 +1751,17 @@
       try {
         const res = await apiFetch(`/api/books/${encodeURIComponent(fileHash)}/compress`, { method: 'POST' });
         if (res?.success) {
-          showToast(`✅ PDF Optimize Edildi!\nEski Boyut: ${res.old_mb} MB ➔ Yeni: ${res.new_mb} MB (%${res.reduction_percent} tasarruf)`, 'success');
+          showToast(`PDF Optimize Edildi!\nEski Boyut: ${res.old_mb} MB ➔ Yeni: ${res.new_mb} MB (%${res.reduction_percent} tasarruf)`, 'success');
           // Reload book list to reflect new size
           if (typeof reloadBooks === 'function') reloadBooks();
           // Update details modal if open
           const sizeEl = document.querySelector('#modal-content .book-info-row span:last-child');
           if (sizeEl) sizeEl.textContent = `${res.new_mb} MB`;
         } else {
-          showToast(`ℹ️ ${res?.message || 'Sıkıştırma tamamlandı.'}`, 'info');
+          showToast(`${res?.message || 'Sıkıştırma tamamlandı.'}`, 'info');
         }
       } catch (err) {
-        showToast(`❌ Sıkıştırma hatası: ${err.message || 'İşlem gerçekleştirilemedi.'}`, 'error');
+        showToast(`Sıkıştırma hatası: ${err.message || 'İşlem gerçekleştirilemedi.'}`, 'error');
       } finally {
         if (btn && prevHtml) {
           btn.disabled = false;

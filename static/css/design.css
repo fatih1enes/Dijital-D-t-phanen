@@ -537,6 +537,19 @@ h1 em {
   animation: statCountBump 320ms var(--ease-spring);
 }
 
+/* ═══════════════ UNIFORM ICON SYSTEM (E3) ═══════════════ */
+i[class*="fa-"],
+svg {
+  color: currentColor;
+  vertical-align: -0.125em;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+i[class*="fa-heart"] {
+  transition: transform var(--t-micro) var(--ease-spring), color var(--t-micro) var(--ease-out);
+}
+
 .theme-toggle {
   width: 36px;
   height: 36px;
