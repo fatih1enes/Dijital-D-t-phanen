@@ -15,6 +15,7 @@
       modal.classList.remove('closing');
       modal.classList.add('open');
       document.body.classList.add('modal-open');
+      if (typeof activateModalFocus === 'function') activateModalFocus(modal);
 
       // Setup smart scroll detection on logs container
       const body = document.getElementById('logs-body');

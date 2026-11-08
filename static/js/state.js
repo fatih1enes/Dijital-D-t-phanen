@@ -50,11 +50,16 @@ function showToast(message, type = 'info', duration = 3800) {
     container = document.createElement('div');
     container.id = 'toast-container';
     container.className = 'toast-container';
+    container.setAttribute('aria-live', 'polite');
+    container.setAttribute('aria-atomic', 'true');
     document.body.appendChild(container);
   }
 
   const toast = document.createElement('div');
   toast.className = `toast-item toast-${type}`;
+  toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+  toast.setAttribute('aria-live', type === 'error' ? 'assertive' : 'polite');
+  toast.setAttribute('aria-atomic', 'true');
 
   const iconMap = {
     success: 'fa-circle-check',

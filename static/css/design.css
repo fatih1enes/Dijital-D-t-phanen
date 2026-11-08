@@ -844,11 +844,19 @@ i[class*="fa-heart"] {
 }
 
 .dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
   border-radius: var(--r-xs);
   font-family: var(--font-ui);
   font-size: var(--fs-sm);
   color: var(--ink);
   padding: 8px 12px;
+  cursor: pointer;
 }
 
 .dropdown-item:hover {
@@ -2055,6 +2063,9 @@ i[class*="fa-heart"] {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
   padding: var(--sp-2) var(--sp-3);
   background: var(--surface);
   border: 1px solid var(--line);
@@ -2425,6 +2436,14 @@ button:active:not(:disabled),
 .pdf-toolbar {
   background: var(--surface);
   border-bottom: 1px solid var(--line);
+}
+
+.pdf-toc-item {
+  width: 100%;
+  background: transparent;
+  border: 1px solid transparent;
+  text-align: left;
+  font-family: inherit;
 }
 
 .pdf-btn {

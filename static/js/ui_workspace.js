@@ -2445,9 +2445,9 @@
       if (noteModal) {
         noteModal.classList.remove('closing');
         noteModal.classList.add('open');
+        document.body.classList.add('modal-open');
+        if (typeof activateModalFocus === 'function') activateModalFocus(noteModal);
       }
-      document.body.classList.add('modal-open');
-      setTimeout(() => document.getElementById('pdf-note-textarea')?.focus(), 150);
     }
 
     function closePdfNoteModalDirect() {
@@ -3308,7 +3308,8 @@
         
         function appendItems(items, level = 0) {
           for (const item of items) {
-            const div = document.createElement('div');
+            const div = document.createElement('button');
+            div.type = 'button';
             div.className = `pdf-toc-item level-${Math.min(level, 2)}`;
             div.innerHTML = `<span>${esc(item.title)}</span><i class="fas fa-chevron-right" style="font-size:0.65rem; opacity:0.4;"></i>`;
             
@@ -3476,7 +3477,8 @@
       if (!tocList) return;
       tocList.innerHTML = '';
       items.forEach(it => {
-        const div = document.createElement('div');
+        const div = document.createElement('button');
+        div.type = 'button';
         div.className = `pdf-toc-item level-${Math.min(it.level || 1, 2)}`;
         const srcBadge = it.source === 'auto_detected' ? '<span style="font-size:0.65rem; color:#b8862f; margin-left:4px;">(Otomatik)</span>' : '';
         div.innerHTML = `<span style="flex:1;">${esc(it.title)} ${srcBadge}</span><span style="font-size:0.75rem; color:var(--muted); font-family:var(--font-mono, monospace);">s. ${it.page_number}</span>`;
@@ -3612,9 +3614,9 @@
       if (!modal || !qrContainer) return;
 
       modal.classList.remove('closing');
-      modal.style.display = 'flex';
       modal.classList.add('open');
       document.body.classList.add('modal-open');
+      if (typeof activateModalFocus === 'function') activateModalFocus(modal);
       qrContainer.innerHTML = '<div style="padding:3rem 1rem; color:#888;"><i class="fas fa-spinner fa-spin"></i> QR Kod Üretiliyor...</div>';
       if (urlText) urlText.textContent = '';
 

@@ -7,11 +7,11 @@
       const menu = document.getElementById('category-menu');
       const trigger = document.getElementById('category-trigger');
 
-      let html = `<div class="dropdown-item ${window.activeCategory === 'all' ? 'active' : ''}" onclick="selectCat('all', 'Tüm Kategoriler')"><i class="fas fa-layer-group"></i> Tüm Kategoriler</div>`;
+      let html = `<button type="button" class="dropdown-item ${window.activeCategory === 'all' ? 'active' : ''}" role="option" onclick="selectCat('all', 'Tüm Kategoriler')"><i class="fas fa-layer-group"></i> Tüm Kategoriler</button>`;
 
       cats.forEach(cat => {
         const encodedCat = encData(cat);
-        html += `<div class="dropdown-item ${window.activeCategory === cat ? 'active' : ''}" data-value="${encodedCat}" data-label="${encodedCat}" onclick="selectCat(decodeURIComponent(this.dataset.value), decodeURIComponent(this.dataset.label))"><i class="fas fa-tag"></i> ${esc(cat)}</div>`;
+        html += `<button type="button" class="dropdown-item ${window.activeCategory === cat ? 'active' : ''}" role="option" data-value="${encodedCat}" data-label="${encodedCat}" onclick="selectCat(decodeURIComponent(this.dataset.value), decodeURIComponent(this.dataset.label))"><i class="fas fa-tag"></i> ${esc(cat)}</button>`;
       });
       if (menu) menu.innerHTML = html;
 
@@ -58,11 +58,11 @@
           const menu = document.getElementById('collection-menu');
           const trigger = document.getElementById('collection-trigger');
 
-          let html = `<div class="dropdown-item ${window.activeCollection === 'all' ? 'active' : ''}" onclick="selectCol('all', 'Tüm Koleksiyonlar')"><i class="fas fa-folder-open"></i> Tüm Koleksiyonlar</div>`;
+          let html = `<button type="button" class="dropdown-item ${window.activeCollection === 'all' ? 'active' : ''}" role="option" onclick="selectCol('all', 'Tüm Koleksiyonlar')"><i class="fas fa-folder-open"></i> Tüm Koleksiyonlar</button>`;
 
           (window.allCollections || []).forEach(c => {
             const encodedName = encData(c.isim);
-            html += `<div class="dropdown-item ${window.activeCollection === String(c.id) ? 'active' : ''}" data-value="${c.id}" data-label="${encodedName}" onclick="selectCol(this.dataset.value, decodeURIComponent(this.dataset.label))"><i class="fas fa-folder"></i> ${esc(c.isim)}</div>`;
+            html += `<button type="button" class="dropdown-item ${window.activeCollection === String(c.id) ? 'active' : ''}" role="option" data-value="${c.id}" data-label="${encodedName}" onclick="selectCol(this.dataset.value, decodeURIComponent(this.dataset.label))"><i class="fas fa-folder"></i> ${esc(c.isim)}</button>`;
           });
           if (menu) menu.innerHTML = html;
 
@@ -230,8 +230,8 @@
                  <i class="fas fa-share-alt"></i>
              </button>
              <div class="dropdown-menu" style="right:0; top:calc(100% + 5px); min-width:180px; z-index:100; left:auto; width:auto; padding:0.4rem;">
-                <div class="dropdown-item" style="padding:0.6rem 0.8rem;" onclick="window.location.href='/api/share-collection/${c.id}'"><i class="fas fa-file-download"></i> JSON İndir</div>
-                <div class="dropdown-item" style="padding:0.6rem 0.8rem;" onclick="copyCollectionMarkdown(${c.id}, decodeURIComponent('${encodedName}'))"><i class="fas fa-copy"></i> Markdown Kopyala</div>
+                <button type="button" class="dropdown-item" role="menuitem" style="padding:0.6rem 0.8rem;" onclick="window.location.href='/api/share-collection/${c.id}'"><i class="fas fa-file-download"></i> JSON İndir</button>
+                <button type="button" class="dropdown-item" role="menuitem" style="padding:0.6rem 0.8rem;" onclick="copyCollectionMarkdown(${c.id}, decodeURIComponent('${encodedName}'))"><i class="fas fa-copy"></i> Markdown Kopyala</button>
              </div>
            </div>
 
@@ -254,9 +254,10 @@
       list.innerHTML += importBtn;
       list.style.overflowX = 'hidden'; // Ensure no horizontal scroll
 
-      document.getElementById('col-modal').classList.add('open');
+      const colModal = document.getElementById('col-modal');
+      colModal.classList.add('open');
       document.body.classList.add('modal-open');
-      document.body.classList.add('modal-open');
+      activateModalFocus(colModal);
     }
 
     function toggleShareMenu(btn) {
@@ -515,7 +516,7 @@
             const progressBar = progress ? `<div class="card-progress-bar" style="width: ${progress.pct}%;"></div>` : '';
             const progressBadge = progress ? `<span class="card-progress-badge" style="font-size:0.6rem; padding:0 4px; margin-left:6px;">%${progress.pct}</span>` : '';
             return `
-              <div class="shelf-item" onclick="const target = (window.allBooks || []).find(x => x.hash === '${b.hash}'); if (target) { if (typeof openBookWithMorph === 'function') openBookWithMorph(this, target); else openWorkspace(target); }">
+              <button type="button" class="shelf-item" onclick="const target = (window.allBooks || []).find(x => x.hash === '${b.hash}'); if (target) { if (typeof openBookWithMorph === 'function') openBookWithMorph(this, target); else openWorkspace(target); }" aria-label="${esc(b.title)} - Kitabı Oku">
                 <div class="shelf-item-cover">
                   ${cover}
                   ${progressBar}
@@ -528,7 +529,7 @@
                   <h4 class="shelf-item-title">${esc(b.title) || 'İsimsiz'}</h4>
                   <span class="shelf-item-author">${esc(b.author) || 'Bilinmeyen Yazar'}</span>
                 </div>
-              </div>
+              </button>
             `;
           }).join('')}
         </div>
@@ -581,9 +582,9 @@
         <div class="selection-indicator"></div>
         <div class="card-cover">
           <div class="card-cat-badge">${esc(b.category)}</div>
-          <div class="btn-favorite-card" onclick="event.stopPropagation(); toggleFavorite('${b.hash}')" title="${favBtnText}">
+          <button type="button" class="btn-favorite-card" onclick="event.stopPropagation(); toggleFavorite('${b.hash}')" title="${favBtnText}" aria-label="${favBtnText}">
              ${favIcon}
-          </div>
+          </button>
           ${coverInner}
           ${progressBarHtml}
         </div>
@@ -966,7 +967,7 @@
       </div>
       <div class="modal-right" style="flex: 1; border-left: 1px solid var(--line); padding-left: 2rem;">
         <div class="modal-cat" style="color: var(--accent); font-weight: 600; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.1em;">${esc(b.category)}${b.subcat ? ' / ' + esc(b.subcat) : ''}</div>
-        <h2 class="modal-title" style="margin-top: 0.5rem; font-size: 2.2rem; font-family:'Instrument Serif', serif; line-height: 1.1;">${esc(b.title) || 'İsimsiz Kitap'}</h2>
+        <h2 class="modal-title" id="modal-book-title" style="margin-top: 0.5rem; font-size: 2.2rem; font-family:'Instrument Serif', serif; line-height: 1.1;">${esc(b.title) || 'İsimsiz Kitap'}</h2>
         <div class="modal-author" style="margin-bottom: 1.5rem; font-style: italic; font-size: 1.1rem; color: var(--muted); opacity: 0.9;">${esc(b.author) || 'Bilinmeyen Yazar'}</div>
 
         ${(!b.category || b.category === 'Bilinmeyen' || b.summary?.includes('Analiz başarısız')) ? `
@@ -1004,9 +1005,10 @@
       </div>
     </div>
   `;
-      document.getElementById('modal').classList.add('open');
+      const modalEl = document.getElementById('modal');
+      modalEl.classList.add('open');
       document.body.classList.add('modal-open');
-      document.body.classList.add('modal-open');
+      activateModalFocus(modalEl);
     }
 
     function showKeywordBooks(keyword) {
@@ -1039,6 +1041,84 @@
     }
 
     // ── Unified Modal Exit Animation (Apple/Tesla Standard) ──
+
+    // ═══════════════ F2: UNIVERSAL FOCUS TRAP & ACCESSIBILITY ═══════════════
+    let modalFocusStack = [];
+
+    function handleModalTabKey(e) {
+      if (e.key !== 'Tab') return;
+      const modalEl = this;
+      const focusables = Array.from(modalEl.querySelectorAll(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )).filter(el => el.offsetParent !== null || window.getComputedStyle(el).display !== 'none');
+
+      if (focusables.length === 0) {
+        e.preventDefault();
+        return;
+      }
+
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === first || !modalEl.contains(document.activeElement)) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last || !modalEl.contains(document.activeElement)) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
+    function activateModalFocus(modalRef) {
+      const modalEl = typeof modalRef === 'string' ? document.getElementById(modalRef) : modalRef;
+      if (!modalEl) return;
+
+      const prevActive = document.activeElement;
+      modalFocusStack.push({ modal: modalEl, returnEl: prevActive });
+
+      const focusables = Array.from(modalEl.querySelectorAll(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )).filter(el => el.offsetParent !== null || window.getComputedStyle(el).display !== 'none');
+
+      if (focusables.length > 0) {
+        setTimeout(() => {
+          const firstInput = focusables.find(el => (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') && !el.readOnly);
+          if (firstInput) {
+            firstInput.focus();
+          } else {
+            focusables[0].focus();
+          }
+        }, 60);
+      }
+
+      modalEl.removeEventListener('keydown', handleModalTabKey);
+      modalEl.addEventListener('keydown', handleModalTabKey);
+    }
+    window.activateModalFocus = activateModalFocus;
+
+    function releaseModalFocus(modalRef) {
+      const modalEl = typeof modalRef === 'string' ? document.getElementById(modalRef) : modalRef;
+      if (!modalEl) return;
+      modalEl.removeEventListener('keydown', handleModalTabKey);
+
+      const idx = modalFocusStack.findLastIndex ? modalFocusStack.findLastIndex(e => e.modal === modalEl) : -1;
+      let entry = null;
+      if (idx !== -1) {
+        entry = modalFocusStack.splice(idx, 1)[0];
+      } else {
+        entry = modalFocusStack.pop();
+      }
+
+      if (entry && entry.returnEl && typeof entry.returnEl.focus === 'function' && document.body.contains(entry.returnEl)) {
+        setTimeout(() => entry.returnEl.focus(), 40);
+      }
+    }
+    window.releaseModalFocus = releaseModalFocus;
+
     function closeModalWithAnimation(modalRef, callback) {
       let modal = modalRef;
       if (typeof modalRef === 'string') {
@@ -1052,6 +1132,7 @@
         return;
       }
 
+      releaseModalFocus(modal);
       modal.classList.add('closing');
       modal.classList.remove('open');
 
@@ -1142,7 +1223,7 @@
 
         overlay.classList.add('open');
         document.body.classList.add('modal-open');
-        setTimeout(() => cancelBtn.focus(), 60);
+        activateModalFocus(overlay);
       });
     }
     window.showAppConfirm = showAppConfirm;
@@ -1229,9 +1310,9 @@
       const m = document.getElementById('shortcuts-modal');
       if (m) {
         m.classList.remove('closing');
-        m.style.display = 'flex';
         m.classList.add('open');
         document.body.classList.add('modal-open');
+        activateModalFocus(m);
       }
     }
     function closeShortcutsModal() {
@@ -1778,9 +1859,9 @@
       if (!modal || !container) return;
 
       modal.classList.remove('closing');
-      modal.style.display = 'flex';
       modal.classList.add('open');
       document.body.classList.add('modal-open');
+      activateModalFocus(modal);
       container.innerHTML = '<div style="text-align:center; padding:2.5rem; color:var(--muted);"><i class="fas fa-spinner fa-spin fa-2x" style="margin-bottom:0.8rem; display:block; color:var(--accent);"></i>Kütüphane mükerrer kopyalar için taranıyor...</div>';
 
       try {

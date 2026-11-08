@@ -307,6 +307,7 @@
           modal.classList.add('open');
           document.body.classList.add('modal-open');
           switchSettingsTab('ai');
+          if (typeof activateModalFocus === 'function') activateModalFocus(modal);
         }
       } catch (err) {
         console.error("openSettings error:", err);

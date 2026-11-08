@@ -129,6 +129,7 @@ async function openTelegramModal() {
   modal.classList.remove('closing');
   modal.classList.add('open');
   document.body.classList.add('modal-open');
+  if (typeof activateModalFocus === 'function') activateModalFocus(modal);
 
   // Check connection status
   try {
