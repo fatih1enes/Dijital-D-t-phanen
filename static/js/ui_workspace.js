@@ -222,6 +222,16 @@
       document.getElementById('workspace-reader').classList.add('open');
       document.body.classList.add('modal-open');
 
+      // On mobile viewports, start in immersive reading mode with bottom sheet chat collapsed
+      if (window.innerWidth <= 768) {
+        const cp = document.getElementById('workspace-chat-pane');
+        const tb = document.getElementById('btn-toggle-workspace-chat');
+        const lbl = document.getElementById('workspace-chat-toggle-label');
+        if (cp) cp.classList.add('collapsed');
+        if (tb) tb.classList.remove('active');
+        if (lbl) lbl.textContent = 'AI Aç';
+      }
+
       // Load previous persistent chat history from server if exists
       const chatMessages = document.getElementById('workspace-chat-messages');
       chatMessages.innerHTML = `
@@ -708,6 +718,55 @@
       }, 280);
     }
     window.toggleWorkspaceChatPane = toggleWorkspaceChatPane;
+
+    // Mobile bottom sheet velocity drag gesture for reader chat pane
+    (function setupMobileChatSheetDrag() {
+      const chatPane = document.getElementById('workspace-chat-pane');
+      const chatHeader = document.getElementById('workspace-chat-header');
+      if (!chatPane || !chatHeader) return;
+
+      let startY = 0;
+      let currentY = 0;
+      let isDragging = false;
+      let startTime = 0;
+
+      chatHeader.addEventListener('touchstart', (e) => {
+        if (window.innerWidth > 768) return;
+        if (chatPane.classList.contains('collapsed')) return;
+        startY = e.touches[0].clientY;
+        currentY = startY;
+        startTime = Date.now();
+        isDragging = true;
+        chatPane.style.transition = 'none';
+      }, { passive: true });
+
+      window.addEventListener('touchmove', (e) => {
+        if (!isDragging || window.innerWidth > 768) return;
+        currentY = e.touches[0].clientY;
+        const deltaY = currentY - startY;
+        if (deltaY > 0) {
+          chatPane.style.transform = `translateY(${deltaY}px)`;
+        }
+      }, { passive: true });
+
+      window.addEventListener('touchend', () => {
+        if (!isDragging || window.innerWidth > 768) return;
+        isDragging = false;
+        chatPane.style.transition = '';
+        const deltaY = currentY - startY;
+        const elapsed = Date.now() - startTime;
+        const velocity = deltaY / Math.max(elapsed, 1);
+
+        if (deltaY > 80 || (velocity > 0.4 && deltaY > 20)) {
+          chatPane.style.transform = '';
+          if (!chatPane.classList.contains('collapsed')) {
+            toggleWorkspaceChatPane();
+          }
+        } else {
+          chatPane.style.transform = '';
+        }
+      });
+    })();
 
 
     /* ==========================================================================

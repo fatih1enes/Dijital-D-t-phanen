@@ -42,6 +42,9 @@
   --sp-5: 24px;
   --sp-6: 32px;
   --sp-7: 48px;
+  --sp-8: 64px;
+  --sp-9: 80px;
+  --sp-12: 96px;
 
   --space-2xs: var(--sp-1);
   --space-xs: var(--sp-2);

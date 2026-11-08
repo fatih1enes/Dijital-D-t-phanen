@@ -25,6 +25,7 @@ body {
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  padding-bottom: max(var(--sp-12), calc(var(--sp-8) + env(safe-area-inset-bottom)));
 }
 
 h1, h2, h3, h4, h5, h6,
@@ -2404,6 +2405,8 @@ button:active:not(:disabled),
 }
 
 .workspace-chat-pane {
+  flex: 0 0 380px;
+  width: 380px;
   background: var(--surface);
   border-left: 1px solid var(--line);
   transition: width var(--t-ui) var(--ease-out), min-width var(--t-ui) var(--ease-out), opacity var(--t-ui) var(--ease-out);
@@ -2445,7 +2448,69 @@ button:active:not(:disabled),
   border-color: var(--line-strong);
 }
 
-/* ═══════════════ 9. RESPONSIVE DÜZENLEMELER ═══════════════ */
+/* ═══════════════ 9. RESPONSIVE DÜZENLEMELER & MOBİL ERGONOMİ (F1) ═══════════════ */
+/* Safe area insets for mobile edge-to-edge screens */
+.container,
+#library-view {
+  padding-bottom: max(var(--sp-12), calc(var(--sp-8) + env(safe-area-inset-bottom)));
+}
+
+@media (pointer: coarse), (hover: none) {
+  /* Expand tap hit area to at least 44x44px for compact controls */
+  .theme-toggle-btn,
+  .header-icon-btn,
+  .btn-favorite-card,
+  .view-btn,
+  .modal-close,
+  .btn-modal-close,
+  .ops-btn-icon,
+  .shelf-nav-btn,
+  .pdf-btn,
+  .hl-color-btn,
+  .hl-action-btn,
+  .btn-compact-action,
+  .compact-theme-btn,
+  .prompt-chip {
+    position: relative;
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  .theme-toggle-btn::before,
+  .header-icon-btn::before,
+  .btn-favorite-card::before,
+  .view-btn::before,
+  .modal-close::before,
+  .btn-modal-close::before,
+  .ops-btn-icon::before,
+  .shelf-nav-btn::before,
+  .pdf-btn::before,
+  .hl-color-btn::before,
+  .hl-action-btn::before,
+  .btn-compact-action::before,
+  .compact-theme-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    min-width: 44px;
+    min-height: 44px;
+    width: 100%;
+    height: 100%;
+    pointer-events: auto;
+  }
+
+  /* Book cards: category badge and favorite heart always visible on touch */
+  .book-card .card-cat-badge,
+  .book-card .btn-favorite-card {
+    opacity: 1;
+    transform: none;
+    visibility: visible;
+    pointer-events: auto;
+  }
+}
+
 @media (max-width: 768px) {
   .hero-features-strip {
     grid-template-columns: 1fr;
@@ -2468,11 +2533,11 @@ button:active:not(:disabled),
     display: none !important;
   }
 
-  /* Mobile Floating Action Pills: Sitting in their respective corners */
+  /* Mobile Floating Action Pills: Sitting in their respective corners with safe area */
   #chat-panel:not(.active) {
     left: auto;
     right: 1rem;
-    bottom: 1rem;
+    bottom: max(1rem, env(safe-area-inset-bottom));
     width: auto;
     max-width: fit-content;
   }
@@ -2480,8 +2545,84 @@ button:active:not(:disabled),
   #ops-toggle {
     left: 1rem;
     right: auto;
-    bottom: 1rem;
+    bottom: max(1rem, env(safe-area-inset-bottom));
     width: auto;
+  }
+
+  #scroll-top-btn {
+    bottom: max(4.5rem, calc(4rem + env(safe-area-inset-bottom)));
+  }
+
+  .modal-box,
+  .modal-content {
+    padding-bottom: max(var(--sp-4), env(safe-area-inset-bottom));
+  }
+
+  /* Reader Workspace Mobile Bottom Sheet */
+  .workspace-content {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .workspace-pdf-pane {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 100%;
+    height: 100%;
+  }
+
+  .workspace-resize-handle {
+    display: none;
+  }
+
+  .workspace-chat-pane {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
+    height: 72vh;
+    max-height: 80vh;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    border-left: none;
+    border-top: 1px solid var(--line);
+    box-shadow: 0 -8px 30px var(--shadow-color);
+    z-index: 5020;
+    transform: translateY(0);
+    transition: transform var(--t-ui) var(--ease-spring), opacity var(--t-ui) var(--ease-out);
+  }
+
+  .workspace-chat-pane.collapsed {
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
+  }
+
+  .workspace-chat-header {
+    flex-direction: column;
+    align-items: center;
+    padding: var(--sp-2) var(--sp-4);
+    touch-action: pan-y;
+    cursor: grab;
+  }
+
+  .workspace-chat-header::before {
+    content: '';
+    display: block;
+    width: 38px;
+    height: 4px;
+    border-radius: var(--r-full);
+    background: var(--muted-light);
+    margin-bottom: var(--sp-2);
+  }
+
+  .workspace-chat-input-area {
+    padding-bottom: max(var(--sp-3), env(safe-area-inset-bottom));
   }
 }
 
