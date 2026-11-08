@@ -4,11 +4,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#f4f1eb" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#161513" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f4f1eb" id="theme-color-meta">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Kütüphanem</title>
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('kutuphane-theme') || localStorage.getItem('theme');
+        if (!t) {
+          t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.setAttribute('data-theme', t);
+        var meta = document.getElementById('theme-color-meta');
+        if (meta) meta.setAttribute('content', t === 'dark' ? '#161513' : '#f4f1eb');
+      } catch (e) {}
+    })();
+  </script>
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', path='/favicon.svg') }}">
   <link rel="manifest" href="{{ url_for('static', path='/manifest.json') }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', path='/favicon.svg') }}">

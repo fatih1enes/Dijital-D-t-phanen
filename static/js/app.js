@@ -183,6 +183,7 @@
       const apply = () => {
         html.dataset.theme = next;
         localStorage.setItem('kutuphane-theme', next);
+        localStorage.setItem('theme', next);
         updateThemeIcons(next, true);
         updateThemeMeta(next);
       };
@@ -197,7 +198,7 @@
 
     // Sayfa yüklenirken kaydedilmiş tema tercihini uygula
     (function () {
-      const saved = localStorage.getItem('kutuphane-theme') || 'light';
+      const saved = localStorage.getItem('kutuphane-theme') || localStorage.getItem('theme') || 'light';
       document.documentElement.dataset.theme = saved;
       updateThemeIcons(saved, false);
       updateThemeMeta(saved);
