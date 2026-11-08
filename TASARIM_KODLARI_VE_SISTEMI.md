@@ -1,6 +1,6 @@
-# 🏛️ DİJİTAL KÜTÜPHANE — BÜTÜN TASARIM, ARAYÜZ, HAREKET VE İMZA ETKİLEŞİM SİSTEMİ KODLARI (FAZ A + B + C + D GÜNCEL SÜRÜM)
+# 🏛️ DİJİTAL KÜTÜPHANE — BÜTÜN TASARIM, ARAYÜZ, HAREKET, ERİŞİLEBİLİRLİK VE İMZA ETKİLEŞİM SİSTEMİ KODLARI (FAZ A'DAN FAZ G'YE EKSİKSİZ MASTER SÜRÜM)
 
-Bu dosya, Dijital Kütüphane projesinin **tüm görsel tasarım sistemi, CSS katman mimarisi, tasarım token'ları, hareket fizikleri (60 FPS motion), paylaşılan eleman geçişleri (View Transitions morph), çift tamponlama ve imza UI/UX etkileşim kodlarını** yapay zekâ modellerine (Claude, GPT-4, Gemini vb.) tek parça halinde aktarmak amacıyla eksiksiz olarak bir araya getirilmiştir.
+Bu dosya, Dijital Kütüphane projesinin **tüm görsel tasarım sistemi, CSS katman mimarisi (@layer), tasarım token'ları, hareket fizikleri (60 FPS motion), paylaşılan eleman geçişleri (View Transitions morph), çift tamponlama, mobil okuyucu alt çekmecesi (bottom sheet), evrensel odak tuzağı (focus trap), WCAG AA/AAA kontrast uyumu ve imza UI/UX etkileşim kodlarını** yapay zekâ modellerine (Claude, GPT-4, Gemini vb.) tek parça halinde aktarmak amacıyla eksiksiz olarak bir araya getirilmiştir.
 
 ---
 
@@ -11,52 +11,47 @@ Bu dosya, Dijital Kütüphane projesinin **tüm görsel tasarım sistemi, CSS ka
 3. **FAZ B: HAREKET SİSTEMİ STANDARDI (B1 - B5)**
 4. **FAZ C: PERFORMANS VE ÇİFT TAMPONLAMA (C1 - C7)**
 5. **FAZ D: İMZA ETKİLEŞİMLER (D1 - D6)**
-6. **KOD DOSYALARI:**
+6. **FAZ E: GÖRSEL DİL VE TUTARLILIK (E1 - E8)**
+7. **FAZ F: DOKUNMATİK, MOBİL VE ERİŞİLEBİLİRLİK (F1 - F3)**
+8. **FAZ G: SON CİLA VE DENETİM (G1 - G2)**
+9. **KOD DOSYALARI:**
    - **DOSYA 0:** `static/css/app.css` (CSS Cascade Layers: `@layer legacy, tokens, design;`)
    - **DOSYA 1:** `static/css/tokens.css` (Tek Doğru Kaynak: Renk, Tipografi, Boşluk, Radius, Hareket Token'ları)
-   - **DOSYA 2:** `static/css/design.css` (Rafine Tasarım Katmanı, View Transitions & İmza Etkileşimler)
-   - **DOSYA 3:** `templates/kutuphane.html` (Ana Kütüphane Arayüzü, Hero, Raf & Çalışma Alanı Şablonu)
-   - **DOSYA 4:** `templates/login.html` (Giriş Ekranı, Sıcak Kâğıt/Mürekkep Paleti & View Transitions)
-   - **DOSYA 5:** `static/css/style.css` (Temel Bileşenler, Modallar, Panel Yapıları & Temizlikleri)
-   - **DOSYA 6.1:** `static/js/app.js` (Uygulama Yaşam Döngüsü, View Transitions Tema Geçişi)
-   - **DOSYA 6.2:** `static/js/ui_core.js` (UI Çekirdeği, cardElementsMap, Klavye Erişilebilirliği & showAppConfirm)
-   - **DOSYA 6.3:** `static/js/ui_workspace.js` (Retina 2.5 DPR, openBookWithMorph, Prefetch & Çift Tamponlama Zoom)
-   - **DOSYA 6.4:** `static/js/ui_chat_settings.js` (Daktilo Efekti 2.5s Sınırlaması, Akıllı Scroll)
-   - **DOSYA 6.5:** `static/js/ui_logs.js` (İşlem Merkezi & Canlı Log Akışı)
+   - **DOSYA 2:** `static/css/design.css` (Rafine Tasarım Katmanı, View Transitions, Dokunmatik F1, Odak F2 & Cila G1)
+   - **DOSYA 3:** `templates/kutuphane.html` (Ana Kütüphane, Editoryal Hero, Dialog Rolleri & Okuyucu Şablonu)
+   - **DOSYA 4:** `templates/login.html` (Giriş Ekranı, Sıcak Kâğıt/Mürekkep, FOUC Önleme & View Transitions)
+   - **DOSYA 5:** `static/css/style.css` (Temel Bileşenler, Mojibake Temizliği & Ölü Sınıf Tasfiyesi)
+   - **DOSYA 6.1:** `static/js/app.js` (Uygulama Yaşam Döngüsü, Dinamik Theme-Color & Scroll-to-Top)
+   - **DOSYA 6.2:** `static/js/state.js` (Toast Sistemi, role='status', aria-live & 4s Hover Pause)
+   - **DOSYA 6.3:** `static/js/ui_core.js` (UI Çekirdeği, cardElementsMap, Evrensel Focus Trap & Semantik Butonlar)
+   - **DOSYA 6.4:** `static/js/ui_workspace.js` (Retina 2.5 DPR, Mobil Bottom Sheet, Çift Tamponlama Zoom & Dinamik Başlık)
+   - **DOSYA 6.5:** `static/js/ui_chat_settings.js` (Daktilo Efekti 2.5s Sınırlaması, Akıllı Scroll & Focus Entegrasyonu)
+   - **DOSYA 6.6:** `static/js/ui_logs.js` (İşlem Merkezi, Canlı Log Akışı & Dialog Rolleri)
+   - **DOSYA 7:** `static/manifest.json` (PWA Manifest, Sıcak Kâğıt & Kehribar Renk Uyumu)
 
 ---
 
 ## 1. TASARIM, HAREKET VE PERFORMANS FELSEFESİ
 
-- **Sessiz ve Rafine Estetik:** Yapay zekâ SaaS şablonu klişelerinden (mor/mavi degrade, gereksiz neon parlama, kontrolsüz 20px+ blur, zıplayan hover efektleri) tamamen arındırılmıştır.
-- **Sıcak Kâğıt & Derin Mürekkep Paleti:** Açık temada sıcak kâğıt (`#f4f1eb`) ve derin antrasit mürekkep (`#1f1e1b`, kontrast 14:1); koyu temada obsidian kömür (`#161513`) ve temiz krem metin (`#f0ece3`).
+- **Sessiz ve Rafine Estetik:** Yapay zekâ SaaS şablonu klişelerinden (mor/mavi degrade, gereksiz neon parlama, kontrolsüz 20px+ blur, zıplayan butonlar) tamamen arındırılmıştır.
+- **Sıcak Kâğıt & Derin Mürekkep Paleti:** Açık temada sıcak kâğıt (`#f4f1eb`) ve derin antrasit mürekkep (`#1f1e1b`, kontrast 14.8:1 AAA); koyu temada obsidian kömür (`#161513`) ve temiz krem metin (`#f0ece3`).
 - **Doğal Tipografi:** Başlıklarda Instrument Serif (yalnızca 400 normal/italik, sahte kalın yasak); editoryal metinlerde Newsreader; kullanıcı arayüzünde Geist; sayısal ve künye alanlarında Geist Mono.
 - **Paylaşılan Eleman Geçişleri (D1):** Karttan okuyucuya geçerken kapak görseli View Transitions API ile kart konumundan okuyucu başlığına (`#workspace-cover-slot`) akıcı bir yaylanmayla (`--ease-spring`) büyür; okuyucu kapatıldığında karttaki yerine geri uçar.
-- **Klavye Erişilebilirliği (D5):** Tüm açılır menüler ve araçlar klavye ok tuşları (↑/↓), Enter ve Escape ile yönetilebilir; kapandığında odak tetikleyici butona geri döner.
-- **Uygulama İçi Şık Onay Pencereleri (D6):** Tarayıcının kaba yerel `confirm()` pencereleri tamamen kaldırıldı; sıcak kâğıt paletinde çalışan, animasyonlu `showAppConfirm` modalı devreye alındı.
+- **Evrensel Odak Tuzağı (F2):** Tüm modallarda `role="dialog"`, `aria-labelledby` ve tam döngüsel `Tab` / `Escape` odak yönetimi.
+- **Mobil Okuyucu Alt Çekmecesi (F1):** Mobilde (375px) PDF'i küçültmeden tam ekran okuma deneyimi sunulur; AI asistanı dokunmatik hız bazlı çekmece (bottom sheet) olarak çalışır.
+- **PWA & FOUC Önleme (F3):** Sayfa yüklenirken ilk piksel çizilmeden önce çalışan satır içi tema betiği ile gece modunda beyaz parlama sıfıra indirilmiştir.
 
 ---
 
-## 2. FAZ A, B, C VE D MİMARİ DÖNÜŞÜMLERİ
+## 2. FAZ BAZLI MİMARİ DÖNÜŞÜMLER ÖZETİ
 
-1. **CSS Katman Mimarisi (`@layer`):** `style.css` (legacy), `tokens.css` (tokens) ve `design.css` (design) katmanlarına ayrıldı. `design.css` içindeki 920'den fazla zorlama `!important` temizlendi.
-2. **Merkezi Token Sistemi:** `tokens.css` tek doğru kaynak haline getirildi; mükerrer `:root` blokları silindi.
-3. **Modal Sayfa Kayması:** `html { scrollbar-gutter: stable; }` ve `body.modal-open` sınıf standardı ile Windows'ta 15px layout shift çözüldü.
-4. **Stagger Kontrolü (B4):** Canlı arama ve filtrelemede `doStagger = false` ile sıfır gecikmeli gösterim sağlandı.
-5. **Erişilebilirlik (B5):** `prefers-reduced-motion: reduce` altında 0.01ms hilesi kaldırıldı; sakin 100-150ms opaklık solması sağlandı.
-6. **Bulanıklık Temizliği (C1):** Sabit navigasyon ve kontrollerdeki ağır blur'lar kaldırılarak saf yüzey rengine (`var(--surface)`) dönüldü.
-7. **GPU Bellek Tasarrufu (C2):** `.book-card` üzerindeki kalıcı `will-change` kaldırıldı; geçici hover/stagger durumlarına bağlandı.
-8. **DOM Eleman Ön Bellekleme (C3):** `cardElementsMap` ve `tableRowsMap` ile arama ve filtrelemede `innerHTML = ''` yerine `display: none` / `''` kullanıldı; sıfır DOM re-render!
-9. **View Transitions API (C4):** `theme-transitioning` sınıfı silindi; `document.startViewTransition()` ile layout recalculation < 1ms sağlandı.
-10. **GPU Yüzey Modları (C5):** Sepya ve E-Ink modları canvas piksel döngüsünden alınıp donanım hızlandırmalı CSS filtrelerine bağlandı (`0.29ms`).
-11. **Çift Tamponlama Zoom (C6):** Zoom sırasında beyaz flaş engellendi, `is-zooming` ile `will-change` dinamik yönetildi.
-12. **Daktilo Efekti Hızlandırması (C7):** 500 kelimelik yapay zekâ yanıtları 2.5s ile sınırlandı; ara reflow'lar durduruldu.
-13. **Paylaşılan Eleman Geçişi (D1):** `openBookWithMorph` ve `#workspace-cover-slot` ile karttan okuyucuya kesintisiz kapak akışı sağlandı.
-14. **PDF Pre-fetching & İskelet Yükleyici (D2):** Karta hover yapıldığında (150ms debounce) `pdfjsLib.getDocument` önceden başlatıldı; okuyucuda sakin kapaklı iskelet (skeleton) gösterildi.
-15. **Yumuşak Kapak Yükleme (D3):** Kapaklara `loading="lazy"`, `decoding="async"` ve `onload="this.classList.add('loaded')"` ile `--t-ui` opaklık geçişi eklendi; sakin shimmer bağlandı.
-16. **Kart Okuma İlerlemesi (D4):** Başlanmış kitapların altına 2px `--accent` okuma çizgisi ve `%xx` rozeti eklendi; okunmamış kitaplarda (%0) gizlendi.
-17. **Klavye Erişilebilirliği (D5):** Açılır menülerde ↑/↓/Enter/Esc klavye navigasyonu ve tetikleyiciye odak dönüşü sağlandı.
-18. **Uygulama İçi Onay Diyaloğu (D6):** Tüm yerel `confirm()` çağrıları kaldırıldı; `showAppConfirm` modalına geçirildi.
+- **FAZ A:** `@layer legacy, tokens, design;` mimarisiyle 920+ zorlama `!important` silindi, retina 2.5 DPR keskinliği sağlandı.
+- **FAZ B:** Tek hareket sistemi tokenlaştırıldı (`--t-micro`, `--t-ui`, `--t-page`, `--ease-out`, `--ease-spring`).
+- **FAZ C:** Kalıcı `will-change` temizlendi, `cardElementsMap` ile DOM sıfır re-render hızına kavuştu, daktilo 2.5s ile sınırlandı.
+- **FAZ D:** `openBookWithMorph`, hover prefetch, lazy decoding kapaklar, 2px okuma çizgisi ve `showAppConfirm` eklendi.
+- **FAZ E:** Editoryal tam genişlik hero, tek tip SVG ikon sistemi, 35 sabit inline renk temizliği, buton sınıfı konsolidasyonu ve WCAG AAA kontrast düzenlemesi yapıldı.
+- **FAZ F:** 44×44px dokunma hedefleri (`::before`), safe-area insets, mobil bottom sheet çekmecesi, focus trap ve semantik `<button>` dönüşümleri tamamlandı.
+- **FAZ G:** İnce tema uyumlu scrollbar, `::selection` ve `caret-color: var(--accent)`, sayısal `tabular-nums`, dinamik `document.title` güncellemesi, mojibake tasfiyesi ve 100/100 audit sağlandı.
 
 ---
 
@@ -131,6 +126,9 @@ Bu dosya, Dijital Kütüphane projesinin **tüm görsel tasarım sistemi, CSS ka
   --sp-5: 24px;
   --sp-6: 32px;
   --sp-7: 48px;
+  --sp-8: 64px;
+  --sp-9: 80px;
+  --sp-12: 96px;
 
   --space-2xs: var(--sp-1);
   --space-xs: var(--sp-2);
@@ -355,7 +353,7 @@ body.dark-mode {
 ```
 
 
-## DOSYA 2: static/css/design.css (Rafine Tasarım Sistemi, View Transitions & Mikro-Etkileşimler)
+## DOSYA 2: static/css/design.css (Rafine Tasarım Sistemi, View Transitions, Dokunmatik F1, Odak F2 & Cila G1)
 
 **Dosya Yolu:** `static/css/design.css`
 
@@ -387,6 +385,7 @@ body {
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  padding-bottom: max(var(--sp-12), calc(var(--sp-8) + env(safe-area-inset-bottom)));
 }
 
 h1, h2, h3, h4, h5, h6,
@@ -438,6 +437,60 @@ p,
 ::selection {
   background: var(--accent-glow);
   color: var(--ink);
+}
+
+::-moz-selection {
+  background: var(--accent-glow);
+  color: var(--ink);
+}
+
+input,
+textarea {
+  caret-color: var(--accent);
+}
+
+/* Modern, slim, theme-aware scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted-light) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted-light);
+  border-radius: var(--r-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* Tabular numerals for all quantitative & status counters */
+.stat-pill,
+.stat-card-value,
+.stat-total,
+.badge,
+.ops-badge,
+.pdf-page-indicator,
+.pdf-search-counter,
+.card-progress-badge,
+.modal-progress-wrap span,
+.ops-tab-badge,
+.shortcut-kbd,
+.meta-chip,
+.logs-timestamp,
+.shelf-item-cat,
+.shelf-item-info span,
+.pdf-zoom-label {
+  font-variant-numeric: tabular-nums;
 }
 
 :focus-visible {
@@ -1205,11 +1258,19 @@ i[class*="fa-heart"] {
 }
 
 .dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
   border-radius: var(--r-xs);
   font-family: var(--font-ui);
   font-size: var(--fs-sm);
   color: var(--ink);
   padding: 8px 12px;
+  cursor: pointer;
 }
 
 .dropdown-item:hover {
@@ -1261,7 +1322,7 @@ i[class*="fa-heart"] {
   color: var(--accent);
 }
 
-/* ═══════════════ 7. KİTAP KARTLARI (EDITORIAL MINIMALISM) ═══════════════ */
+/* ═══════════════ 10. KİTAP KARTLARI (EDITORIAL MINIMALISM) ═══════════════ */
 #grid-view {
   grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
   gap: var(--sp-6) var(--sp-5);
@@ -1436,7 +1497,7 @@ i[class*="fa-heart"] {
   transform: translateX(4px);
 }
 
-/* ═══════════════ 8. VIEW GEÇİŞ ANİMASYONU (PÜRÜZSÜZ & AKICI) ═══════════════ */
+/* ═══════════════ 11. VIEW GEÇİŞ ANİMASYONU (PÜRÜZSÜZ & AKICI) ═══════════════ */
 .view-fade-in {
   animation: smoothViewReveal var(--t-ui) var(--ease-out) both;
 }
@@ -1452,7 +1513,7 @@ i[class*="fa-heart"] {
   }
 }
 
-/* ═══════════════ 9. SISTEM & İŞLEM LOGLARI (KRİSTAL NETLİKTE OKUNABİLİRLİK) ═══════════════ */
+/* ═══════════════ 12. SISTEM & İŞLEM LOGLARI (KRİSTAL NETLİKTE OKUNABİLİRLİK) ═══════════════ */
 .logs-modal {
   background: rgba(22, 21, 19, 0.5);
   backdrop-filter: blur(6px);
@@ -1731,7 +1792,7 @@ i[class*="fa-heart"] {
   color: var(--muted);
 }
 
-/* ═══════════════ 10. MODAL VE AYARLAR PENCERELERİ ═══════════════ */
+/* ═══════════════ 13. MODAL VE AYARLAR PENCERELERİ ═══════════════ */
 @keyframes modalOverlayIn {
   from {
     opacity: 0;
@@ -1875,7 +1936,7 @@ i[class*="fa-heart"] {
   box-shadow: var(--shadow-sm);
 }
 
-/* ═══════════════ 11. İŞLEM MERKEZİ & SOHBET WIDGET (FLOATING PILL DOCK) ═══════════════ */
+/* ═══════════════ 14. İŞLEM MERKEZİ & SOHBET WIDGET (FLOATING PILL DOCK) ═══════════════ */
 #ops-center {
   background: var(--surface);
   border: 1px solid var(--line-strong);
@@ -2139,9 +2200,21 @@ i[class*="fa-heart"] {
   border: 1px solid var(--line-strong);
   border-radius: var(--r-full);
   box-shadow: var(--shadow-md);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(12px);
+  transition: opacity var(--t-ui) var(--ease-out), transform var(--t-ui) var(--ease-out), background-color var(--t-micro);
 }
 
-/* ═══════════════ 7. SIFIR DURUMU (ZERO STATE) & EDİTORYAL HERO ═══════════════ */
+#scroll-top-btn.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+/* ═══════════════ 8. SIFIR DURUMU (ZERO STATE) & EDİTORYAL HERO ═══════════════ */
 .import-zone {
   display: block;
   width: 100%;
@@ -2367,7 +2440,7 @@ i[class*="fa-heart"] {
   color: #ffffff;
 }
 
-/* ═══════════════ RECENT SHELF (EDITORIAL HIGHLIGHTS) ═══════════════ */
+/* ═══════════════ 9. ÖNE ÇIKAN ESERLER (RECENT SHELF) ═══════════════ */
 .recent-shelf-container {
   margin-bottom: var(--sp-6);
   padding-bottom: var(--sp-5);
@@ -2416,6 +2489,9 @@ i[class*="fa-heart"] {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
   padding: var(--sp-2) var(--sp-3);
   background: var(--surface);
   border: 1px solid var(--line);
@@ -2698,7 +2774,7 @@ button:active:not(:disabled),
   transform: scale(1.025);
 }
 
-/* ═══════════════ 8. ÇALIŞMA ALANI & ODAKLI OKUYUCU (WORKSPACE) ═══════════════ */
+/* ═══════════════ 15. ÇALIŞMA ALANI & ODAKLI OKUYUCU (WORKSPACE) ═══════════════ */
 .workspace-reader {
   background: var(--paper);
 }
@@ -2766,6 +2842,8 @@ button:active:not(:disabled),
 }
 
 .workspace-chat-pane {
+  flex: 0 0 380px;
+  width: 380px;
   background: var(--surface);
   border-left: 1px solid var(--line);
   transition: width var(--t-ui) var(--ease-out), min-width var(--t-ui) var(--ease-out), opacity var(--t-ui) var(--ease-out);
@@ -2784,6 +2862,14 @@ button:active:not(:disabled),
 .pdf-toolbar {
   background: var(--surface);
   border-bottom: 1px solid var(--line);
+}
+
+.pdf-toc-item {
+  width: 100%;
+  background: transparent;
+  border: 1px solid transparent;
+  text-align: left;
+  font-family: inherit;
 }
 
 .pdf-btn {
@@ -2807,7 +2893,69 @@ button:active:not(:disabled),
   border-color: var(--line-strong);
 }
 
-/* ═══════════════ 9. RESPONSIVE DÜZENLEMELER ═══════════════ */
+/* ═══════════════ 16. RESPONSIVE DÜZENLEMELER & MOBİL ERGONOMİ (F1) ═══════════════ */
+/* Safe area insets for mobile edge-to-edge screens */
+.container,
+#library-view {
+  padding-bottom: max(var(--sp-12), calc(var(--sp-8) + env(safe-area-inset-bottom)));
+}
+
+@media (pointer: coarse), (hover: none) {
+  /* Expand tap hit area to at least 44x44px for compact controls */
+  .theme-toggle-btn,
+  .header-icon-btn,
+  .btn-favorite-card,
+  .view-btn,
+  .modal-close,
+  .btn-modal-close,
+  .ops-btn-icon,
+  .shelf-nav-btn,
+  .pdf-btn,
+  .hl-color-btn,
+  .hl-action-btn,
+  .btn-compact-action,
+  .compact-theme-btn,
+  .prompt-chip {
+    position: relative;
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  .theme-toggle-btn::before,
+  .header-icon-btn::before,
+  .btn-favorite-card::before,
+  .view-btn::before,
+  .modal-close::before,
+  .btn-modal-close::before,
+  .ops-btn-icon::before,
+  .shelf-nav-btn::before,
+  .pdf-btn::before,
+  .hl-color-btn::before,
+  .hl-action-btn::before,
+  .btn-compact-action::before,
+  .compact-theme-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    min-width: 44px;
+    min-height: 44px;
+    width: 100%;
+    height: 100%;
+    pointer-events: auto;
+  }
+
+  /* Book cards: category badge and favorite heart always visible on touch */
+  .book-card .card-cat-badge,
+  .book-card .btn-favorite-card {
+    opacity: 1;
+    transform: none;
+    visibility: visible;
+    pointer-events: auto;
+  }
+}
+
 @media (max-width: 768px) {
   .hero-features-strip {
     grid-template-columns: 1fr;
@@ -2830,11 +2978,11 @@ button:active:not(:disabled),
     display: none !important;
   }
 
-  /* Mobile Floating Action Pills: Sitting in their respective corners */
+  /* Mobile Floating Action Pills: Sitting in their respective corners with safe area */
   #chat-panel:not(.active) {
     left: auto;
     right: 1rem;
-    bottom: 1rem;
+    bottom: max(1rem, env(safe-area-inset-bottom));
     width: auto;
     max-width: fit-content;
   }
@@ -2842,14 +2990,90 @@ button:active:not(:disabled),
   #ops-toggle {
     left: 1rem;
     right: auto;
-    bottom: 1rem;
+    bottom: max(1rem, env(safe-area-inset-bottom));
     width: auto;
+  }
+
+  #scroll-top-btn {
+    bottom: max(4.5rem, calc(4rem + env(safe-area-inset-bottom)));
+  }
+
+  .modal-box,
+  .modal-content {
+    padding-bottom: max(var(--sp-4), env(safe-area-inset-bottom));
+  }
+
+  /* Reader Workspace Mobile Bottom Sheet */
+  .workspace-content {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .workspace-pdf-pane {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 100%;
+    height: 100%;
+  }
+
+  .workspace-resize-handle {
+    display: none;
+  }
+
+  .workspace-chat-pane {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
+    height: 72vh;
+    max-height: 80vh;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    border-left: none;
+    border-top: 1px solid var(--line);
+    box-shadow: 0 -8px 30px var(--shadow-color);
+    z-index: 5020;
+    transform: translateY(0);
+    transition: transform var(--t-ui) var(--ease-spring), opacity var(--t-ui) var(--ease-out);
+  }
+
+  .workspace-chat-pane.collapsed {
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
+  }
+
+  .workspace-chat-header {
+    flex-direction: column;
+    align-items: center;
+    padding: var(--sp-2) var(--sp-4);
+    touch-action: pan-y;
+    cursor: grab;
+  }
+
+  .workspace-chat-header::before {
+    content: '';
+    display: block;
+    width: 38px;
+    height: 4px;
+    border-radius: var(--r-full);
+    background: var(--muted-light);
+    margin-bottom: var(--sp-2);
+  }
+
+  .workspace-chat-input-area {
+    padding-bottom: max(var(--sp-3), env(safe-area-inset-bottom));
   }
 }
 
 
 
-/* ═══════════════ 12. ERİŞİLEBİLİRLİK (REDUCED MOTION) ═══════════════ */
+/* ═══════════════ 17. ERİŞİLEBİLİRLİK (REDUCED MOTION) ═══════════════ */
 @media (prefers-reduced-motion: reduce) {
   /* Hareketi sıfırla, yumuşak geçişi (opacity, color) koru */
   *, *::before, *::after {
@@ -3247,7 +3471,7 @@ button:active:not(:disabled),
 ```
 
 
-## DOSYA 3: templates/kutuphane.html (Ana Kütüphane, Hero & Okuyucu Şablonu)
+## DOSYA 3: templates/kutuphane.html (Ana Kütüphane, Editoryal Hero, Dialog Rolleri & Okuyucu Şablonu)
 
 **Dosya Yolu:** `templates/kutuphane.html`
 
@@ -3258,11 +3482,23 @@ button:active:not(:disabled),
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#f4f1eb" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#161513" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f4f1eb" id="theme-color-meta">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Kütüphanem</title>
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('kutuphane-theme') || localStorage.getItem('theme');
+        if (!t) {
+          t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.setAttribute('data-theme', t);
+        var meta = document.getElementById('theme-color-meta');
+        if (meta) meta.setAttribute('content', t === 'dark' ? '#161513' : '#f4f1eb');
+      } catch (e) {}
+    })();
+  </script>
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', path='/favicon.svg') }}">
   <link rel="manifest" href="{{ url_for('static', path='/manifest.json') }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', path='/favicon.svg') }}">
@@ -3330,11 +3566,11 @@ button:active:not(:disabled),
 
         <!-- Tools Dropdown (Organized Utilities: Logs, Telegram, Sync, Duplicates, Shortcuts, PWA) -->
         <div class="header-tools-wrapper" id="header-tools-wrapper">
-          <button type="button" class="header-icon-btn" id="header-tools-btn" onclick="toggleToolsMenu(event)" title="Araçlar &amp; Sistem Menüsü" aria-label="Araçlar ve Sistem Menüsü">
+          <button type="button" class="header-icon-btn" id="header-tools-btn" aria-haspopup="menu" aria-expanded="false" onclick="toggleToolsMenu(event)" title="Araçlar &amp; Sistem Menüsü" aria-label="Araçlar ve Sistem Menüsü">
             <i class="fas fa-sliders-h"></i>
             <span class="header-logs-badge" id="header-logs-badge" style="display:none;"></span>
           </button>
-          <div class="header-tools-menu" id="header-tools-menu" style="display:none;">
+          <div class="header-tools-menu" id="header-tools-menu" role="menu" aria-label="Araçlar ve Sistem Menüsü" style="display:none;">
             <div class="tools-menu-label">Araçlar &amp; Sistem</div>
             <button type="button" class="tools-menu-item" id="header-logs-btn" onclick="openLogsModal(); closeToolsMenu();">
               <i class="fas fa-terminal"></i>
@@ -3403,17 +3639,17 @@ button:active:not(:disabled),
         <i class="fas fa-plus"></i>
         <span>Kitap Ekle</span>
       </button>
-      <button type="button" class="header-icon-btn compact-icon" id="compact-theme-btn" onclick="toggleTheme()" title="Aydınlık / Karanlık Mod">
+      <button type="button" class="header-icon-btn compact-icon" id="compact-theme-btn" onclick="toggleTheme()" title="Aydınlık / Karanlık Mod" aria-label="Aydınlık veya Karanlık Mod">
         <i class="fas fa-moon"></i>
       </button>
-      <button type="button" class="header-icon-btn compact-icon" id="compact-logs-btn" onclick="openLogsModal()" title="İşlem Logları" style="position:relative;">
+      <button type="button" class="header-icon-btn compact-icon" id="compact-logs-btn" onclick="openLogsModal()" title="İşlem Logları" aria-label="İşlem Logları" style="position:relative;">
         <i class="fas fa-terminal"></i>
         <span class="header-logs-badge compact-logs-badge" id="compact-logs-badge" style="display:none;"></span>
       </button>
-      <button type="button" class="header-icon-btn compact-icon" id="compact-pwa-install" onclick="triggerPwaInstall()" title="Masaüstü/Mobil Uygulama Olarak Yükle" style="display:none;">
+      <button type="button" class="header-icon-btn compact-icon" id="compact-pwa-install" onclick="triggerPwaInstall()" title="Masaüstü/Mobil Uygulama Olarak Yükle" aria-label="Uygulamayı Yükle" style="display:none;">
         <i class="fas fa-download"></i>
       </button>
-      <button type="button" class="header-icon-btn compact-icon" onclick="openSettings()" title="Ayarlar">
+      <button type="button" class="header-icon-btn compact-icon" onclick="openSettings()" title="Ayarlar" aria-label="Kütüphane Ayarları">
         <i class="fas fa-cog"></i>
       </button>
     </div>
@@ -3430,13 +3666,13 @@ button:active:not(:disabled),
 
     <div class="control-group dropdowns-group">
       <div class="custom-dropdown" id="dropdown-category">
-        <button type="button" class="dropdown-trigger" id="category-trigger" onclick="toggleDropdown('dropdown-category')">Tüm Kategoriler</button>
-        <div class="dropdown-menu" id="category-menu"></div>
+        <button type="button" class="dropdown-trigger" id="category-trigger" aria-haspopup="listbox" aria-expanded="false" onclick="toggleDropdown('dropdown-category')">Tüm Kategoriler</button>
+        <div class="dropdown-menu" id="category-menu" role="listbox" aria-label="Kategori seçin"></div>
       </div>
 
       <div class="custom-dropdown" id="dropdown-collection">
-        <button type="button" class="dropdown-trigger" id="collection-trigger" onclick="toggleDropdown('dropdown-collection')">Tüm Koleksiyonlar</button>
-        <div class="dropdown-menu" id="collection-menu"></div>
+        <button type="button" class="dropdown-trigger" id="collection-trigger" aria-haspopup="listbox" aria-expanded="false" onclick="toggleDropdown('dropdown-collection')">Tüm Koleksiyonlar</button>
+        <div class="dropdown-menu" id="collection-menu" role="listbox" aria-label="Koleksiyon seçin"></div>
       </div>
     </div>
 
@@ -3556,11 +3792,11 @@ button:active:not(:disabled),
     </div>
   </main>
 
-  <div class="modal-overlay" id="modal" aria-modal="true" tabindex="-1">
+  <div class="modal-overlay" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-book-title" tabindex="-1">
     <div class="modal" id="modal-box">
       <div class="modal-top"></div>
       <button type="button" class="modal-close" onclick="closeModalDirect()" aria-label="Kapat" title="Kapat"><i class="fas fa-times"></i></button>
-      <div id="modal-content"></div>
+      <div id="modal-content"><h2 id="modal-book-title" style="display:none;">Kitap Detayı</h2></div>
     </div>
   </div>
 
@@ -3572,13 +3808,13 @@ button:active:not(:disabled),
         <span class="ops-count-pill" id="ops-active-pill">Hazır</span>
       </div>
       <div class="ops-header-actions">
-        <button class="ops-btn-icon" onclick="fetchTasksFromAPI()" title="Yenile / Güncelle">
+        <button type="button" class="ops-btn-icon" onclick="fetchTasksFromAPI()" title="Yenile / Güncelle" aria-label="İşlemleri Yenile">
           <i class="fas fa-sync-alt" id="ops-refresh-icon"></i>
         </button>
         <button id="archive-toggle" class="ops-archive-btn" onclick="openLogsModal()" title="Tüm Sistem ve Arka Plan Logları">
           <i class="fas fa-scroll"></i> Loglar
         </button>
-        <button class="ops-btn-close" onclick="toggleOps()" title="Kapat">
+        <button type="button" class="ops-btn-close" onclick="toggleOps()" title="Kapat" aria-label="İşlem Merkezini Kapat">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -3609,14 +3845,14 @@ button:active:not(:disabled),
     </div>
   </div>
 
-  <div class="logs-modal" id="logs-modal" aria-modal="true" tabindex="-1">
+  <div class="logs-modal" id="logs-modal" role="dialog" aria-modal="true" aria-labelledby="logs-modal-title" tabindex="-1">
     <div class="logs-panel">
       <!-- Top Bar: Header & Actions -->
       <div class="logs-header">
         <div class="logs-header-left">
           <div class="logs-title-wrap">
             <i class="fas fa-terminal logs-title-icon"></i>
-            <h4>Sistem ve işlem logları</h4>
+            <h4 id="logs-modal-title">Sistem ve işlem logları</h4>
           </div>
           <div class="logs-status-pill status-online" id="logs-status-indicator" title="WebSocket Canlı Bağlantı Durumu">
             <span class="status-dot"></span>
@@ -3637,7 +3873,7 @@ button:active:not(:disabled),
           <button type="button" class="logs-action-btn logs-btn-danger" onclick="clearLogsUI()" title="Ekrandaki ve bellekteki logları temizle">
             <i class="fas fa-trash-alt"></i> <span>Temizle</span>
           </button>
-          <button type="button" class="logs-close" onclick="closeLogsModalDirect()" title="Kapat">
+          <button type="button" class="logs-close" onclick="closeLogsModalDirect()" title="Kapat" aria-label="Loglar Panelini Kapat">
             <i class="fas fa-times"></i>
           </button>
         </div>
@@ -3682,7 +3918,7 @@ button:active:not(:disabled),
             <div class="logs-search-wrap">
               <i class="fas fa-search logs-search-icon"></i>
               <input type="text" id="logs-search-input" placeholder="Loglarda ara (mesaj, dosya, hata kodu, ip...)" aria-label="Loglarda ara" oninput="handleLogSearchInput(this.value)">
-              <button type="button" id="logs-search-clear" onclick="clearLogSearch()" style="display:none;" title="Aramayı temizle"><i class="fas fa-times"></i></button>
+              <button type="button" id="logs-search-clear" onclick="clearLogSearch()" style="display:none;" title="Aramayı temizle" aria-label="Aramayı Temizle"><i class="fas fa-times"></i></button>
             </div>
             <div class="logs-level-filters">
               <button class="logs-level-btn active" data-lvl="all" onclick="setLogLevel('all', this)">Tümü</button>
@@ -3710,7 +3946,7 @@ button:active:not(:disabled),
           <div class="logs-footer">
             <div class="logs-footer-left">
               <label class="logs-autoscroll-toggle" title="Yeni log geldiğinde otomatik olarak en son satıra kaydır">
-                <input type="checkbox" id="logs-autoscroll-check" checked onchange="toggleAutoScroll(this.checked)">
+                <input type="checkbox" id="logs-autoscroll-check" checked onchange="toggleAutoScroll(this.checked)" aria-label="Otomatik Kaydırma">
                 <span class="custom-toggle-slider"></span>
                 <span>Otomatik Kaydırma</span>
               </label>
@@ -3720,8 +3956,8 @@ button:active:not(:disabled),
             </div>
             <div class="logs-footer-right">
               <span id="logs-counter-info" class="logs-counter-info">0 log</span>
-              <button class="logs-nav-btn" onclick="scrollLogsToTop()" title="En Başa Git"><i class="fas fa-arrow-up"></i></button>
-              <button class="logs-nav-btn" onclick="scrollLogsToBottom()" title="En Sona Git"><i class="fas fa-arrow-down"></i></button>
+              <button type="button" class="logs-nav-btn" onclick="scrollLogsToTop()" title="En Başa Git" aria-label="En Başa Git"><i class="fas fa-arrow-up"></i></button>
+              <button type="button" class="logs-nav-btn" onclick="scrollLogsToBottom()" title="En Sona Git" aria-label="En Sona Git"><i class="fas fa-arrow-down"></i></button>
             </div>
           </div>
         </section>
@@ -3921,12 +4157,12 @@ button:active:not(:disabled),
 
           <!-- Floating Action Bar -->
           <div class="pdf-floating-bar" id="pdf-floating-bar">
-            <button class="hl-color-btn yellow" onclick="applyHighlight('#e8dca0', 'yellow')" title="Sarı"></button>
-            <button class="hl-color-btn green" onclick="applyHighlight('#d3dfc3', 'green')" title="Yeşil"></button>
-            <button class="hl-color-btn blue" onclick="applyHighlight('#d8d1c3', 'blue')" title="Mavi"></button>
-            <button class="hl-color-btn pink" onclick="applyHighlight('#e4d6cd', 'pink')" title="Pembe"></button>
+            <button type="button" class="hl-color-btn yellow" onclick="applyHighlight('#e8dca0', 'yellow')" title="Sarı" aria-label="Sarı Vurgu"></button>
+            <button type="button" class="hl-color-btn green" onclick="applyHighlight('#d3dfc3', 'green')" title="Yeşil" aria-label="Yeşil Vurgu"></button>
+            <button type="button" class="hl-color-btn blue" onclick="applyHighlight('#d8d1c3', 'blue')" title="Mavi" aria-label="Mavi Vurgu"></button>
+            <button type="button" class="hl-color-btn pink" onclick="applyHighlight('#e4d6cd', 'pink')" title="Pembe" aria-label="Pembe Vurgu"></button>
             <button class="hl-action-btn" onclick="openNoteModalForSelection()"><i class="fas fa-sticky-note"></i> Not Ekle</button>
-            <button class="hl-action-btn close" onclick="clearSelection()"><i class="fas fa-times"></i></button>
+            <button type="button" class="hl-action-btn close" onclick="clearSelection()" aria-label="Vurgu Seçimini Temizle" title="Kapat"><i class="fas fa-times"></i></button>
           </div>
         </div>
         <!-- Keep iframe hidden for background fallback download/printing in needed cases -->
@@ -3939,7 +4175,7 @@ button:active:not(:disabled),
       </div>
 
       <!-- Right Panel: AI Chat Panel -->
-      <div class="workspace-chat-pane" id="workspace-chat-pane" style="flex: 0 0 380px; width: 380px;">
+      <div class="workspace-chat-pane" id="workspace-chat-pane">
         <!-- Chat Header with Copy Button -->
         <div class="workspace-chat-header" id="workspace-chat-header">
           <div class="workspace-chat-title">
@@ -3981,7 +4217,7 @@ button:active:not(:disabled),
   </div>
 
   <!-- Ayarlar Modalı -->
-  <div class="modal-overlay" id="settings-modal" aria-modal="true" tabindex="-1">
+  <div class="modal-overlay" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title" tabindex="-1">
     <div class="modal">
       <div class="modal-top"></div>
       
@@ -3992,7 +4228,7 @@ button:active:not(:disabled),
             <i class="fas fa-sliders-h"></i>
           </div>
           <div>
-            <h2>Kütüphane Ayarları</h2>
+            <h2 id="settings-modal-title">Kütüphane Ayarları</h2>
             <p>AI modelleri, analiz limitleri ve sistem tercihleri</p>
           </div>
         </div>
@@ -4250,7 +4486,7 @@ button:active:not(:disabled),
               <div style="display: flex; align-items: center; gap: 0.5rem;">
                 <div style="position: relative; flex: 1; display: flex; align-items: center;">
                   <input type="password" id="set-access-password" class="settings-input" placeholder="Şifre belirlenmemiş" style="padding-right: 2.5rem;" autocomplete="new-password" onkeydown="if(event.key==='Enter'){event.preventDefault();saveAccessPasswordDirect();}">
-                  <button type="button" onclick="toggleAccessPasswordVisibility()" title="Şifreyi Göster/Gizle" style="position: absolute; right: 0.6rem; background: transparent; border: none; color: var(--muted); cursor: pointer; padding: 0.4rem; font-size: 0.9rem; display: flex; align-items: center; justify-content: center;">
+                  <button type="button" onclick="toggleAccessPasswordVisibility()" title="Şifreyi Göster/Gizle" aria-label="Şifreyi Göster veya Gizle" style="position: absolute; right: 0.6rem; background: transparent; border: none; color: var(--muted); cursor: pointer; padding: 0.4rem; font-size: 0.9rem; display: flex; align-items: center; justify-content: center;">
                     <i id="btn-toggle-pwd-icon" class="fas fa-eye"></i>
                   </button>
                 </div>
@@ -4341,7 +4577,7 @@ button:active:not(:disabled),
             <span class="settings-section-label">Gölge kütüphaneci (otomatik izleme klasörü)</span>
             <div class="settings-field-group">
               <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
-                <input type="checkbox" id="set-watchfolder-enabled">
+                <input type="checkbox" id="set-watchfolder-enabled" aria-label="Klasör İzlemeyi Etkinleştir">
                 <span>İndirilenleri Otomatik Ekle (Auto-Watchfolder)</span>
               </label>
               <div style="font-size:0.75rem; color:var(--muted); margin-top:0.3rem;">
@@ -4398,7 +4634,7 @@ button:active:not(:disabled),
   </div>
 
   <!-- Koleksiyon Yönetim Modalı -->
-  <div class="modal-overlay" id="col-modal" aria-modal="true" tabindex="-1" style="z-index: 3500;">
+  <div class="modal-overlay" id="col-modal" role="dialog" aria-modal="true" aria-labelledby="col-modal-title" tabindex="-1" style="z-index: 3500;">
     <div class="modal"
       style="max-width: 480px; padding: 2.5rem; background: var(--paper); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow-lg);">
       <div class="modal-top"
@@ -4411,8 +4647,7 @@ button:active:not(:disabled),
           style="width: 64px; height: 64px; margin: 0 auto 1rem; background: var(--paper-dark); border-radius: 50%; display:flex; align-items:center; justify-content:center; color: var(--accent); font-size: 1.8rem;">
           <i class="fas fa-layer-group"></i>
         </div>
-        <h3 style="font-family:'Instrument Serif',serif; color:var(--ink); font-size:1.8rem; font-weight: 400;">
-          Koleksiyon Yönetimi</h3>
+        <h3 id="col-modal-title" style="font-family:'Instrument Serif',serif; color:var(--ink); font-size:1.8rem; font-weight: 400;">Koleksiyon Yönetimi</h3>
         <p style="color:var(--muted); font-size:0.9rem; margin-top: 0.5rem; font-family:'Geist', sans-serif;">Bu kitabı
           okuma listelerinize dahil edin</p>
       </div>
@@ -4442,7 +4677,7 @@ button:active:not(:disabled),
   </div>
 
   <!-- PDF Not Ekleme / Düzenleme Modalı -->
-  <div class="modal-overlay" id="pdf-note-modal" aria-modal="true" tabindex="-1" style="z-index: 7000;">
+  <div class="modal-overlay" id="pdf-note-modal" role="dialog" aria-modal="true" aria-labelledby="pdf-note-modal-title" tabindex="-1" style="z-index: 7000;">
     <div class="modal" style="max-width: 480px; padding: 2.5rem; background: var(--paper); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow-lg); position: relative;">
       <div class="modal-top" style="background: var(--accent); height: 6px; top: 0; left: 0; right: 0; position: absolute; border-radius: 6px 6px 0 0;"></div>
       <button type="button" class="modal-close" onclick="closePdfNoteModalDirect()" title="Kapat" aria-label="Kapat"><i class="fas fa-times"></i></button>
@@ -4451,7 +4686,7 @@ button:active:not(:disabled),
         <div style="width: 54px; height: 54px; margin: 0 auto 1rem; background: var(--paper-dark); border-radius: 50%; display:flex; align-items:center; justify-content:center; color: var(--accent); font-size: 1.5rem;">
           <i class="fas fa-pen-fancy"></i>
         </div>
-        <h3 style="font-family:'Instrument Serif',serif; color:var(--ink); font-size:1.6rem; font-weight: 400;">Okuma Notu Ekle</h3>
+        <h3 id="pdf-note-modal-title" style="font-family:'Instrument Serif',serif; color:var(--ink); font-size:1.6rem; font-weight: 400;">Okuma Notu Ekle</h3>
         <p style="color:var(--muted); font-size:0.85rem; margin-top: 0.3rem; font-family:'Geist', sans-serif;">Seçtiğiniz metne kişisel yorumlarınızı veya özetlerinizi ekleyin.</p>
       </div>
 
@@ -4479,7 +4714,7 @@ button:active:not(:disabled),
   </div>
 
   <!-- Telegram Senkronizasyon Modalı -->
-  <div class="modal-overlay" id="telegram-modal" aria-modal="true" tabindex="-1" style="z-index: 7500;">
+  <div class="modal-overlay" id="telegram-modal" role="dialog" aria-modal="true" aria-labelledby="telegram-modal-title" tabindex="-1" style="z-index: 7500;">
     <div class="modal" style="max-width: 520px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; padding: 0; border-radius: var(--r-md);">
       <div class="modal-top"></div>
       <button type="button" class="modal-close" style="top: 1.2rem; right: 1.2rem;" onclick="closeTelegramModal()" title="Kapat" aria-label="Kapat"><i class="fas fa-times"></i></button>
@@ -4490,7 +4725,7 @@ button:active:not(:disabled),
           <i class="fab fa-telegram-plane"></i>
         </div>
         <div>
-          <h2 style="font-family:'Instrument Serif',serif; font-size: 1.6rem; color: var(--ink); margin: 0;">Telegram Senkronizasyonu</h2>
+          <h2 id="telegram-modal-title" style="font-family:'Instrument Serif',serif; font-size: 1.6rem; color: var(--ink); margin: 0;">Telegram Senkronizasyonu</h2>
           <p style="font-family:'Geist',sans-serif; font-size: 0.8rem; color: var(--muted); margin-top: 0.2rem;">Kitaplarınızı Telegram'dan kütüphaneye otomatik aktarın</p>
         </div>
       </div>
@@ -4634,10 +4869,10 @@ button:active:not(:disabled),
     </div>
 
   <!-- Shortcuts Help Modal -->
-  <div class="modal-overlay" id="shortcuts-modal" aria-modal="true" tabindex="-1" style="z-index:8000;">
+  <div class="modal-overlay" id="shortcuts-modal" role="dialog" aria-modal="true" aria-labelledby="shortcuts-modal-title" tabindex="-1" style="z-index:8000;">
     <div class="modal" style="max-width: 480px; padding: 2rem; border-radius: var(--r-md); background: var(--paper); border: 1px solid var(--line); box-shadow: var(--shadow-lg);">
       <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
-        <h2 style="font-family:'Instrument Serif',serif; font-size:1.35rem; color:var(--ink); margin:0; display:flex; align-items:center; gap:0.6rem;">
+        <h2 id="shortcuts-modal-title" style="font-family:'Instrument Serif',serif; font-size:1.35rem; color:var(--ink); margin:0; display:flex; align-items:center; gap:0.6rem;">
           <i class="fas fa-keyboard" style="color:var(--accent);"></i> Klavye Kısayolları
         </h2>
         <button type="button" class="btn-close" onclick="closeShortcutsModal()" aria-label="Kapat" style="background:transparent; border:none; font-size:1.4rem; cursor:pointer; color:var(--muted);">&times;</button>
@@ -4688,10 +4923,10 @@ button:active:not(:disabled),
   </div>
 
   <!-- Instant LAN Handoff (QR Code) Modal -->
-  <div class="modal-overlay" id="handoff-modal" aria-modal="true" tabindex="-1" style="z-index:99999;">
+  <div class="modal-overlay" id="handoff-modal" role="dialog" aria-modal="true" aria-labelledby="handoff-modal-title" tabindex="-1" style="z-index:99999;">
     <div class="modal" style="max-width:440px; text-align:center; padding:2rem; border-radius:var(--r-md); background:var(--paper); border:1px solid var(--line); box-shadow:var(--shadow-xl);">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-        <h3 style="font-size:1.15rem; color:var(--ink); margin:0; display:flex; align-items:center; gap:0.5rem;">
+        <h3 id="handoff-modal-title" style="font-size:1.15rem; color:var(--ink); margin:0; display:flex; align-items:center; gap:0.5rem;">
           <i class="fas fa-mobile-alt" style="color:var(--accent);"></i> Telefonda Okumaya Devam Et
         </h3>
         <button type="button" class="modal-close" style="position:static; font-size:1.3rem; border:none; background:none; cursor:pointer;" onclick="closeHandoffModal()" title="Kapat" aria-label="Kapat">&times;</button>
@@ -4708,10 +4943,10 @@ button:active:not(:disabled),
   </div>
 
   <!-- Duplicate Books Modal -->
-  <div class="modal-overlay" id="duplicates-modal" aria-modal="true" tabindex="-1" style="z-index:3600;">
+  <div class="modal-overlay" id="duplicates-modal" role="dialog" aria-modal="true" aria-labelledby="duplicates-modal-title" tabindex="-1" style="z-index:3600;">
     <div class="modal" style="max-width:680px; padding:2rem; border-radius:var(--r-md); background:var(--paper); border:1px solid var(--line); box-shadow:var(--shadow-xl);">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; border-bottom:1px solid var(--line); padding-bottom:0.8rem;">
-        <h3 style="font-family:'Instrument Serif',serif; font-size:1.35rem; color:var(--ink); margin:0; display:flex; align-items:center; gap:0.6rem;">
+        <h3 id="duplicates-modal-title" style="font-family:'Instrument Serif',serif; font-size:1.35rem; color:var(--ink); margin:0; display:flex; align-items:center; gap:0.6rem;">
           <i class="fas fa-copy" style="color:var(--accent);"></i> Mükerrer / Çift Kitap Avcısı
         </h3>
         <button type="button" class="btn-close" onclick="closeDuplicatesModal()" aria-label="Kapat" style="background:transparent; border:none; font-size:1.4rem; cursor:pointer; color:var(--muted);">&times;</button>
@@ -4740,7 +4975,7 @@ button:active:not(:disabled),
 ```
 
 
-## DOSYA 4: templates/login.html (Giriş Ekranı Arayüzü & View Transitions)
+## DOSYA 4: templates/login.html (Giriş Ekranı Arayüzü, FOUC Önleme & View Transitions)
 
 **Dosya Yolu:** `templates/login.html`
 
@@ -4751,9 +4986,21 @@ button:active:not(:disabled),
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#f4f1eb" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#161513" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f4f1eb" id="theme-color-meta">
   <title>Giriş Yap — Dijital Kütüphane</title>
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('kutuphane-theme') || localStorage.getItem('theme');
+        if (!t) {
+          t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.setAttribute('data-theme', t);
+        var meta = document.getElementById('theme-color-meta');
+        if (meta) meta.setAttribute('content', t === 'dark' ? '#161513' : '#f4f1eb');
+      } catch (e) {}
+    })();
+  </script>
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -5160,7 +5407,7 @@ button:active:not(:disabled),
 ```
 
 
-## DOSYA 5: static/css/style.css (Temel Stil Motoru, Modallar & Temizlikler)
+## DOSYA 5: static/css/style.css (Temel Stil Motoru, Mojibake Temizliği & Ölü Sınıf Tasfiyesi)
 
 **Dosya Yolu:** `static/css/style.css`
 
@@ -5883,32 +6130,7 @@ button:active:not(:disabled),
       text-align: center;
     }
 
-    .import-box {
-      border: 1.5px dashed var(--sepia-light);
-      border-radius: 8px;
-      padding: 4rem 3rem;
-      background: rgba(232, 223, 208, 0.15);
-      backdrop-filter: blur(8px);
-      transition: border-color var(--transition-fast);
-    }
-
-    .import-box:hover {
-      border-color: var(--accent-soft);
-    }
-
-    .import-box h2 {
-      font-family: 'Instrument Serif', serif;
-      font-size: 1.5rem;
-      font-weight: 400;
-      margin-bottom: 0.6rem;
-    }
-
-    .import-box p {
-      color: var(--muted);
-      font-size: 0.92rem;
-      margin-bottom: 1.8rem;
-      font-weight: 300;
-    }
+    /* .import-box superseded by .zero-state-hero */
 
     .btn-import {
       display: inline-block;
@@ -5937,7 +6159,7 @@ button:active:not(:disabled),
       display: none;
     }
 
-    /* Ã¢â€â‚¬Ã¢â€â‚¬ MAIN Ã¢â€â‚¬Ã¢â€â‚¬ */
+    /* ── MAIN ── */
     main {
       max-width: 1400px;
       margin: 0 auto;
@@ -6387,7 +6609,7 @@ button:active:not(:disabled),
       border-color: rgba(255, 255, 255, 0.1);
     }
 
-    /* â”€â”€ TABLE â”€â”€ */
+    /* ── TABLE ── */
     #table-view {
       display: none;
       overflow-x: auto;
@@ -7625,7 +7847,7 @@ button:active:not(:disabled),
       transition-duration: var(--t-micro);
     }
 
-    /* Ã¢â€â‚¬Ã¢â€â‚¬ EMPTY Ã¢â€â‚¬Ã¢â€â‚¬ */
+    /* ── EMPTY ── */
     .empty {
       text-align: center;
       padding: 5rem 2rem;
@@ -7645,7 +7867,7 @@ button:active:not(:disabled),
       color: var(--sepia);
     }
 
-    /* â€“â€“ SCROLL TOP BTN â€“â€“ */
+    /* –– SCROLL TOP BTN –– */
     #scroll-top-btn {
       position: fixed;
       right: 2rem;
@@ -7743,12 +7965,12 @@ button:active:not(:disabled),
       }
     }
 
-    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-     MOBILE RESPONSIVE â€” TABLET (â‰¤768px)
-     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+    /* ═══════════════════════════════════════════════════════════
+     MOBILE RESPONSIVE — TABLET (≤768px)
+     ═══════════════════════════════════════════════════════════ */
     @media(max-width:768px) {
 
-      /* â€” Header â€” */
+      /* — Header — */
       header {
         padding: 2rem 1.2rem 1.5rem;
       }
@@ -7767,12 +7989,12 @@ button:active:not(:disabled),
         font-size: 0.55rem;
       }
 
-      /* â€” Compact Nav â€” */
+      /* — Compact Nav — */
       .compact-nav {
         padding: 0.5rem 1.2rem;
       }
 
-      /* â€” Controls Panel â€” */
+      /* — Controls Panel — */
       .controls-panel {
         flex-wrap: wrap;
         justify-content: center;
@@ -7830,26 +8052,20 @@ button:active:not(:disabled),
         height: 14px;
       }
 
-      /* â€” Import Zone â€” */
+      /* — Import Zone — */
       .import-zone {
         padding: 0 1.2rem;
         margin: 2rem auto;
       }
 
-      .import-box {
-        padding: 2.5rem 1.5rem;
-      }
+      /* .import-box superseded */
 
-      .import-box h2 {
-        font-size: 1.2rem;
-      }
-
-      /* â€” Main Content â€” */
+      /* — Main Content — */
       main {
         padding: 1.5rem 1.2rem 2rem;
       }
 
-      /* â€” Grid â€” */
+      /* — Grid — */
       #grid-view {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         gap: 0.8rem;
@@ -7878,7 +8094,7 @@ button:active:not(:disabled),
         padding: 0.5rem 0.7rem;
       }
 
-      /* â€” Table â€” */
+      /* — Table — */
       #table-view {
         font-size: 0.8rem;
       }
@@ -7896,7 +8112,7 @@ button:active:not(:disabled),
         height: 44px;
       }
 
-      /* â€” Modal â€” */
+      /* — Modal — */
       .modal-overlay {
         padding: 0.5rem;
       }
@@ -7970,7 +8186,7 @@ button:active:not(:disabled),
         height: 32px;
       }
 
-      /* â€” Chat Panel â€” */
+      /* — Chat Panel — */
       #chat-panel {
         width: calc(100vw - 1.5rem);
         right: 0.75rem;
@@ -9404,7 +9620,7 @@ button:active:not(:disabled),
     }
 
 
-    /* â€” Floating Controls â€” */
+    /* — Floating Controls — */
 
 
     .ops-badge {
@@ -9423,10 +9639,10 @@ button:active:not(:disabled),
       --shift-y: -435px;
     }
 
-    /* â•â•â•â•â•â•â•â•â•â• PDF READER â•â•â•â•â•â•â•â•â•â• */
+    /* ══════════ PDF READER ══════════ */
 
 
-    /* â•â•â•â•â•â•â•â•â•â• STATS DASHBOARD â•â•â•â•â•â•â•â•â•â• */
+    /* ══════════ STATS DASHBOARD ══════════ */
     #stats-view {
       display: none;
       padding: 2rem 0;
@@ -9585,7 +9801,7 @@ button:active:not(:disabled),
       }
     }
 
-    /* â•â•â•â•â•â•â•â•â•â• COVER UPLOAD â•â•â•â•â•â•â•â•â•â• */
+    /* ══════════ COVER UPLOAD ══════════ */
     .btn-cover-upload {
       position: relative;
       overflow: hidden;
@@ -9598,7 +9814,7 @@ button:active:not(:disabled),
       cursor: pointer;
     }
 
-    /* â•â•â•â•â•â•â•â•â•â• DRAG SORT â•â•â•â•â•â•â•â•â•â• */
+    /* ══════════ DRAG SORT ══════════ */
     .book-card.dragging {
       opacity: 0.4;
       transform: scale(0.95);
@@ -11670,7 +11886,7 @@ button:active:not(:disabled),
 ```
 
 
-## DOSYA 6.1: static/js/app.js (Uygulama Yaşam Döngüsü & View Transitions)
+## DOSYA 6.1: static/js/app.js (Uygulama Yaşam Döngüsü, Dinamik Theme-Color & Scroll-to-Top)
 
 **Dosya Yolu:** `static/js/app.js`
 
@@ -11860,6 +12076,7 @@ button:active:not(:disabled),
       const apply = () => {
         html.dataset.theme = next;
         localStorage.setItem('kutuphane-theme', next);
+        localStorage.setItem('theme', next);
         updateThemeIcons(next, true);
         updateThemeMeta(next);
       };
@@ -11874,7 +12091,7 @@ button:active:not(:disabled),
 
     // Sayfa yüklenirken kaydedilmiş tema tercihini uygula
     (function () {
-      const saved = localStorage.getItem('kutuphane-theme') || 'light';
+      const saved = localStorage.getItem('kutuphane-theme') || localStorage.getItem('theme') || 'light';
       document.documentElement.dataset.theme = saved;
       updateThemeIcons(saved, false);
       updateThemeMeta(saved);
@@ -11968,7 +12185,133 @@ window.login = () => { window.location.href = "/login"; };
 ```
 
 
-## DOSYA 6.2: static/js/ui_core.js (UI Çekirdeği, cardElementsMap ile Sıfır Re-render)
+## DOSYA 6.2: static/js/state.js (Toast Bildirim Sistemi, role='status', aria-live & 4s Hover Pause)
+
+**Dosya Yolu:** `static/js/state.js`
+
+```javascript
+/* ═══════════ state.js — Global State & Constants ═══════════ */
+var allBooks = [];
+var currentPage = 1;
+var totalBooks = 0;
+var isLoadingMore = false;
+var allCollections = [];
+var activeCategory = 'all';
+var activeCollection = 'all';
+var currentView = 'grid';
+var sortCol = -1, sortDir = 1;
+var opsActiveTab = 'all';
+var lastActiveTasks = {};
+var lastArchivedTasks = {};
+var pendingUploads = new Set();
+var uploadingCards = new Map();   // tempId -> {card, bar, label}
+var taskToTemp = new Map();       // taskId -> tempId
+var telegramDlCards = new Map();   // filename -> tempId
+var currentModalHash = null;      // Track open book in modal
+var isSelectionMode = false;      // Is bulk selection mode active?
+var selectedBooks = new Set();    // Hash list of selected books
+var showOnlyFav = false;          // Is "Show favorites only" active?
+var appSettings = {};             // Sunucudan gelen ayarlar
+var completedTasks = new Set();
+var currentLogCategory = 'all';
+var currentLogLevel = 'all';
+var currentLogSearch = '';
+var isLogLivePaused = false;
+var isLogAutoScroll = true;
+var unreadLogErrors = 0;
+var cachedLogs = [];
+var ws = null;
+var wsReconnectTimer = null;
+var wsReconnectDelay = 1500;
+var colTargetHash = null;
+var dragSrcEl = null;
+var customOrder = JSON.parse(localStorage.getItem('kutuphane-custom-order') || 'null');
+var network = null;
+var networkFocusBookHash = null;
+var isDeepSearchActive = false;
+
+
+const BOOK_ICON_LG = `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" style="color:var(--sepia-light)"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`;
+const BOOK_ICON_SM = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--sepia-light)"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`;
+const DONUT_COLORS = ['#6e614c', '#82745e', '#e8a87c', '#82745e', '#b9b3a6', '#e6e1d6', '#5a8a6e', '#7eb8a0', '#4a7a9b', '#7fb3d4', '#9b6ea0', '#c49bc7'];
+
+/* ═══════════ Toast Notification System ═══════════ */
+function showToast(message, type = 'info', duration = 4000) {
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    container.className = 'toast-container';
+    container.setAttribute('aria-live', 'polite');
+    container.setAttribute('aria-atomic', 'true');
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  toast.className = `toast-item toast-${type}`;
+  toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+  toast.setAttribute('aria-live', type === 'error' ? 'assertive' : 'polite');
+  toast.setAttribute('aria-atomic', 'true');
+
+  const iconMap = {
+    success: 'fa-circle-check',
+    error: 'fa-circle-exclamation',
+    warning: 'fa-triangle-exclamation',
+    info: 'fa-circle-info'
+  };
+  const icon = iconMap[type] || 'fa-circle-info';
+
+  const escapeHtml = (str) => {
+    return (str || '').toString()
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  };
+  const formattedMsg = escapeHtml(message).replaceAll('\n', '<br>');
+
+  toast.innerHTML = `
+    <div class="toast-icon"><i class="fas ${icon}"></i></div>
+    <div class="toast-content">${formattedMsg}</div>
+    <button class="toast-close" onclick="this.closest('.toast-item').remove()" aria-label="Kapat">&times;</button>
+  `;
+
+  container.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.classList.add('show');
+  });
+
+  let dismissTimer = setTimeout(() => {
+    toast.classList.remove('show');
+    toast.classList.add('hide');
+    setTimeout(() => toast.remove(), 280);
+  }, duration);
+
+  toast.addEventListener('mouseenter', () => clearTimeout(dismissTimer));
+  toast.addEventListener('mouseleave', () => {
+    dismissTimer = setTimeout(() => {
+      toast.classList.remove('show');
+      toast.classList.add('hide');
+      setTimeout(() => toast.remove(), 280);
+    }, 1200);
+  });
+}
+
+window.showToast = showToast;
+window.showNotification = showToast;
+window.toast = {
+  success: (msg, dur) => showToast(msg, 'success', dur),
+  error: (msg, dur) => showToast(msg, 'error', dur || 5000),
+  warning: (msg, dur) => showToast(msg, 'warning', dur),
+  info: (msg, dur) => showToast(msg, 'info', dur)
+};
+
+```
+
+
+## DOSYA 6.3: static/js/ui_core.js (UI Çekirdeği, cardElementsMap, Evrensel Focus Trap & Semantik Butonlar)
 
 **Dosya Yolu:** `static/js/ui_core.js`
 
@@ -11982,11 +12325,11 @@ window.login = () => { window.location.href = "/login"; };
       const menu = document.getElementById('category-menu');
       const trigger = document.getElementById('category-trigger');
 
-      let html = `<div class="dropdown-item ${window.activeCategory === 'all' ? 'active' : ''}" onclick="selectCat('all', 'Tüm Kategoriler')"><i class="fas fa-layer-group"></i> Tüm Kategoriler</div>`;
+      let html = `<button type="button" class="dropdown-item ${window.activeCategory === 'all' ? 'active' : ''}" role="option" onclick="selectCat('all', 'Tüm Kategoriler')"><i class="fas fa-layer-group"></i> Tüm Kategoriler</button>`;
 
       cats.forEach(cat => {
         const encodedCat = encData(cat);
-        html += `<div class="dropdown-item ${window.activeCategory === cat ? 'active' : ''}" data-value="${encodedCat}" data-label="${encodedCat}" onclick="selectCat(decodeURIComponent(this.dataset.value), decodeURIComponent(this.dataset.label))"><i class="fas fa-tag"></i> ${esc(cat)}</div>`;
+        html += `<button type="button" class="dropdown-item ${window.activeCategory === cat ? 'active' : ''}" role="option" data-value="${encodedCat}" data-label="${encodedCat}" onclick="selectCat(decodeURIComponent(this.dataset.value), decodeURIComponent(this.dataset.label))"><i class="fas fa-tag"></i> ${esc(cat)}</button>`;
       });
       if (menu) menu.innerHTML = html;
 
@@ -12033,11 +12376,11 @@ window.login = () => { window.location.href = "/login"; };
           const menu = document.getElementById('collection-menu');
           const trigger = document.getElementById('collection-trigger');
 
-          let html = `<div class="dropdown-item ${window.activeCollection === 'all' ? 'active' : ''}" onclick="selectCol('all', 'Tüm Koleksiyonlar')"><i class="fas fa-folder-open"></i> Tüm Koleksiyonlar</div>`;
+          let html = `<button type="button" class="dropdown-item ${window.activeCollection === 'all' ? 'active' : ''}" role="option" onclick="selectCol('all', 'Tüm Koleksiyonlar')"><i class="fas fa-folder-open"></i> Tüm Koleksiyonlar</button>`;
 
           (window.allCollections || []).forEach(c => {
             const encodedName = encData(c.isim);
-            html += `<div class="dropdown-item ${window.activeCollection === String(c.id) ? 'active' : ''}" data-value="${c.id}" data-label="${encodedName}" onclick="selectCol(this.dataset.value, decodeURIComponent(this.dataset.label))"><i class="fas fa-folder"></i> ${esc(c.isim)}</div>`;
+            html += `<button type="button" class="dropdown-item ${window.activeCollection === String(c.id) ? 'active' : ''}" role="option" data-value="${c.id}" data-label="${encodedName}" onclick="selectCol(this.dataset.value, decodeURIComponent(this.dataset.label))"><i class="fas fa-folder"></i> ${esc(c.isim)}</button>`;
           });
           if (menu) menu.innerHTML = html;
 
@@ -12205,8 +12548,8 @@ window.login = () => { window.location.href = "/login"; };
                  <i class="fas fa-share-alt"></i>
              </button>
              <div class="dropdown-menu" style="right:0; top:calc(100% + 5px); min-width:180px; z-index:100; left:auto; width:auto; padding:0.4rem;">
-                <div class="dropdown-item" style="padding:0.6rem 0.8rem;" onclick="window.location.href='/api/share-collection/${c.id}'"><i class="fas fa-file-download"></i> JSON İndir</div>
-                <div class="dropdown-item" style="padding:0.6rem 0.8rem;" onclick="copyCollectionMarkdown(${c.id}, decodeURIComponent('${encodedName}'))"><i class="fas fa-copy"></i> Markdown Kopyala</div>
+                <button type="button" class="dropdown-item" role="menuitem" style="padding:0.6rem 0.8rem;" onclick="window.location.href='/api/share-collection/${c.id}'"><i class="fas fa-file-download"></i> JSON İndir</button>
+                <button type="button" class="dropdown-item" role="menuitem" style="padding:0.6rem 0.8rem;" onclick="copyCollectionMarkdown(${c.id}, decodeURIComponent('${encodedName}'))"><i class="fas fa-copy"></i> Markdown Kopyala</button>
              </div>
            </div>
 
@@ -12229,9 +12572,10 @@ window.login = () => { window.location.href = "/login"; };
       list.innerHTML += importBtn;
       list.style.overflowX = 'hidden'; // Ensure no horizontal scroll
 
-      document.getElementById('col-modal').classList.add('open');
+      const colModal = document.getElementById('col-modal');
+      colModal.classList.add('open');
       document.body.classList.add('modal-open');
-      document.body.classList.add('modal-open');
+      activateModalFocus(colModal);
     }
 
     function toggleShareMenu(btn) {
@@ -12490,7 +12834,7 @@ window.login = () => { window.location.href = "/login"; };
             const progressBar = progress ? `<div class="card-progress-bar" style="width: ${progress.pct}%;"></div>` : '';
             const progressBadge = progress ? `<span class="card-progress-badge" style="font-size:0.6rem; padding:0 4px; margin-left:6px;">%${progress.pct}</span>` : '';
             return `
-              <div class="shelf-item" onclick="const target = (window.allBooks || []).find(x => x.hash === '${b.hash}'); if (target) { if (typeof openBookWithMorph === 'function') openBookWithMorph(this, target); else openWorkspace(target); }">
+              <button type="button" class="shelf-item" onclick="const target = (window.allBooks || []).find(x => x.hash === '${b.hash}'); if (target) { if (typeof openBookWithMorph === 'function') openBookWithMorph(this, target); else openWorkspace(target); }" aria-label="${esc(b.title)} - Kitabı Oku">
                 <div class="shelf-item-cover">
                   ${cover}
                   ${progressBar}
@@ -12503,7 +12847,7 @@ window.login = () => { window.location.href = "/login"; };
                   <h4 class="shelf-item-title">${esc(b.title) || 'İsimsiz'}</h4>
                   <span class="shelf-item-author">${esc(b.author) || 'Bilinmeyen Yazar'}</span>
                 </div>
-              </div>
+              </button>
             `;
           }).join('')}
         </div>
@@ -12556,9 +12900,9 @@ window.login = () => { window.location.href = "/login"; };
         <div class="selection-indicator"></div>
         <div class="card-cover">
           <div class="card-cat-badge">${esc(b.category)}</div>
-          <div class="btn-favorite-card" onclick="event.stopPropagation(); toggleFavorite('${b.hash}')" title="${favBtnText}">
+          <button type="button" class="btn-favorite-card" onclick="event.stopPropagation(); toggleFavorite('${b.hash}')" title="${favBtnText}" aria-label="${favBtnText}">
              ${favIcon}
-          </div>
+          </button>
           ${coverInner}
           ${progressBarHtml}
         </div>
@@ -12941,7 +13285,7 @@ window.login = () => { window.location.href = "/login"; };
       </div>
       <div class="modal-right" style="flex: 1; border-left: 1px solid var(--line); padding-left: 2rem;">
         <div class="modal-cat" style="color: var(--accent); font-weight: 600; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.1em;">${esc(b.category)}${b.subcat ? ' / ' + esc(b.subcat) : ''}</div>
-        <h2 class="modal-title" style="margin-top: 0.5rem; font-size: 2.2rem; font-family:'Instrument Serif', serif; line-height: 1.1;">${esc(b.title) || 'İsimsiz Kitap'}</h2>
+        <h2 class="modal-title" id="modal-book-title" style="margin-top: 0.5rem; font-size: 2.2rem; font-family:'Instrument Serif', serif; line-height: 1.1;">${esc(b.title) || 'İsimsiz Kitap'}</h2>
         <div class="modal-author" style="margin-bottom: 1.5rem; font-style: italic; font-size: 1.1rem; color: var(--muted); opacity: 0.9;">${esc(b.author) || 'Bilinmeyen Yazar'}</div>
 
         ${(!b.category || b.category === 'Bilinmeyen' || b.summary?.includes('Analiz başarısız')) ? `
@@ -12979,9 +13323,10 @@ window.login = () => { window.location.href = "/login"; };
       </div>
     </div>
   `;
-      document.getElementById('modal').classList.add('open');
+      const modalEl = document.getElementById('modal');
+      modalEl.classList.add('open');
       document.body.classList.add('modal-open');
-      document.body.classList.add('modal-open');
+      activateModalFocus(modalEl);
     }
 
     function showKeywordBooks(keyword) {
@@ -13014,6 +13359,84 @@ window.login = () => { window.location.href = "/login"; };
     }
 
     // ── Unified Modal Exit Animation (Apple/Tesla Standard) ──
+
+    // ═══════════════ F2: UNIVERSAL FOCUS TRAP & ACCESSIBILITY ═══════════════
+    let modalFocusStack = [];
+
+    function handleModalTabKey(e) {
+      if (e.key !== 'Tab') return;
+      const modalEl = this;
+      const focusables = Array.from(modalEl.querySelectorAll(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )).filter(el => el.offsetParent !== null || window.getComputedStyle(el).display !== 'none');
+
+      if (focusables.length === 0) {
+        e.preventDefault();
+        return;
+      }
+
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === first || !modalEl.contains(document.activeElement)) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last || !modalEl.contains(document.activeElement)) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
+    function activateModalFocus(modalRef) {
+      const modalEl = typeof modalRef === 'string' ? document.getElementById(modalRef) : modalRef;
+      if (!modalEl) return;
+
+      const prevActive = document.activeElement;
+      modalFocusStack.push({ modal: modalEl, returnEl: prevActive });
+
+      const focusables = Array.from(modalEl.querySelectorAll(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )).filter(el => el.offsetParent !== null || window.getComputedStyle(el).display !== 'none');
+
+      if (focusables.length > 0) {
+        setTimeout(() => {
+          const firstInput = focusables.find(el => (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') && !el.readOnly);
+          if (firstInput) {
+            firstInput.focus();
+          } else {
+            focusables[0].focus();
+          }
+        }, 60);
+      }
+
+      modalEl.removeEventListener('keydown', handleModalTabKey);
+      modalEl.addEventListener('keydown', handleModalTabKey);
+    }
+    window.activateModalFocus = activateModalFocus;
+
+    function releaseModalFocus(modalRef) {
+      const modalEl = typeof modalRef === 'string' ? document.getElementById(modalRef) : modalRef;
+      if (!modalEl) return;
+      modalEl.removeEventListener('keydown', handleModalTabKey);
+
+      const idx = modalFocusStack.findLastIndex ? modalFocusStack.findLastIndex(e => e.modal === modalEl) : -1;
+      let entry = null;
+      if (idx !== -1) {
+        entry = modalFocusStack.splice(idx, 1)[0];
+      } else {
+        entry = modalFocusStack.pop();
+      }
+
+      if (entry && entry.returnEl && typeof entry.returnEl.focus === 'function' && document.body.contains(entry.returnEl)) {
+        setTimeout(() => entry.returnEl.focus(), 40);
+      }
+    }
+    window.releaseModalFocus = releaseModalFocus;
+
     function closeModalWithAnimation(modalRef, callback) {
       let modal = modalRef;
       if (typeof modalRef === 'string') {
@@ -13027,6 +13450,7 @@ window.login = () => { window.location.href = "/login"; };
         return;
       }
 
+      releaseModalFocus(modal);
       modal.classList.add('closing');
       modal.classList.remove('open');
 
@@ -13117,7 +13541,7 @@ window.login = () => { window.location.href = "/login"; };
 
         overlay.classList.add('open');
         document.body.classList.add('modal-open');
-        setTimeout(() => cancelBtn.focus(), 60);
+        activateModalFocus(overlay);
       });
     }
     window.showAppConfirm = showAppConfirm;
@@ -13204,9 +13628,9 @@ window.login = () => { window.location.href = "/login"; };
       const m = document.getElementById('shortcuts-modal');
       if (m) {
         m.classList.remove('closing');
-        m.style.display = 'flex';
         m.classList.add('open');
         document.body.classList.add('modal-open');
+        activateModalFocus(m);
       }
     }
     function closeShortcutsModal() {
@@ -13753,9 +14177,9 @@ window.login = () => { window.location.href = "/login"; };
       if (!modal || !container) return;
 
       modal.classList.remove('closing');
-      modal.style.display = 'flex';
       modal.classList.add('open');
       document.body.classList.add('modal-open');
+      activateModalFocus(modal);
       container.innerHTML = '<div style="text-align:center; padding:2.5rem; color:var(--muted);"><i class="fas fa-spinner fa-spin fa-2x" style="margin-bottom:0.8rem; display:block; color:var(--accent);"></i>Kütüphane mükerrer kopyalar için taranıyor...</div>';
 
       try {
@@ -13970,7 +14394,7 @@ window.login = () => { window.location.href = "/login"; };
 ```
 
 
-## DOSYA 6.3: static/js/ui_workspace.js (Okuma Alanı, Çift Tamponlama Zoom & GPU Yüzeyler)
+## DOSYA 6.4: static/js/ui_workspace.js (Okuma Alanı, Mobil Bottom Sheet, Çift Tamponlama Zoom & Dinamik Başlık)
 
 **Dosya Yolu:** `static/js/ui_workspace.js`
 
@@ -14177,6 +14601,7 @@ window.login = () => { window.location.href = "/login"; };
       // Sync meta text and cover slot
       document.getElementById('workspace-book-cat').textContent = book.category || 'Belge';
       document.getElementById('workspace-book-title').textContent = book.title || 'İsimsiz';
+      document.title = `${book.title || 'İsimsiz Eser'} — Kütüphanem`;
       const coverSlot = document.getElementById('workspace-cover-slot');
       if (coverSlot) {
         coverSlot.innerHTML = book.has_cover
@@ -14198,6 +14623,16 @@ window.login = () => { window.location.href = "/login"; };
       // Open overlay
       document.getElementById('workspace-reader').classList.add('open');
       document.body.classList.add('modal-open');
+
+      // On mobile viewports, start in immersive reading mode with bottom sheet chat collapsed
+      if (window.innerWidth <= 768) {
+        const cp = document.getElementById('workspace-chat-pane');
+        const tb = document.getElementById('btn-toggle-workspace-chat');
+        const lbl = document.getElementById('workspace-chat-toggle-label');
+        if (cp) cp.classList.add('collapsed');
+        if (tb) tb.classList.remove('active');
+        if (lbl) lbl.textContent = 'AI Aç';
+      }
 
       // Load previous persistent chat history from server if exists
       const chatMessages = document.getElementById('workspace-chat-messages');
@@ -14263,6 +14698,7 @@ window.login = () => { window.location.href = "/login"; };
       const doClose = () => {
         document.getElementById('workspace-reader').classList.remove('open');
         document.body.classList.remove('modal-open');
+        document.title = 'Kütüphanem';
         
         // Stop ongoing typewriter or TTS
         if (activeTypewriterTimer) {
@@ -14685,6 +15121,55 @@ window.login = () => { window.location.href = "/login"; };
       }, 280);
     }
     window.toggleWorkspaceChatPane = toggleWorkspaceChatPane;
+
+    // Mobile bottom sheet velocity drag gesture for reader chat pane
+    (function setupMobileChatSheetDrag() {
+      const chatPane = document.getElementById('workspace-chat-pane');
+      const chatHeader = document.getElementById('workspace-chat-header');
+      if (!chatPane || !chatHeader) return;
+
+      let startY = 0;
+      let currentY = 0;
+      let isDragging = false;
+      let startTime = 0;
+
+      chatHeader.addEventListener('touchstart', (e) => {
+        if (window.innerWidth > 768) return;
+        if (chatPane.classList.contains('collapsed')) return;
+        startY = e.touches[0].clientY;
+        currentY = startY;
+        startTime = Date.now();
+        isDragging = true;
+        chatPane.style.transition = 'none';
+      }, { passive: true });
+
+      window.addEventListener('touchmove', (e) => {
+        if (!isDragging || window.innerWidth > 768) return;
+        currentY = e.touches[0].clientY;
+        const deltaY = currentY - startY;
+        if (deltaY > 0) {
+          chatPane.style.transform = `translateY(${deltaY}px)`;
+        }
+      }, { passive: true });
+
+      window.addEventListener('touchend', () => {
+        if (!isDragging || window.innerWidth > 768) return;
+        isDragging = false;
+        chatPane.style.transition = '';
+        const deltaY = currentY - startY;
+        const elapsed = Date.now() - startTime;
+        const velocity = deltaY / Math.max(elapsed, 1);
+
+        if (deltaY > 80 || (velocity > 0.4 && deltaY > 20)) {
+          chatPane.style.transform = '';
+          if (!chatPane.classList.contains('collapsed')) {
+            toggleWorkspaceChatPane();
+          }
+        } else {
+          chatPane.style.transform = '';
+        }
+      });
+    })();
 
 
     /* ==========================================================================
@@ -16363,9 +16848,9 @@ window.login = () => { window.location.href = "/login"; };
       if (noteModal) {
         noteModal.classList.remove('closing');
         noteModal.classList.add('open');
+        document.body.classList.add('modal-open');
+        if (typeof activateModalFocus === 'function') activateModalFocus(noteModal);
       }
-      document.body.classList.add('modal-open');
-      setTimeout(() => document.getElementById('pdf-note-textarea')?.focus(), 150);
     }
 
     function closePdfNoteModalDirect() {
@@ -17226,7 +17711,8 @@ window.login = () => { window.location.href = "/login"; };
         
         function appendItems(items, level = 0) {
           for (const item of items) {
-            const div = document.createElement('div');
+            const div = document.createElement('button');
+            div.type = 'button';
             div.className = `pdf-toc-item level-${Math.min(level, 2)}`;
             div.innerHTML = `<span>${esc(item.title)}</span><i class="fas fa-chevron-right" style="font-size:0.65rem; opacity:0.4;"></i>`;
             
@@ -17394,7 +17880,8 @@ window.login = () => { window.location.href = "/login"; };
       if (!tocList) return;
       tocList.innerHTML = '';
       items.forEach(it => {
-        const div = document.createElement('div');
+        const div = document.createElement('button');
+        div.type = 'button';
         div.className = `pdf-toc-item level-${Math.min(it.level || 1, 2)}`;
         const srcBadge = it.source === 'auto_detected' ? '<span style="font-size:0.65rem; color:#b8862f; margin-left:4px;">(Otomatik)</span>' : '';
         div.innerHTML = `<span style="flex:1;">${esc(it.title)} ${srcBadge}</span><span style="font-size:0.75rem; color:var(--muted); font-family:var(--font-mono, monospace);">s. ${it.page_number}</span>`;
@@ -17530,9 +18017,9 @@ window.login = () => { window.location.href = "/login"; };
       if (!modal || !qrContainer) return;
 
       modal.classList.remove('closing');
-      modal.style.display = 'flex';
       modal.classList.add('open');
       document.body.classList.add('modal-open');
+      if (typeof activateModalFocus === 'function') activateModalFocus(modal);
       qrContainer.innerHTML = '<div style="padding:3rem 1rem; color:#888;"><i class="fas fa-spinner fa-spin"></i> QR Kod Üretiliyor...</div>';
       if (urlText) urlText.textContent = '';
 
@@ -17628,7 +18115,7 @@ window.login = () => { window.location.href = "/login"; };
 ```
 
 
-## DOSYA 6.4: static/js/ui_chat_settings.js (Sohbet Daktilo Hızlandırması & Ayarlar)
+## DOSYA 6.5: static/js/ui_chat_settings.js (Sohbet Daktilo Hızlandırması & Ayarlar Focus Entegrasyonu)
 
 **Dosya Yolu:** `static/js/ui_chat_settings.js`
 
@@ -17942,6 +18429,7 @@ window.login = () => { window.location.href = "/login"; };
           modal.classList.add('open');
           document.body.classList.add('modal-open');
           switchSettingsTab('ai');
+          if (typeof activateModalFocus === 'function') activateModalFocus(modal);
         }
       } catch (err) {
         console.error("openSettings error:", err);
@@ -18597,7 +19085,7 @@ window.login = () => { window.location.href = "/login"; };
 ```
 
 
-## DOSYA 6.5: static/js/ui_logs.js (İşlem Merkezi & Canlı Log Akışı)
+## DOSYA 6.6: static/js/ui_logs.js (İşlem Merkezi & Canlı Log Akışı Dialog Rolleri)
 
 **Dosya Yolu:** `static/js/ui_logs.js`
 
@@ -18619,6 +19107,7 @@ window.login = () => { window.location.href = "/login"; };
       modal.classList.remove('closing');
       modal.classList.add('open');
       document.body.classList.add('modal-open');
+      if (typeof activateModalFocus === 'function') activateModalFocus(modal);
 
       // Setup smart scroll detection on logs container
       const body = document.getElementById('logs-body');
@@ -19426,4 +19915,33 @@ window.login = () => { window.location.href = "/login"; };
       XLSX.writeFile(wb, "Dijital_Kutuphane_Yedegi.xlsx");
     }
 
+```
+
+
+## DOSYA 7: static/manifest.json (PWA Manifest, Sıcak Kâğıt & Kehribar Renk Uyumu)
+
+**Dosya Yolu:** `static/manifest.json`
+
+```json
+{
+  "id": "/?source=pwa",
+  "name": "Dijital Kütüphane",
+  "short_name": "Kütüphane",
+  "description": "Kişisel Dijital PDF ve EPUB Kütüphanesi",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4f1eb",
+  "theme_color": "#b8862f",
+  "categories": ["books", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/static/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
 ```
