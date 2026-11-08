@@ -44,7 +44,7 @@ const BOOK_ICON_SM = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none
 const DONUT_COLORS = ['#6e614c', '#82745e', '#e8a87c', '#82745e', '#b9b3a6', '#e6e1d6', '#5a8a6e', '#7eb8a0', '#4a7a9b', '#7fb3d4', '#9b6ea0', '#c49bc7'];
 
 /* ═══════════ Toast Notification System ═══════════ */
-function showToast(message, type = 'info', duration = 3800) {
+function showToast(message, type = 'info', duration = 4000) {
   let container = document.getElementById('toast-container');
   if (!container) {
     container = document.createElement('div');

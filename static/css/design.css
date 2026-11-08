@@ -79,6 +79,60 @@ p,
   color: var(--ink);
 }
 
+::-moz-selection {
+  background: var(--accent-glow);
+  color: var(--ink);
+}
+
+input,
+textarea {
+  caret-color: var(--accent);
+}
+
+/* Modern, slim, theme-aware scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted-light) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted-light);
+  border-radius: var(--r-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* Tabular numerals for all quantitative & status counters */
+.stat-pill,
+.stat-card-value,
+.stat-total,
+.badge,
+.ops-badge,
+.pdf-page-indicator,
+.pdf-search-counter,
+.card-progress-badge,
+.modal-progress-wrap span,
+.ops-tab-badge,
+.shortcut-kbd,
+.meta-chip,
+.logs-timestamp,
+.shelf-item-cat,
+.shelf-item-info span,
+.pdf-zoom-label {
+  font-variant-numeric: tabular-nums;
+}
+
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -908,7 +962,7 @@ i[class*="fa-heart"] {
   color: var(--accent);
 }
 
-/* ═══════════════ 7. KİTAP KARTLARI (EDITORIAL MINIMALISM) ═══════════════ */
+/* ═══════════════ 10. KİTAP KARTLARI (EDITORIAL MINIMALISM) ═══════════════ */
 #grid-view {
   grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
   gap: var(--sp-6) var(--sp-5);
@@ -1083,7 +1137,7 @@ i[class*="fa-heart"] {
   transform: translateX(4px);
 }
 
-/* ═══════════════ 8. VIEW GEÇİŞ ANİMASYONU (PÜRÜZSÜZ & AKICI) ═══════════════ */
+/* ═══════════════ 11. VIEW GEÇİŞ ANİMASYONU (PÜRÜZSÜZ & AKICI) ═══════════════ */
 .view-fade-in {
   animation: smoothViewReveal var(--t-ui) var(--ease-out) both;
 }
@@ -1099,7 +1153,7 @@ i[class*="fa-heart"] {
   }
 }
 
-/* ═══════════════ 9. SISTEM & İŞLEM LOGLARI (KRİSTAL NETLİKTE OKUNABİLİRLİK) ═══════════════ */
+/* ═══════════════ 12. SISTEM & İŞLEM LOGLARI (KRİSTAL NETLİKTE OKUNABİLİRLİK) ═══════════════ */
 .logs-modal {
   background: rgba(22, 21, 19, 0.5);
   backdrop-filter: blur(6px);
@@ -1378,7 +1432,7 @@ i[class*="fa-heart"] {
   color: var(--muted);
 }
 
-/* ═══════════════ 10. MODAL VE AYARLAR PENCERELERİ ═══════════════ */
+/* ═══════════════ 13. MODAL VE AYARLAR PENCERELERİ ═══════════════ */
 @keyframes modalOverlayIn {
   from {
     opacity: 0;
@@ -1522,7 +1576,7 @@ i[class*="fa-heart"] {
   box-shadow: var(--shadow-sm);
 }
 
-/* ═══════════════ 11. İŞLEM MERKEZİ & SOHBET WIDGET (FLOATING PILL DOCK) ═══════════════ */
+/* ═══════════════ 14. İŞLEM MERKEZİ & SOHBET WIDGET (FLOATING PILL DOCK) ═══════════════ */
 #ops-center {
   background: var(--surface);
   border: 1px solid var(--line-strong);
@@ -1786,9 +1840,21 @@ i[class*="fa-heart"] {
   border: 1px solid var(--line-strong);
   border-radius: var(--r-full);
   box-shadow: var(--shadow-md);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(12px);
+  transition: opacity var(--t-ui) var(--ease-out), transform var(--t-ui) var(--ease-out), background-color var(--t-micro);
 }
 
-/* ═══════════════ 7. SIFIR DURUMU (ZERO STATE) & EDİTORYAL HERO ═══════════════ */
+#scroll-top-btn.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+/* ═══════════════ 8. SIFIR DURUMU (ZERO STATE) & EDİTORYAL HERO ═══════════════ */
 .import-zone {
   display: block;
   width: 100%;
@@ -2014,7 +2080,7 @@ i[class*="fa-heart"] {
   color: #ffffff;
 }
 
-/* ═══════════════ RECENT SHELF (EDITORIAL HIGHLIGHTS) ═══════════════ */
+/* ═══════════════ 9. ÖNE ÇIKAN ESERLER (RECENT SHELF) ═══════════════ */
 .recent-shelf-container {
   margin-bottom: var(--sp-6);
   padding-bottom: var(--sp-5);
@@ -2348,7 +2414,7 @@ button:active:not(:disabled),
   transform: scale(1.025);
 }
 
-/* ═══════════════ 8. ÇALIŞMA ALANI & ODAKLI OKUYUCU (WORKSPACE) ═══════════════ */
+/* ═══════════════ 15. ÇALIŞMA ALANI & ODAKLI OKUYUCU (WORKSPACE) ═══════════════ */
 .workspace-reader {
   background: var(--paper);
 }
@@ -2467,7 +2533,7 @@ button:active:not(:disabled),
   border-color: var(--line-strong);
 }
 
-/* ═══════════════ 9. RESPONSIVE DÜZENLEMELER & MOBİL ERGONOMİ (F1) ═══════════════ */
+/* ═══════════════ 16. RESPONSIVE DÜZENLEMELER & MOBİL ERGONOMİ (F1) ═══════════════ */
 /* Safe area insets for mobile edge-to-edge screens */
 .container,
 #library-view {
@@ -2647,7 +2713,7 @@ button:active:not(:disabled),
 
 
 
-/* ═══════════════ 12. ERİŞİLEBİLİRLİK (REDUCED MOTION) ═══════════════ */
+/* ═══════════════ 17. ERİŞİLEBİLİRLİK (REDUCED MOTION) ═══════════════ */
 @media (prefers-reduced-motion: reduce) {
   /* Hareketi sıfırla, yumuşak geçişi (opacity, color) koru */
   *, *::before, *::after {

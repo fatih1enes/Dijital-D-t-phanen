@@ -468,7 +468,7 @@
           <div class="logs-footer">
             <div class="logs-footer-left">
               <label class="logs-autoscroll-toggle" title="Yeni log geldiğinde otomatik olarak en son satıra kaydır">
-                <input type="checkbox" id="logs-autoscroll-check" checked onchange="toggleAutoScroll(this.checked)">
+                <input type="checkbox" id="logs-autoscroll-check" checked onchange="toggleAutoScroll(this.checked)" aria-label="Otomatik Kaydırma">
                 <span class="custom-toggle-slider"></span>
                 <span>Otomatik Kaydırma</span>
               </label>
@@ -1099,7 +1099,7 @@
             <span class="settings-section-label">Gölge kütüphaneci (otomatik izleme klasörü)</span>
             <div class="settings-field-group">
               <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
-                <input type="checkbox" id="set-watchfolder-enabled">
+                <input type="checkbox" id="set-watchfolder-enabled" aria-label="Klasör İzlemeyi Etkinleştir">
                 <span>İndirilenleri Otomatik Ekle (Auto-Watchfolder)</span>
               </label>
               <div style="font-size:0.75rem; color:var(--muted); margin-top:0.3rem;">

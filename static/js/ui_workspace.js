@@ -200,6 +200,7 @@
       // Sync meta text and cover slot
       document.getElementById('workspace-book-cat').textContent = book.category || 'Belge';
       document.getElementById('workspace-book-title').textContent = book.title || 'İsimsiz';
+      document.title = `${book.title || 'İsimsiz Eser'} — Kütüphanem`;
       const coverSlot = document.getElementById('workspace-cover-slot');
       if (coverSlot) {
         coverSlot.innerHTML = book.has_cover
@@ -296,6 +297,7 @@
       const doClose = () => {
         document.getElementById('workspace-reader').classList.remove('open');
         document.body.classList.remove('modal-open');
+        document.title = 'Kütüphanem';
         
         // Stop ongoing typewriter or TTS
         if (activeTypewriterTimer) {

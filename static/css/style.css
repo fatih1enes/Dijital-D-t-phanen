@@ -716,32 +716,7 @@
       text-align: center;
     }
 
-    .import-box {
-      border: 1.5px dashed var(--sepia-light);
-      border-radius: 8px;
-      padding: 4rem 3rem;
-      background: rgba(232, 223, 208, 0.15);
-      backdrop-filter: blur(8px);
-      transition: border-color var(--transition-fast);
-    }
-
-    .import-box:hover {
-      border-color: var(--accent-soft);
-    }
-
-    .import-box h2 {
-      font-family: 'Instrument Serif', serif;
-      font-size: 1.5rem;
-      font-weight: 400;
-      margin-bottom: 0.6rem;
-    }
-
-    .import-box p {
-      color: var(--muted);
-      font-size: 0.92rem;
-      margin-bottom: 1.8rem;
-      font-weight: 300;
-    }
+    /* .import-box superseded by .zero-state-hero */
 
     .btn-import {
       display: inline-block;
@@ -770,7 +745,7 @@
       display: none;
     }
 
-    /* Ã¢â€â‚¬Ã¢â€â‚¬ MAIN Ã¢â€â‚¬Ã¢â€â‚¬ */
+    /* ── MAIN ── */
     main {
       max-width: 1400px;
       margin: 0 auto;
@@ -1220,7 +1195,7 @@
       border-color: rgba(255, 255, 255, 0.1);
     }
 
-    /* â”€â”€ TABLE â”€â”€ */
+    /* ── TABLE ── */
     #table-view {
       display: none;
       overflow-x: auto;
@@ -2458,7 +2433,7 @@
       transition-duration: var(--t-micro);
     }
 
-    /* Ã¢â€â‚¬Ã¢â€â‚¬ EMPTY Ã¢â€â‚¬Ã¢â€â‚¬ */
+    /* ── EMPTY ── */
     .empty {
       text-align: center;
       padding: 5rem 2rem;
@@ -2478,7 +2453,7 @@
       color: var(--sepia);
     }
 
-    /* â€“â€“ SCROLL TOP BTN â€“â€“ */
+    /* –– SCROLL TOP BTN –– */
     #scroll-top-btn {
       position: fixed;
       right: 2rem;
@@ -2576,12 +2551,12 @@
       }
     }
 
-    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-     MOBILE RESPONSIVE â€” TABLET (â‰¤768px)
-     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+    /* ═══════════════════════════════════════════════════════════
+     MOBILE RESPONSIVE — TABLET (≤768px)
+     ═══════════════════════════════════════════════════════════ */
     @media(max-width:768px) {
 
-      /* â€” Header â€” */
+      /* — Header — */
       header {
         padding: 2rem 1.2rem 1.5rem;
       }
@@ -2600,12 +2575,12 @@
         font-size: 0.55rem;
       }
 
-      /* â€” Compact Nav â€” */
+      /* — Compact Nav — */
       .compact-nav {
         padding: 0.5rem 1.2rem;
       }
 
-      /* â€” Controls Panel â€” */
+      /* — Controls Panel — */
       .controls-panel {
         flex-wrap: wrap;
         justify-content: center;
@@ -2663,26 +2638,20 @@
         height: 14px;
       }
 
-      /* â€” Import Zone â€” */
+      /* — Import Zone — */
       .import-zone {
         padding: 0 1.2rem;
         margin: 2rem auto;
       }
 
-      .import-box {
-        padding: 2.5rem 1.5rem;
-      }
+      /* .import-box superseded */
 
-      .import-box h2 {
-        font-size: 1.2rem;
-      }
-
-      /* â€” Main Content â€” */
+      /* — Main Content — */
       main {
         padding: 1.5rem 1.2rem 2rem;
       }
 
-      /* â€” Grid â€” */
+      /* — Grid — */
       #grid-view {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         gap: 0.8rem;
@@ -2711,7 +2680,7 @@
         padding: 0.5rem 0.7rem;
       }
 
-      /* â€” Table â€” */
+      /* — Table — */
       #table-view {
         font-size: 0.8rem;
       }
@@ -2729,7 +2698,7 @@
         height: 44px;
       }
 
-      /* â€” Modal â€” */
+      /* — Modal — */
       .modal-overlay {
         padding: 0.5rem;
       }
@@ -2803,7 +2772,7 @@
         height: 32px;
       }
 
-      /* â€” Chat Panel â€” */
+      /* — Chat Panel — */
       #chat-panel {
         width: calc(100vw - 1.5rem);
         right: 0.75rem;
@@ -4237,7 +4206,7 @@
     }
 
 
-    /* â€” Floating Controls â€” */
+    /* — Floating Controls — */
 
 
     .ops-badge {
@@ -4256,10 +4225,10 @@
       --shift-y: -435px;
     }
 
-    /* â•â•â•â•â•â•â•â•â•â• PDF READER â•â•â•â•â•â•â•â•â•â• */
+    /* ══════════ PDF READER ══════════ */
 
 
-    /* â•â•â•â•â•â•â•â•â•â• STATS DASHBOARD â•â•â•â•â•â•â•â•â•â• */
+    /* ══════════ STATS DASHBOARD ══════════ */
     #stats-view {
       display: none;
       padding: 2rem 0;
@@ -4418,7 +4387,7 @@
       }
     }
 
-    /* â•â•â•â•â•â•â•â•â•â• COVER UPLOAD â•â•â•â•â•â•â•â•â•â• */
+    /* ══════════ COVER UPLOAD ══════════ */
     .btn-cover-upload {
       position: relative;
       overflow: hidden;
@@ -4431,7 +4400,7 @@
       cursor: pointer;
     }
 
-    /* â•â•â•â•â•â•â•â•â•â• DRAG SORT â•â•â•â•â•â•â•â•â•â• */
+    /* ══════════ DRAG SORT ══════════ */
     .book-card.dragging {
       opacity: 0.4;
       transform: scale(0.95);
