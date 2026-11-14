@@ -1,0 +1,8 @@
+{
+  "max_pages": 15,
+  "ocr_pages": 20,
+  "vision_pages": 20,
+  "vision_max_image_dim": 1200,
+  "vision_jpeg_quality": 82,
+  "tesseract_cmd": ""
+}

@@ -632,6 +632,20 @@
     function renderGrid(books) {
       const grid = document.getElementById('grid-view');
       if (!grid) return;
+
+      // Clean up any stale/ghost uploading cards whose book has already been added to the library
+      if (typeof uploadingCards !== 'undefined' && uploadingCards.size > 0 && typeof removeUploadingCard === 'function') {
+        const completedFiles = new Set(books.map(b => (b.file || '').toLowerCase().trim()));
+        const completedTitles = new Set(books.map(b => (b.title || '').toLowerCase().trim()));
+        for (const [tempId, holder] of Array.from(uploadingCards.entries())) {
+          const cardFn = (holder?.filename || holder?.card?.dataset?.filename || '').toLowerCase().trim();
+          const cardTitle = (holder?.title?.textContent || '').toLowerCase().trim();
+          if ((cardFn && completedFiles.has(cardFn)) || (cardTitle && completedTitles.has(cardTitle))) {
+            removeUploadingCard(tempId, false);
+          }
+        }
+      }
+
       const activeUploads = Array.from(grid.querySelectorAll('.uploading')).filter(node => {
         const tempId = node.dataset.tempId;
         return tempId && typeof uploadingCards !== 'undefined' && uploadingCards.has(tempId);
@@ -804,7 +818,6 @@
 
       // 3. Synchronize existing DOM
       const existingRowsInTbody = new Set(Array.from(tbody.querySelectorAll('tr')).map(r => r.dataset.hash));
-      let hasMissingRows = false;
 
       books.forEach((b, i) => {
         let tr = tableRowsMap.get(b.hash);
@@ -826,10 +839,6 @@
         }
 
         tr.style.display = '';
-
-        if (!existingRowsInTbody.has(b.hash)) {
-          hasMissingRows = true;
-        }
       });
 
       // Hide rows that are filtered out
@@ -839,20 +848,18 @@
         }
       }
 
-      // Populate if missing rows or empty tbody
-      if (hasMissingRows || tbody.querySelectorAll('tr').length === 0) {
-        tbody.innerHTML = '';
-        books.forEach(b => {
-          const tr = tableRowsMap.get(b.hash);
-          if (tr) tbody.appendChild(tr);
-        });
-      }
+      // Keep tbody rows synchronized and ordered matching sorted books list
+      books.forEach(b => {
+        const tr = tableRowsMap.get(b.hash);
+        if (tr) tbody.appendChild(tr);
+      });
     }
 
     function compareTableValues(va, vb, sortDir) {
-      if (va < vb) return -sortDir;
-      if (va > vb) return sortDir;
-      return 0;
+      if (!va && !vb) return 0;
+      if (!va) return sortDir;
+      if (!vb) return -sortDir;
+      return va.localeCompare(vb, 'tr', { sensitivity: 'base' }) * sortDir;
     }
 
     // --- SIRALA ---
@@ -860,8 +867,8 @@
       const keys = ['title', 'author', 'category', 'subcat', 'summary'];
       if (window.sortCol === col) window.sortDir *= -1; else { window.sortCol = col; window.sortDir = 1; }
       (window.allBooks || []).sort((a, b) => {
-        const va = (a[keys[col]] || '').toLowerCase();
-        const vb = (b[keys[col]] || '').toLowerCase();
+        const va = String(a[keys[col]] || '').trim();
+        const vb = String(b[keys[col]] || '').trim();
         return compareTableValues(va, vb, window.sortDir);
       });
       document.querySelectorAll('thead th').forEach((th, i) => {
@@ -1036,7 +1043,6 @@
     </div>
   `;
       document.getElementById('modal').classList.add('open');
-      document.body.classList.add('modal-open');
       document.body.classList.add('modal-open');
     }
 
@@ -1831,15 +1837,20 @@
 
       try {
         const res = await apiFetch(`/api/books/${encodeURIComponent(fileHash)}/compress`, { method: 'POST' });
-        if (res?.success) {
-          showToast(`PDF Optimize Edildi!\nEski Boyut: ${res.old_mb} MB ➔ Yeni: ${res.new_mb} MB (%${res.reduction_percent} tasarruf)`, 'success');
+        if (!res) return;
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data?.detail || data?.message || `HTTP ${res.status}`);
+        }
+        if (data?.success) {
+          showToast(`PDF Optimize Edildi!\nEski Boyut: ${data.old_mb} MB ➔ Yeni: ${data.new_mb} MB (%${data.reduction_percent} tasarruf)`, 'success');
           // Reload book list to reflect new size
-          if (typeof reloadBooks === 'function') reloadBooks();
+          if (typeof loadBooksFromAPI === 'function') loadBooksFromAPI(1, false);
           // Update details modal if open
           const sizeEl = document.querySelector('#modal-content .book-info-row span:last-child');
-          if (sizeEl) sizeEl.textContent = `${res.new_mb} MB`;
+          if (sizeEl) sizeEl.textContent = `${data.new_mb} MB`;
         } else {
-          showToast(`${res?.message || 'Sıkıştırma tamamlandı.'}`, 'info');
+          showToast(`${data?.message || 'Sıkıştırma tamamlandı.'}`, 'info');
         }
       } catch (err) {
         showToast(`Sıkıştırma hatası: ${err.message || 'İşlem gerçekleştirilemedi.'}`, 'error');
@@ -1866,7 +1877,12 @@
 
       try {
         const res = await apiFetch('/api/books/duplicates');
-        if (!res?.duplicates?.length) {
+        if (!res) return;
+        if (!res.ok) {
+          throw new Error(`Sunucu hatası: ${res.status}`);
+        }
+        const data = await res.json();
+        if (!data?.duplicates?.length) {
           container.innerHTML = `
             <div style="text-align:center; padding:3rem 1.5rem; color:var(--muted);">
               <i class="fas fa-check-circle" style="font-size:3rem; color:#22c55e; margin-bottom:1rem; display:block;"></i>
@@ -1877,7 +1893,7 @@
           return;
         }
 
-        renderDuplicateGroups(res.duplicates);
+        renderDuplicateGroups(data.duplicates);
       } catch (err) {
         container.innerHTML = `<div style="text-align:center; padding:2rem; color:var(--accent);">Tarama hatası: ${esc(String(err))}</div>`;
       }
@@ -1974,12 +1990,19 @@
 
       try {
         const res = await apiFetch(`/api/books/${encodeURIComponent(fileHash)}`, { method: 'DELETE' });
-        if (res && res.success !== false) {
+        if (!res) return;
+        let data = {};
+        try {
+          data = await res.json();
+        } catch (_) {
+          // Non-JSON responses are tolerated if status is ok
+        }
+        if (res.ok && data.success !== false) {
           showToast('Kopya başarıyla silindi.', 'success');
           updateDuplicateDOMAfterDelete(fileHash, groupId);
-          if (typeof reloadBooks === 'function') reloadBooks();
+          if (typeof loadBooksFromAPI === 'function') loadBooksFromAPI(1, false);
         } else {
-          showToast(`Silme başarısız: ${res?.message || 'Hata oluştu'}`, 'error');
+          showToast(`Silme başarısız: ${data?.detail || data?.message || 'Hata oluştu'}`, 'error');
         }
       } catch (err) {
         showToast(`Silme hatası: ${err.message}`, 'error');

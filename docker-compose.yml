@@ -1,0 +1,16 @@
+services:
+  dijital-kutuphane:
+    build: .
+    container_name: dijital-kutuphane
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./veriler:/app/veriler
+    env_file:
+      - .env
+    environment:
+      # Container dış ağa açıldığı için .env içinde ACCESS_PASSWORD tanımlanmalıdır!
+      - PORT=8000
+      - AUTO_OPEN_BROWSER=False
+      - AUTO_OPEN_BROWSER=False
+    restart: unless-stopped

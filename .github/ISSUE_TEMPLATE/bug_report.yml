@@ -1,0 +1,82 @@
+name: 🐛 Hata Bildirimi (Bug Report)
+description: Dijital Kütüphane uygulamasında karşılaştığınız bir sorunu veya hatayı bildirin.
+title: "[BUG]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Hata bildirimi için teşekkür ederiz! Sorunun hızlıca çözülebilmesi için lütfen aşağıdaki alanları doldurun.
+  - type: textarea
+    id: description
+    attributes:
+      label: Sorunun Açıklaması
+      description: Karşılaştığınız hatayı açık ve net bir şekilde açıklayın.
+      placeholder: "Örneğin: Kitap yükleme sırasında 'PDF işlenemedi' hatası alıyorum."
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Yeniden Üretme Adımları (Steps to Reproduce)
+      description: Hatayı tekrarlamak için izlenen adımları listeleyin.
+      placeholder: |
+        1. '...' sayfasına gidin
+        2. '...' butonuna tıklayın
+        3. '....' dosyasını yükleyin
+        4. Hatanın gerçekleştiğini görün
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Beklenen Davranış
+      description: Normal şartlarda ne olmasını bekliyordunuz?
+      placeholder: Kitabın başarıyla yüklenmesi ve kapak görselinin oluşturulması gerekiyordu.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Hata Günlükleri / Ekran Görüntüleri
+      description: Varsa konsol logları, veriler/logs/app.log içeriği veya ekran görüntüsü ekleyin.
+      render: shell
+  - type: dropdown
+    id: os
+    attributes:
+      label: İşletim Sistemi
+      description: Uygulamayı çalıştırdığınız işletim sistemini seçin.
+      options:
+        - Windows 11
+        - Windows 10
+        - Linux (Ubuntu / Debian vb.)
+        - macOS
+        - Docker Container
+    validations:
+      required: true
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Çalıştırma Yöntemi
+      description: Uygulamayı nasıl çalıştırıyorsunuz?
+      options:
+        - Masaüstü Uygulaması (desktop_shell.py / BASLAT.bat)
+        - Doğrudan Web (main.py / uvicorn)
+        - Docker / Docker Compose
+    validations:
+      required: true
+  - type: input
+    id: python-version
+    attributes:
+      label: Python Sürümü
+      description: Kullandığınız Python sürümü (örn. Python 3.12.3)
+      placeholder: python --version çıktısı
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Kontrol Listesi
+      options:
+        - label: Benzer bir sorunun daha önce açılıp açılmadığını arama yaparak kontrol ettim.
+          required: true
+        - label: En son kararlı sürümü / master dalını kullandığımdan eminim.
+          required: true

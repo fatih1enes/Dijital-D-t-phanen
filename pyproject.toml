@@ -1,0 +1,140 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dijital-kutuphane"
+version = "1.0.0"
+description = "AI-powered digital library management system with FastAPI"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Fatih"}
+]
+keywords = ["digital-library", "fastapi", "ai", "pdf", "gemini"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Framework :: FastAPI",
+    "Topic :: Office/Business",
+    "Topic :: Text Processing",
+]
+
+dependencies = [
+    "fastapi>=0.115.0,<1.0.0",
+    "uvicorn[standard]>=0.30.0,<1.0.0",
+    "pdfplumber>=0.11.0,<1.0.0",
+    "pdf2image>=1.17.0,<2.0.0",
+    "pillow>=12.3.0,<13.0.0",
+    "pytesseract>=0.3.10,<0.4.0",
+    "google-genai>=2.0.0,<3.0.0",
+    "openai>=1.0.0,<2.0.0",
+    "aiosqlite>=0.20.0,<1.0.0",
+    "jinja2>=3.1.0,<4.0.0",
+    "python-multipart>=0.0.20,<1.0.0",
+    "python-dotenv>=1.0.1,<2.0.0",
+    "itsdangerous>=2.2.0,<3.0.0",
+    "pydantic>=2.0.0,<3.0.0",
+    "starlette>=0.45.0,<1.0.0",
+    "cryptography>=43.0.0",
+    "urllib3>=2.2.0",
+    "pyasn1>=0.6.1",
+    "numpy>=1.26.0,<3.0.0",
+    "httpx>=0.27.0,<1.0.0",
+    "fastapi-cache2>=0.2.0",
+    "telethon>=1.40.0,<2.0.0",
+    "cryptg>=0.4.0",
+    "pypdfium2>=4.0.0",
+    "defusedxml>=0.7.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=24.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.8.0",
+    "pytest>=8.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pip-audit>=2.6.0",
+    "pre-commit>=3.6.0",
+]
+desktop = [
+    "pywebview>=5.0",
+    "pystray>=0.19",
+]
+
+[project.urls]
+Homepage = "https://github.com/fatih-es/dijital-kutuphane"
+Repository = "https://github.com/fatih-es/dijital-kutuphane"
+Issues = "https://github.com/fatih-es/dijital-kutuphane/issues"
+
+[tool.black]
+line-length = 100
+target-version = ['py310', 'py311', 'py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E501",  # line too long (handled by black)
+    "B008",  # do not perform function calls in argument defaults
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+pythonpath = ["."]
+filterwarnings = ["ignore::DeprecationWarning"]
+addopts = "-v --tb=short"
+
+[tool.setuptools]
+packages = ["app"]
+

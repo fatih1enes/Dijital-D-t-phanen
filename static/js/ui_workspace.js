@@ -1,7 +1,21 @@
-/* ═══════════ ui_workspace.js — Workspace Reader, PDF.js Engine & Annotations ═══════════ */
-    /* ═════════════════════════════════════════════════════════════
-       Workspace Reader Functions (Split-Pane PDF + Contextual AI Chat)
-       ═════════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════════════════════════════
+ * ui_workspace.js — Focused Workspace Reader, Virtualized Engine & Annotations
+ * ════════════════════════════════════════════════════════════════════════════════
+ * Modüler Mimari Dizini:
+ *   [1] MOBIL KONTROLLER & SCRUBBER (Mobile App Bar, Page Scrubber, Theme Cycle)
+ *   [2] WORKSPACE YAŞAM DÖNGÜSÜ (Open/Close, Morph Opening, Header & Backdrops)
+ *   [3] BAĞLAMSAL AI SOHBET MOTORU (Streaming, Typewriter, Auto-load Full Book)
+ *   [4] MOBIL DOKUNMATIK JESTLER (Velocity Drag Bottom Sheet, Touch Gestures)
+ *   [5] ÇİFT SAYFALI GÖRÜNÜM (Two-Page Spread Mode & Spread Geometry)
+ *   [6] MOZILLA PDF.JS SELECTION STABILIZATION (Caret Balancer, EndOfContent)
+ *   [7] SANALLAŞTIRILMIŞ PDF RENDERER (Virtual DOM, Pre-fetching, Zoom/Fit)
+ *   [8] ANOTASYON & VURGU SİSTEMİ (Inline Highlights, Sticky Notes, Floating Bar)
+ *   [9] DOKÜMAN İÇİ ARAMA (Ctrl+F In-Document Search Scanner & Highlights)
+ *   [10] İÇİNDEKİLER (TOC), METİN OKUMA (TTS) & PKM DIŞA AKTARIM
+ *   [11] CHROMAGUARD™ AKILLI GECE YÜZEYİ (Smart OLED Inversion with Figure Preservation)
+ *   [12] INSTANT LAN HANDOFF (30-Günlük Kesintisiz QR Passkey Geçiş Sistemi)
+ * ════════════════════════════════════════════════════════════════════════════════ */
+
     let activeWorkspaceBook = null;
     let isWorkspaceChatLoading = false;
     let isFullBookLoaded = false;
@@ -10,20 +24,103 @@
     let activeTypewriterContainer = null;
     let isSpeaking = false;
 
-    function jumpToPdfPage(pageNum) {
-      const p = Number.parseInt(pageNum, 10);
-      if (!p || Number.isNaN(p) || !pdfDoc || p < 1 || p > pdfPageCount) {
-        if (typeof showToast === 'function') showToast(`Geçersiz sayfa numarası: ${pageNum}`, 'warning');
-        return;
-      }
-      pdfPageNum = p;
+    function syncPageIndicatorUI() {
       const pageInput = document.getElementById('pdf-page-num');
-      if (pageInput) pageInput.value = p;
-
+      if (pageInput) pageInput.value = pdfPageNum;
+      const countEl = document.getElementById('pdf-page-count');
+      if (countEl) countEl.textContent = pdfPageCount || '-';
       const prevBtn = document.getElementById('pdf-prev-btn');
       const nextBtn = document.getElementById('pdf-next-btn');
       if (prevBtn) prevBtn.disabled = (pdfPageNum <= 1);
       if (nextBtn) nextBtn.disabled = (pdfPageNum >= pdfPageCount);
+
+      const scrubPage = document.getElementById('mobile-scrub-page');
+      const scrubTotal = document.getElementById('mobile-scrub-total');
+      if (scrubPage) scrubPage.textContent = pdfPageNum;
+      if (scrubTotal) scrubTotal.textContent = pdfPageCount || '-';
+    }
+    window.syncPageIndicatorUI = syncPageIndicatorUI;
+
+    function promptMobilePageJump() {
+      const input = prompt(`Gitmek istediğiniz sayfa numarasını girin (1 - ${pdfPageCount || 1}):`, String(pdfPageNum || 1));
+      if (!input) return;
+      const p = Number.parseInt(input, 10);
+      if (!Number.isNaN(p) && p >= 1 && p <= pdfPageCount) {
+        jumpToPdfPage(p);
+      }
+    }
+    window.promptMobilePageJump = promptMobilePageJump;
+
+    const READER_SURFACES = ['normal', 'sepia', 'eink', 'chromaguard'];
+    function cycleMobileTheme() {
+      const idx = READER_SURFACES.indexOf(currentReaderSurfaceMode);
+      const nextMode = READER_SURFACES[(idx + 1) % READER_SURFACES.length];
+      setReaderSurfaceMode(nextMode);
+      if (typeof showToast === 'function') {
+        const names = { normal: 'Gündüz', sepia: 'Sepya Kağıt', eink: 'E-Ink', chromaguard: 'Akıllı Gece' };
+        showToast(`Tema: ${names[nextMode]}`, 'info');
+      }
+    }
+    window.cycleMobileTheme = cycleMobileTheme;
+
+    function toggleMobileAppearanceSheet() {
+      const sheet = document.getElementById('mobile-appearance-sheet');
+      const backdrop = document.getElementById('mobile-appearance-backdrop');
+      if (!sheet) return;
+      const isOpen = sheet.classList.toggle('open');
+      if (backdrop) backdrop.classList.toggle('active', isOpen);
+    }
+    window.toggleMobileAppearanceSheet = toggleMobileAppearanceSheet;
+
+    function setupImmersiveMobileReaderToggle() {
+      const container = document.getElementById('pdf-canvas-container');
+      if (!container || container.dataset.tapToggleBound) return;
+      container.dataset.tapToggleBound = 'true';
+
+      let hasScrolled = false;
+
+      container.addEventListener('touchstart', () => {
+        hasScrolled = false;
+      }, { passive: true });
+
+      container.addEventListener('touchmove', () => {
+        hasScrolled = true;
+      }, { passive: true });
+
+      container.addEventListener('click', (e) => {
+        const isMobile = window.innerWidth <= 860 || document.getElementById('workspace-reader')?.classList.contains('is-mobile-reader');
+        if (!isMobile) return;
+        if (hasScrolled) return;
+        if (e.target.closest('button') || e.target.closest('a') || e.target.closest('input') ||
+            e.target.closest('#pdf-floating-bar') || e.target.closest('.sticky-note-marker') ||
+            e.target.closest('#pdf-search-bar') || e.target.closest('.pdf-notes-sidebar') ||
+            e.target.closest('.pdf-toc-sidebar') || e.target.closest('.workspace-chat-pane') ||
+            e.target.closest('.mobile-appearance-sheet')) {
+          return;
+        }
+        const sel = window.getSelection();
+        if (sel && sel.toString().trim().length > 0) return;
+
+        const reader = document.getElementById('workspace-reader');
+        if (reader) {
+          reader.classList.toggle('controls-hidden');
+        }
+      });
+    }
+
+    function jumpToPdfPage(pageNum) {
+      const p = Number.parseInt(pageNum, 10);
+      if (!p || Number.isNaN(p)) return;
+      if (!pdfDoc) {
+        pdfPageNum = p;
+        return;
+      }
+      if (p < 1 || p > pdfPageCount) {
+        if (typeof showToast === 'function') showToast(`Geçersiz sayfa numarası: ${pageNum}`, 'warning');
+        return;
+      }
+      pdfPageNum = p;
+      syncPageIndicatorUI();
 
       const wrapper = document.getElementById(`pdf-page-wrapper-${p}`);
       void renderPdfPageVirtual(p);
@@ -200,6 +297,9 @@
       // Sync meta text and cover slot
       document.getElementById('workspace-book-cat').textContent = book.category || 'Belge';
       document.getElementById('workspace-book-title').textContent = book.title || 'İsimsiz';
+      const mobTitle = document.getElementById('mobile-reader-book-title');
+      if (mobTitle) mobTitle.textContent = book.title || 'İsimsiz Eser';
+
       document.title = `${book.title || 'İsimsiz Eser'} — Kütüphanem`;
       const coverSlot = document.getElementById('workspace-cover-slot');
       if (coverSlot) {
@@ -214,24 +314,26 @@
       // Load PDF via custom HTML5 PDF.js Reader
       initCustomPdfViewer(book, initialPage);
       
-      // Let the user load the book manually via the banner button
-      // setTimeout(() => {
-      //   loadFullBookToAI();
-      // }, 500);
-      
       // Open overlay
-      document.getElementById('workspace-reader').classList.add('open');
+      const readerEl = document.getElementById('workspace-reader');
+      readerEl.classList.add('open');
+      readerEl.classList.remove('controls-hidden');
       document.body.classList.add('modal-open');
 
+      // Detect dedicated mobile reading mode
+      const isMobileDevice = window.innerWidth <= 860 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      readerEl.classList.toggle('is-mobile-reader', isMobileDevice);
+
       // On mobile viewports, start in immersive reading mode with bottom sheet chat collapsed
-      if (window.innerWidth <= 768) {
+      if (isMobileDevice) {
         const cp = document.getElementById('workspace-chat-pane');
         const tb = document.getElementById('btn-toggle-workspace-chat');
         const lbl = document.getElementById('workspace-chat-toggle-label');
         if (cp) cp.classList.add('collapsed');
         if (tb) tb.classList.remove('active');
-        if (lbl) lbl.textContent = 'AI Aç';
+        if (lbl) lbl.textContent = 'AI';
       }
+      setupImmersiveMobileReaderToggle();
 
       // Load previous persistent chat history from server if exists
       const chatMessages = document.getElementById('workspace-chat-messages');
@@ -250,10 +352,12 @@
           console.debug('Chat history load error:', err);
         });
       
-      // Focus textarea
+      // Focus textarea on desktop only (avoids popping mobile software keyboard and ancestor scrolling)
       setTimeout(() => {
-        const textarea = document.getElementById('workspace-chat-input');
-        if (textarea) textarea.focus();
+        if (window.innerWidth > 768) {
+          const textarea = document.getElementById('workspace-chat-input');
+          if (textarea) textarea.focus({ preventScroll: true });
+        }
       }, 300);
     }
 
@@ -280,7 +384,7 @@
         if (cover) cover.style.viewTransitionName = '';
       });
 
-      transition.finished.finally(() => {
+      void transition.finished.finally(() => {
         const slot = document.getElementById('workspace-cover-slot');
         if (slot) slot.style.removeProperty('view-transition-name');
         if (cover) cover.style.removeProperty('view-transition-name');
@@ -336,7 +440,7 @@
         if (slot) slot.style.viewTransitionName = '';
       });
 
-      transition.finished.finally(() => {
+      void transition.finished.finally(() => {
         if (cover) cover.style.removeProperty('view-transition-name');
         if (slot) slot.style.removeProperty('view-transition-name');
       });
@@ -636,10 +740,14 @@
     });
 
     // ─── Workspace Split-Pane Resizer Logic ──────────────────────────────
+    let lastChatFlex = null;
+    let lastPdfFlex = null;
+
     document.addEventListener('DOMContentLoaded', () => {
       const handle = document.getElementById('workspace-resize-handle');
       const pdfPane = document.getElementById('workspace-pdf-pane');
       const chatPane = document.getElementById('workspace-chat-pane');
+      const reader = document.getElementById('workspace-reader');
       
       if (!handle || !pdfPane || !chatPane) return;
       
@@ -648,6 +756,7 @@
       const onMouseDown = (e) => {
         isDragging = true;
         handle.classList.add('active');
+        if (reader) reader.classList.add('is-resizing');
         document.body.style.cursor = 'col-resize';
         // Add a temporary overlay over iframe so mouse events don't get swallowed by pdf
         const iframeMask = document.createElement('div');
@@ -665,50 +774,124 @@
         if (!clientX) return;
         
         const totalWidth = window.innerWidth;
-        const leftWidthPercent = (clientX / totalWidth) * 100;
+        // Limit: PDF pane minimum 380px or 28%, Chat pane min 280px or 20%
+        const minPdfPercent = Math.max(25, (380 / totalWidth) * 100);
+        const maxPdfPercent = Math.min(80, ((totalWidth - 300) / totalWidth) * 100);
+        const leftWidthPercent = Math.max(minPdfPercent, Math.min(maxPdfPercent, (clientX / totalWidth) * 100));
         
-        // Limits constraints (between 30% and 80%)
-        if (leftWidthPercent > 30 && leftWidthPercent < 80) {
-          pdfPane.style.flex = leftWidthPercent / 100;
-          chatPane.style.flex = (100 - leftWidthPercent) / 100;
-        }
+        const pdfF = leftWidthPercent / 100;
+        const chatF = (100 - leftWidthPercent) / 100;
+        pdfPane.style.flex = `${pdfF} 1 0px`;
+        chatPane.style.flex = `${chatF} 1 0px`;
+        chatPane.style.width = 'auto';
+        chatPane.style.minWidth = '280px';
+        lastPdfFlex = pdfPane.style.flex;
+        lastChatFlex = chatPane.style.flex;
       };
       
       const onMouseUp = () => {
         if (!isDragging) return;
         isDragging = false;
         handle.classList.remove('active');
+        if (reader) reader.classList.remove('is-resizing');
         document.body.style.cursor = '';
         document.getElementById('iframe-drag-mask')?.remove();
+        window.dispatchEvent(new Event('resize'));
       };
       
       handle.addEventListener('mousedown', onMouseDown);
-      handle.addEventListener('touchstart', onMouseDown);
+      handle.addEventListener('touchstart', onMouseDown, { passive: true });
       
       window.addEventListener('mousemove', onMouseMove);
-      window.addEventListener('touchmove', onMouseMove);
+      window.addEventListener('touchmove', onMouseMove, { passive: true });
       
       window.addEventListener('mouseup', onMouseUp);
       window.addEventListener('touchend', onMouseUp);
+
+      // Double-click to reset split-pane to default clean ratio
+      handle.addEventListener('dblclick', () => {
+        pdfPane.style.flex = '1 1 0px';
+        chatPane.style.flex = '0 0 380px';
+        chatPane.style.width = '380px';
+        lastPdfFlex = null;
+        lastChatFlex = null;
+        window.dispatchEvent(new Event('resize'));
+      });
+
+      // Enable horizontal mouse wheel scroll on the pdf toolbar
+      const toolbar = document.querySelector('.pdf-toolbar');
+      if (toolbar) {
+        toolbar.addEventListener('wheel', (e) => {
+          if (e.deltaY !== 0 && toolbar.scrollWidth > toolbar.clientWidth) {
+            e.preventDefault();
+            toolbar.scrollLeft += (e.deltaY * 0.85);
+          }
+        }, { passive: false });
+      }
     });
 
     function toggleWorkspaceChatPane() {
       const chatPane = document.getElementById('workspace-chat-pane');
+      const pdfPane = document.getElementById('workspace-pdf-pane');
       const resizeHandle = document.getElementById('workspace-resize-handle');
       const toggleBtn = document.getElementById('btn-toggle-workspace-chat');
       const label = document.getElementById('workspace-chat-toggle-label');
+      const backdrop = document.getElementById('mobile-chat-backdrop');
       if (!chatPane) return;
 
       const isCollapsed = chatPane.classList.toggle('collapsed');
+      const isMobile = window.innerWidth <= 860 || document.getElementById('workspace-reader')?.classList.contains('is-mobile-reader');
+
+      if (backdrop) {
+        backdrop.classList.toggle('active', !isCollapsed && isMobile);
+      }
+
       if (resizeHandle) {
-        resizeHandle.style.display = isCollapsed ? 'none' : 'flex';
+        resizeHandle.style.display = (isCollapsed || isMobile) ? 'none' : 'flex';
       }
       if (toggleBtn) {
         toggleBtn.classList.toggle('active', !isCollapsed);
         toggleBtn.title = isCollapsed ? 'AI Asistan Panelini Aç' : 'AI Asistan Panelini Gizle (Odaklı Okuma)';
       }
       if (label) {
-        label.textContent = isCollapsed ? 'AI Aç' : 'AI Paneli';
+        if (isCollapsed) {
+          label.textContent = isMobile ? 'AI' : 'AI Aç';
+        } else {
+          label.textContent = 'AI Paneli';
+        }
+      }
+
+      if (isMobile) {
+        // Reset any inline desktop sizing so mobile responsive CSS rules take full effect
+        chatPane.style.flex = '';
+        chatPane.style.width = '';
+        chatPane.style.minWidth = '';
+        chatPane.style.maxWidth = '';
+        if (pdfPane) pdfPane.style.flex = '';
+      } else if (pdfPane) {
+        if (isCollapsed) {
+          if (chatPane.style.flex && chatPane.style.flex !== '0 0 0px') {
+            lastChatFlex = chatPane.style.flex;
+            lastPdfFlex = pdfPane.style.flex;
+          }
+          chatPane.style.flex = '0 0 0px';
+          chatPane.style.width = '0px';
+          chatPane.style.minWidth = '0px';
+          chatPane.style.maxWidth = '0px';
+          pdfPane.style.flex = '1 1 100%';
+        } else {
+          chatPane.style.maxWidth = '800px';
+          chatPane.style.minWidth = '280px';
+          if (lastPdfFlex && lastChatFlex) {
+            pdfPane.style.flex = lastPdfFlex;
+            chatPane.style.flex = lastChatFlex;
+            chatPane.style.width = 'auto';
+          } else {
+            pdfPane.style.flex = '1 1 0px';
+            chatPane.style.flex = '0 0 380px';
+            chatPane.style.width = '380px';
+          }
+        }
       }
 
       // Smoothly trigger a resize / refit on the PDF canvas so reader is responsive
@@ -734,6 +917,7 @@
 
       chatHeader.addEventListener('touchstart', (e) => {
         if (window.innerWidth > 768) return;
+        if (e.target.closest('button') || e.target.closest('a')) return;
         if (chatPane.classList.contains('collapsed')) return;
         startY = e.touches[0].clientY;
         currentY = startY;
@@ -1399,9 +1583,15 @@
     // Initialize custom PDF.js reader for the loaded book
     function setupPdfPages(firstPage, container) {
       let viewport = firstPage.getViewport({ scale: 1.0 });
+      const isMobile = window.innerWidth <= 860 || document.getElementById('workspace-reader')?.classList.contains('is-mobile-reader');
+
+      if (isMobile) {
+        pdfIsFitWidth = true;
+      }
 
       if (pdfIsFitWidth) {
-        const containerWidth = Math.max(300, container.clientWidth - 48);
+        const padding = isMobile ? 12 : 48;
+        const containerWidth = Math.max(240, container.clientWidth - padding);
         pdfScale = Math.max(0.3, Math.min(4.0, containerWidth / viewport.width));
         updateZoomLabel();
       } else if (pdfIsFitHeight) {
@@ -1420,6 +1610,8 @@
         pageWrapper.dataset.pageNum = p;
         pageWrapper.style.width = viewport.width + 'px';
         pageWrapper.style.height = viewport.height + 'px';
+        pageWrapper.style.minHeight = viewport.height + 'px';
+        pageWrapper.style.flexShrink = '0';
         pageWrapper.style.marginBottom = '24px';
         pageWrapper.style.position = 'relative';
 
@@ -1464,15 +1656,7 @@
       pdfDoc = pdf;
       pdfPageCount = pdf.numPages;
 
-      document.getElementById('pdf-page-count').textContent = pdfPageCount;
-      const pageInput = document.getElementById('pdf-page-num');
-      pageInput.max = pdfPageCount;
-      pageInput.value = pdfPageNum;
-
-      const prevBtn = document.getElementById('pdf-prev-btn');
-      const nextBtn = document.getElementById('pdf-next-btn');
-      if (prevBtn) prevBtn.disabled = (pdfPageNum <= 1);
-      if (nextBtn) nextBtn.disabled = (pdfPageNum >= pdfPageCount);
+      syncPageIndicatorUI();
 
       loadPdfOutline(pdf).catch(err => console.debug("loadPdfOutline error:", err));
 
@@ -1510,7 +1694,7 @@
     function cancelPdfPrefetch(hash) {
       if (!hash || !pdfPrefetchCache.has(hash)) return;
       const item = pdfPrefetchCache.get(hash);
-      if (item && item.cleanupTimer) clearTimeout(item.cleanupTimer);
+      if (item?.cleanupTimer) clearTimeout(item.cleanupTimer);
       if (item) {
         item.cleanupTimer = setTimeout(() => {
           try { item.task.destroy(); } catch (_) {}
@@ -1522,14 +1706,18 @@
 
     function initCustomPdfViewer(book, initialPage = null) {
       // Reset state
+      const isMobile = window.innerWidth <= 860 || document.getElementById('workspace-reader')?.classList.contains('is-mobile-reader') || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       pdfDoc = null;
       pdfPageNum = (initialPage && initialPage > 0) ? initialPage : (book.okunulan_sayfa || 1);
       pdfPageCount = 0;
-      pdfScale = 1.2;
+      pdfScale = isMobile ? 1.0 : 1.2;
       pdfIsRendering = false;
       pdfPendingPageNum = null;
-      pdfIsFitWidth = false;
+      pdfIsFitWidth = isMobile;
       pdfIsFitHeight = false;
+      if (isMobile) {
+        pdfIsSpreadMode = false;
+      }
       closePdfSearch();
       pdfSearchTextCache = {};
       pdfHighlights = {};
@@ -1745,13 +1933,7 @@
       if (!mostVisiblePage || Number.isNaN(mostVisiblePage) || pdfPageNum === mostVisiblePage) return;
 
       pdfPageNum = mostVisiblePage;
-      const pageInput = document.getElementById('pdf-page-num');
-      if (pageInput) pageInput.value = pdfPageNum;
-
-      const prevBtn = document.getElementById('pdf-prev-btn');
-      const nextBtn = document.getElementById('pdf-next-btn');
-      if (prevBtn) prevBtn.disabled = (pdfPageNum <= 1);
-      if (nextBtn) nextBtn.disabled = (pdfPageNum >= pdfPageCount);
+      syncPageIndicatorUI();
 
       if (activeWorkspaceBook) {
         activeWorkspaceBook.okunulan_sayfa = pdfPageNum;
@@ -1873,6 +2055,8 @@
         if (wrapper) {
           wrapper.style.width = viewport.width + 'px';
           wrapper.style.height = viewport.height + 'px';
+          wrapper.style.minHeight = viewport.height + 'px';
+          wrapper.style.flexShrink = '0';
           wrapper.style.setProperty('--scale-factor', String(viewport.scale));
         }
 
@@ -1919,7 +2103,7 @@
         // requestAnimationFrame ile atomik ve flaşsız canvas değişimi
         requestAnimationFrame(() => {
           newCanvas.id = `pdf-render-canvas-${pageNum}`;
-          if (existingCanvas && existingCanvas.parentNode) {
+          if (existingCanvas?.parentNode) {
             existingCanvas.parentNode.replaceChild(newCanvas, existingCanvas);
           } else if (wrapper) {
             wrapper.insertBefore(newCanvas, wrapper.firstChild);
@@ -1957,7 +2141,9 @@
         if (!container) return;
         
         if (pdfIsFitWidth) {
-          const containerWidth = Math.max(300, container.clientWidth - 48);
+          const isMobile = window.innerWidth <= 860 || document.getElementById('workspace-reader')?.classList.contains('is-mobile-reader');
+          const padding = isMobile ? 12 : 48;
+          const containerWidth = Math.max(240, container.clientWidth - padding);
           pdfScale = Math.max(0.3, Math.min(4.0, containerWidth / viewport.width));
           updateZoomLabel();
         } else if (pdfIsFitHeight) {
@@ -2019,10 +2205,8 @@
       const wrapper = document.getElementById(`pdf-page-wrapper-${pageNum}`);
       if (wrapper && container) {
         const row = wrapper.closest('.pdf-spread-row');
-        const targetTop = row ? (row.offsetTop - 16) : (wrapper.offsetTop - 16);
+        const targetTop = row ? (row.offsetTop - 12) : (wrapper.offsetTop - 12);
         container.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
-      } else if (wrapper) {
-        wrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }
 
@@ -2152,7 +2336,7 @@
     document.addEventListener('wheel', function(e) {
       if (!e.ctrlKey) return;
       const container = document.getElementById('pdf-canvas-container');
-      if (!container || !container.contains(e.target)) return;
+      if (!container?.contains(e.target)) return;
       e.preventDefault();
       if (e.deltaY < 0) {
         pdfZoomIn();
@@ -2165,12 +2349,19 @@
     function toggleNotesSidebar() {
       const sidebar = document.getElementById('pdf-notes-sidebar');
       const btn = document.getElementById('pdf-notes-sidebar-btn');
+      const tocSidebar = document.getElementById('pdf-toc-sidebar');
+      const tocBtn = document.getElementById('pdf-toc-sidebar-btn');
+      if (!sidebar) return;
       if (sidebar.classList.contains('open')) {
         sidebar.classList.remove('open');
-        btn.classList.remove('active');
+        if (btn) btn.classList.remove('active');
       } else {
+        if (tocSidebar) {
+          tocSidebar.classList.remove('open');
+          if (tocBtn) tocBtn.classList.remove('active');
+        }
         sidebar.classList.add('open');
-        btn.classList.add('active');
+        if (btn) btn.classList.add('active');
         renderNotesSidebar();
       }
     }
@@ -2602,7 +2793,6 @@
       document.getElementById('pdf-selected-text-preview').textContent = `"${quote}"`;
       document.getElementById('pdf-note-textarea').value = currentNote;
       document.getElementById('pdf-note-modal').classList.add('open');
-      document.body.classList.add('modal-open');
       document.body.classList.add('modal-open');
       setTimeout(() => document.getElementById('pdf-note-textarea').focus(), 150);
     }
@@ -3325,6 +3515,10 @@
                   const pageRef = dest[0];
                   const pageIdx = await pdf.getPageIndex(pageRef);
                   jumpToPdfPage(pageIdx + 1);
+                  if (window.innerWidth <= 860) {
+                    const sb = document.getElementById('pdf-toc-sidebar');
+                    if (sb) sb.classList.remove('open');
+                  }
                 }
               } catch (e) {
                 console.error('TOC atlama hatası:', e);
@@ -3359,6 +3553,8 @@
           btn.classList.remove('active');
           btn.innerHTML = '<i class="fas fa-volume-high"></i> Dinle';
         }
+        const mobLabel = document.getElementById('mob-tts-label');
+        if (mobLabel) mobLabel.textContent = 'Kitabı Sesli Dinle';
         showToast('Seslendirme durduruldu.', 'info', 1800);
         return;
       }
@@ -3397,6 +3593,8 @@
           btn.classList.remove('active');
           btn.innerHTML = '<i class="fas fa-volume-high"></i> Dinle';
         }
+        const mobLabel = document.getElementById('mob-tts-label');
+        if (mobLabel) mobLabel.textContent = 'Kitabı Sesli Dinle';
       };
 
       utterance.onerror = () => {
@@ -3405,6 +3603,8 @@
           btn.classList.remove('active');
           btn.innerHTML = '<i class="fas fa-volume-high"></i> Dinle';
         }
+        const mobLabel = document.getElementById('mob-tts-label');
+        if (mobLabel) mobLabel.textContent = 'Kitabı Sesli Dinle';
       };
 
       window.speechSynthesis.speak(utterance);
@@ -3486,6 +3686,10 @@
         div.innerHTML = `<span style="flex:1;">${esc(it.title)} ${srcBadge}</span><span style="font-size:0.75rem; color:var(--muted); font-family:var(--font-mono, monospace);">s. ${it.page_number}</span>`;
         div.addEventListener('click', () => {
           jumpToPdfPage(it.target_page || it.page_number);
+          if (window.innerWidth <= 860) {
+            const sb = document.getElementById('pdf-toc-sidebar');
+            if (sb) sb.classList.remove('open');
+          }
         });
         tocList.appendChild(div);
       });
@@ -3498,30 +3702,8 @@
       currentReaderSurfaceMode = localStorage.getItem('pdf_reader_surface_mode') || 'normal';
     } catch (e) {}
 
-    function applySepiaFilter(data, len) {
-      for (let i = 0; i < len; i += 4) {
-        const r = data[i], g = data[i + 1], b = data[i + 2];
-        data[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189) + 20);
-        data[i + 1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168) + 15);
-        data[i + 2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131) + 10);
-      }
-    }
-
-    function applyEinkFilter(data, len) {
-      for (let i = 0; i < len; i += 4) {
-        const gray = (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114);
-        let val = gray;
-        if (gray > 185) {
-          val = 245;
-        } else if (gray < 75) {
-          val = 20;
-        }
-        data[i] = val;
-        data[i + 1] = val;
-        data[i + 2] = val;
-      }
-    }
-
+    // Sepia and e-ink modes use zero-overhead GPU CSS filters via [data-surface-mode].
+    // ChromaGuard uses intelligent dark surface inversion while strictly preserving colored figures/images.
     function applyChromaGuardFilter(data, len) {
       for (let i = 0; i < len; i += 4) {
         const r = data[i], g = data[i + 1], b = data[i + 2];
@@ -3585,6 +3767,9 @@
       document.querySelectorAll('#reader-surface-group .surface-btn').forEach(btn => {
         btn.classList.toggle('active', btn.id === `btn-surface-${mode}`);
       });
+      document.querySelectorAll('.mobile-surface-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.id === `mob-surface-${mode}`);
+      });
 
       // Switching between normal, sepia and eink requires ZERO re-renders: GPU CSS filter handles it in 0ms!
       const requiresReRender = (prevMode === 'chromaguard' && mode !== 'chromaguard') || (mode === 'chromaguard');
@@ -3640,17 +3825,7 @@
         const data = await res.json();
         qrContainer.innerHTML = data.qr_svg;
         if (urlText) urlText.innerHTML = `Bağlantı: <a href="${data.url}" target="_blank" style="color:var(--accent); text-decoration:none;">${data.url}</a>`;
-
-        let remaining = data.expires_in_seconds || 120;
-        if (handoffCountdownTimer) clearInterval(handoffCountdownTimer);
-        handoffCountdownTimer = setInterval(() => {
-          remaining -= 1;
-          if (timerEl) timerEl.textContent = `Kod süresi: ${remaining} sn`;
-          if (remaining <= 0) {
-            clearInterval(handoffCountdownTimer);
-            qrContainer.innerHTML = '<div style="color:var(--muted); padding:3rem 1rem;">QR kodun süresi doldu.<br><button class="btn-empty-add" onclick="openHandoffModal()" style="margin-top:0.8rem; font-size:0.8rem;">Yenile</button></div>';
-          }
-        }, 1000);
+        if (timerEl) timerEl.textContent = 'Aynı yerel ağdaki (Wi-Fi) telefonunuzla okutarak anında okumaya devam edin.';
       } catch (err) {
         qrContainer.innerHTML = `<div style="color:var(--accent); padding:2rem 1rem;">Hata: ${esc(String(err))}</div>`;
       }

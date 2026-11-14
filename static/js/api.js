@@ -409,6 +409,7 @@
       const card = document.createElement('div');
       card.className = 'book-card uploading';
       card.dataset.tempId = tempId;
+      card.dataset.filename = filename || '';
       card.innerHTML = `
     <div class="card-cover">
       <div class="card-cat-badge" id="ph-badge-${tempId}">Hazırlanıyor</div>
@@ -427,6 +428,7 @@
       grid.prepend(card);
       return {
         card,
+        filename,
         bar: card.querySelector('.progress-bar span'),
         label: card.querySelector('.progress-label'),
         placeholder: card.querySelector(`#ph-img-${tempId}`),
@@ -586,27 +588,30 @@
 
     function handleCardStatusOutcome(holder, task, tempId, taskId) {
       if (task.status === 'success') {
-        holder.label.textContent = 'Tamamlandı!';
-        holder.bar.style.background = '#5f7a4f';
+        if (holder.label) holder.label.textContent = task.log_message || 'Tamamlandı!';
+        if (holder.bar) {
+          holder.bar.style.width = '100%';
+          holder.bar.style.background = '#5f7a4f';
+        }
         setTimeout(() => {
           removeUploadingCard(tempId, false);
           if (!completedTasks.has(taskId)) {
             completedTasks.add(taskId);
             void loadBooksFromAPI();
           }
-        }, 1000);
+        }, 700);
       } else if (task.status === 'error') {
         holder.card.classList.remove('uploading');
-        holder.label.textContent = 'Hata!';
-        holder.bar.style.background = '#b0473c';
+        if (holder.label) holder.label.textContent = task.log_message || 'Hata!';
+        if (holder.bar) holder.bar.style.background = '#b0473c';
         setTimeout(() => removeUploadingCard(tempId, true), 8000);
       }
     }
 
     function updateSingleCardProgress(holder, task, tempId, taskId) {
       const pct = Math.max(5, task.percentage || 0);
-      holder.bar.style.width = `${pct}%`;
-      holder.label.textContent = task.log_message || 'İşleniyor...';
+      if (holder.bar) holder.bar.style.width = `${pct}%`;
+      if (holder.label) holder.label.textContent = task.log_message || 'İşleniyor...';
 
       if (task.task_data) {
         applyTaskDataToCard(holder, task.task_data);
@@ -649,8 +654,46 @@
       if (!task || task.status === 'success' || task.status === 'error') return;
       if (taskToTemp.has(taskId)) return;
 
+      // If the book is already present and completed in the library, don't spawn a ghost card
+      if (Array.isArray(window.allBooks) && task.filename) {
+        const taskFn = task.filename.trim().toLowerCase();
+        const alreadyInLibrary = window.allBooks.some(b => {
+          const bDosya = (b.dosya_adi || '').trim().toLowerCase();
+          const bTitle = (b.baslik || '').trim().toLowerCase();
+          return (bDosya && (bDosya === taskFn || taskFn.includes(bDosya))) || (bTitle && bTitle === taskFn);
+        });
+        if (alreadyInLibrary) return;
+      }
+
       if (task.filename && telegramDlCards.has(task.filename)) {
         adoptTelegramTaskCard(taskId, task.filename);
+        return;
+      }
+
+      // Check if there is an existing uploadingCard created by local file upload
+      let matchedTempId = null;
+      if (task.filename) {
+        const taskFnNorm = task.filename.trim().toLowerCase();
+        for (const [tempId, holder] of uploadingCards.entries()) {
+          let alreadyBound = false;
+          for (const assignedTemp of taskToTemp.values()) {
+            if (assignedTemp === tempId) {
+              alreadyBound = true;
+              break;
+            }
+          }
+          if (alreadyBound) continue;
+
+          const holderFnNorm = (holder.filename || holder.card?.dataset?.filename || '').trim().toLowerCase();
+          if (holderFnNorm && (holderFnNorm === taskFnNorm || taskFnNorm.includes(holderFnNorm) || holderFnNorm.includes(taskFnNorm))) {
+            matchedTempId = tempId;
+            break;
+          }
+        }
+      }
+
+      if (matchedTempId) {
+        taskToTemp.set(taskId, matchedTempId);
       } else {
         createNewTaskCard(taskId, task);
       }
@@ -1018,6 +1061,8 @@
     window.handleTelegramCardSkipped = handleTelegramCardSkipped;
     window.cleanupTelegramDlCards = cleanupTelegramDlCards;
     window.fetchTasksFromAPI = fetchTasksFromAPI;
+    window.removeUploadingCard = removeUploadingCard;
+    window.uploadingCards = uploadingCards;
     window.esc = esc;
     window.encData = encData;
 

@@ -1,0 +1,56 @@
+# Python runtime
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# Environment and Secrets (CRITICAL: Do NOT commit API keys)
+.env
+config.json
+
+# Database and SQLite temporary files
+veriler/*
+!veriler/.gitkeep
+*.db
+*.db-wal
+*.db-shm
+*.sqlite3
+*.session
+*.session-journal
+
+# Digital Library storage and physical documents
+Kitaplar/
+Dijital_Kutuphane/
+Kaldirilmis_PDFler/
+thumbnails/
+*.pdf.full.txt
+*.pdf.txt
+*.epub.full.txt
+*.epub.txt
+*.lnk
+
+# Application logs
+logs/
+*.log
+
+# Testing & Coverage
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Build & Packaging
+build/
+dist/
+*.egg-info/
+
+# Editor and OS metadata
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+problems.txt

@@ -1,0 +1,41 @@
+name: Docker
+
+'on':
+  push:
+    paths:
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+      - 'requirements.txt'
+      - 'app/**'
+      - 'static/**'
+      - 'templates/**'
+  pull_request:
+    paths:
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+      - 'requirements.txt'
+      - 'app/**'
+      - 'static/**'
+      - 'templates/**'
+
+jobs:
+  docker-smoke-test:
+    name: Docker Build & Smoke Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build container
+        run: |
+          docker build -t dijital-kutuphane:test .
+
+      - name: Smoke test container
+        run: |
+          docker run -d --name test-app -p 8000:8000 -e ACCESS_PASSWORD=testpass123 dijital-kutuphane:test
+          sleep 5
+          curl --retry 5 --retry-delay 2 -f http://localhost:8000/health
+          docker stop test-app

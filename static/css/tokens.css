@@ -79,6 +79,15 @@
   --t-page:  600ms;  /* Okuyucu, hero, büyük geçişler */
 
   /* Aliases for System Backwards Compatibility */
+  --font-reading: var(--font-serif);
+  --font-title: var(--font-display);
+  --font-sans: var(--font-ui);
+  --fs-lg: 1.125rem;
+  --fs-2xl: 1.5rem;
+  --accent-light: rgba(192, 82, 46, 0.12);
+  --bg-hover: var(--paper-dark);
+  --text: var(--ink);
+
   --t-fast: var(--t-micro);
   --t-base: var(--t-ui);
   --duration-instant: 100ms;

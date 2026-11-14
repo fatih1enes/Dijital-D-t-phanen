@@ -144,7 +144,10 @@
         return;
       }
       try {
-        await fetch('/api/logs/clear', { method: 'POST' });
+        const fetcher = typeof apiFetch === 'function' ? apiFetch : fetch;
+        const res = await fetcher('/api/logs/clear', { method: 'POST' });
+        if (!res) return;
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         window.cachedLogs = [];
         window.unreadLogErrors = 0;
         updateHeaderLogsBadge();
@@ -349,7 +352,9 @@
 
     async function fetchAndRenderLogs() {
       try {
-        const res = await fetch('/api/logs?limit=800');
+        const fetcher = typeof apiFetch === 'function' ? apiFetch : fetch;
+        const res = await fetcher('/api/logs?limit=800');
+        if (!res || !res.ok) throw new Error(`HTTP ${res ? res.status : 'network'}`);
         const data = await res.json();
         window.cachedLogs = Array.isArray(data.logs) ? data.logs : [];
         updateCategoryCounters();

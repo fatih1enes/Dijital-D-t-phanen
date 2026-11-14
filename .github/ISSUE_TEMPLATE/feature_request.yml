@@ -1,0 +1,53 @@
+name: 🚀 Özellik / Geliştirme İsteği (Feature Request)
+description: Dijital Kütüphane için yeni bir özellik veya geliştirme önerin.
+title: "[FEATURE]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Dijital Kütüphane'yi geliştirmemize yardımcı olduğunuz için teşekkürler! Lütfen önerinizi detaylandırın.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Bu Özelliğin Çözdüğü Sorun Nedir?
+      description: Karşılaştığınız bir zorluk, eksiklik veya mevcut durumdaki kısıtlamayı açıklayın.
+      placeholder: Mevcut durumda ... yapmak zor/mümkün değil çünkü ...
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Önerilen Çözüm / Özellik
+      description: Nasıl çalışmasını istediğinizi ve ne tür bir çözüm hayal ettiğinizi açıklayın.
+      placeholder: Şu şekilde bir özellik eklense ve kullanıcılar ... yapabilse harika olur.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Değerlendirilen Alternatifler
+      description: Düşündüğünüz başka alternatif çözümler veya geçici yollar varsa belirtin.
+  - type: dropdown
+    id: category
+    attributes:
+      label: İlgili Alan / Modül
+      description: Bu istek hangi bileşeni ilgilendiriyor?
+      options:
+        - Kullanıcı Arayüzü / Web UI (templates, static)
+        - Masaüstü Entegrasyonu (PyWebView, System Tray)
+        - Yapay Zeka / OCR / Özetleme (Gemini, Tesseract)
+        - PDF İşleme / Sayfa Önizleme (pdfplumber, pdf2image)
+        - Arama & Filtreleme & Veritabanı
+        - OPDS / E-Kitap Okuyucu Entegrasyonu
+        - Telegram Bot
+        - Docker / Kurulum / Dağıtım
+        - Diğer
+    validations:
+      required: true
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Katkı Sağlama
+      options:
+        - label: İhtiyaç halinde bu özelliği geliştirmek ve Pull Request açmak istiyorum.

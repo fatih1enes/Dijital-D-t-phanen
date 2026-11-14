@@ -13,10 +13,12 @@
         if (!t) {
           t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
-        document.documentElement.setAttribute('data-theme', t);
+        document.documentElement.dataset.theme = t;
         var meta = document.getElementById('theme-color-meta');
         if (meta) meta.setAttribute('content', t === 'dark' ? '#161513' : '#f4f1eb');
-      } catch (e) {}
+      } catch (e) {
+        /* LocalStorage may be unavailable in private browsing mode */
+      }
     })();
   </script>
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">

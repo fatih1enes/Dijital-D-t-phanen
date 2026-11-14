@@ -1064,6 +1064,7 @@ i[class*="fa-heart"] {
 }
 
 .btn-favorite-card {
+  position: absolute;
   top: var(--sp-2);
   right: var(--sp-2);
   width: 30px;
@@ -2831,6 +2832,10 @@ button:active:not(:disabled),
 }
 
 /* ═══════════════ READER DOUBLE-BUFFERED ZOOM (GPU TRANSITION) ═══════════════ */
+.pdf-page-wrapper {
+  flex-shrink: 0;
+}
+
 #pdf-canvas-container.is-zooming .pdf-page-canvas,
 #pdf-canvas-container.is-zooming .pdf-page-wrapper {
   will-change: transform;

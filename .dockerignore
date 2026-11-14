@@ -1,0 +1,59 @@
+# Git and Documentation
+.git/
+.gitignore
+.dockerignore
+docs/
+*.md
+!README.md
+bandit_report.json
+
+# Python runtime
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# Environment and Secrets
+.env
+.env.*
+!.env.example
+config.json
+
+# Database and SQLite data files
+veriler/
+*.db
+*.db-wal
+*.db-shm
+*.sqlite3
+*.session
+*.session-journal
+
+# Document storage and cache
+Dijital_Kutuphane/
+Kaldirilmis_PDFler/
+thumbnails/
+*.pdf.full.txt
+*.pdf.txt
+*.epub.full.txt
+*.epub.txt
+
+# Application logs
+logs/
+*.log
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+tests/
+
+# Editor and OS metadata
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.agents/

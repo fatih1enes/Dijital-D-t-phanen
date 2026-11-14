@@ -558,17 +558,6 @@
       z-index: 100;
     }
 
-    header::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent 5%, var(--accent), var(--sepia-light) 70%, transparent 95%);
-      opacity: 0.7;
-    }
-
     /* Kaydırınca yukarıdan inen Kompakt Navbar */
     .compact-nav {
       position: fixed;
@@ -807,10 +796,6 @@
       will-change: transform, opacity;
     }
 
-    .book-card:hover {
-      will-change: transform;
-    }
-
     .book-card::before {
       content: '';
       position: absolute;
@@ -835,6 +820,7 @@
     }
 
     .book-card:hover {
+      will-change: transform;
       transform: translateY(-6px) scale(1.008);
       box-shadow: 0 16px 36px -6px var(--shadow-color), 0 0 0 1px var(--accent-glow);
       border-color: rgba(110,97,76, 0.35);
@@ -1078,42 +1064,6 @@
       font-weight: 300;
     }
 
-    .card-actions {
-      padding: 0.65rem 1rem;
-      display: flex;
-      gap: 0.5rem;
-      border-top: 1px solid var(--line);
-      background: rgba(250, 248, 244, 0.3);
-    }
-
-    .btn-card-read {
-      flex: 1;
-      padding: 0.65rem;
-      border-radius: var(--radius-sm);
-      background: var(--accent);
-      color: #fff;
-      text-decoration: none;
-      font-size: 0.78rem;
-      font-weight: 600;
-      text-align: center;
-      font-family: 'Geist', sans-serif;
-      transition: all var(--transition-fast);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.4rem;
-      box-shadow: 0 2px 8px var(--accent-glow);
-      border: none;
-      outline: none;
-      cursor: pointer;
-    }
-
-    .btn-card-read:hover {
-      background: var(--accent-soft);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px var(--accent-glow);
-    }
-
     .fadeOut {
       animation: fadeOutScale var(--t-ui) forwards;
     }
@@ -1128,26 +1078,6 @@
         opacity: 0;
         transform: scale(0.9);
       }
-    }
-
-    .is-selection-mode .btn-card-read {
-      pointer-events: none;
-      opacity: 0.5;
-      filter: grayscale(1);
-    }
-
-    .btn-delete-card {
-      background: none;
-      border: none;
-      color: var(--muted);
-      cursor: pointer;
-      font-size: 0.8rem;
-      padding: 0.2rem;
-      transition: background-color var(--t-ui) var(--ease-out), color var(--t-ui) var(--ease-out), border-color var(--t-ui) var(--ease-out), box-shadow var(--t-ui) var(--ease-out), color var(--t-micro);
-    }
-
-    .btn-delete-card:hover {
-      color: var(--accent);
     }
 
     /* ── DEEP SEARCH & CHROMAGUARD ── */
@@ -1170,29 +1100,6 @@
     }
     .surface-btn:hover:not(.active) {
       background: rgba(255, 255, 255, 0.1);
-    }
-
-    .network-legend {
-      position: absolute;
-      bottom: 1.5rem;
-      left: 2rem;
-      z-index: 10;
-      pointer-events: none;
-      font-family: 'Geist Mono', monospace;
-      font-size: 0.72rem;
-      background: rgba(255, 255, 255, 0.8);
-      backdrop-filter: blur(8px);
-      padding: 0.6rem 1.2rem;
-      border-radius: 6px;
-      color: var(--muted);
-      border: 1px solid var(--line);
-      box-shadow: 0 4px 15px var(--shadow-color);
-    }
-
-    [data-theme="dark"] .network-legend {
-      background: rgba(0, 0, 0, 0.6);
-      color: #ccc;
-      border-color: rgba(255, 255, 255, 0.1);
     }
 
     /* ── TABLE ── */
@@ -2382,12 +2289,6 @@
       transition-duration: var(--t-micro);
     }
 
-    .header-stats {
-      display: flex;
-      align-items: center;
-      gap: 1.2rem;
-    }
-
     .theme-toggle,
     #settings-btn {
       background: var(--paper);
@@ -2676,10 +2577,6 @@
         line-clamp: 2;
       }
 
-      .card-actions {
-        padding: 0.5rem 0.7rem;
-      }
-
       /* — Table — */
       #table-view {
         font-size: 0.8rem;
@@ -2806,10 +2703,6 @@
         font-size: 1.6rem;
       }
 
-      .header-stats {
-        gap: 0.6rem;
-      }
-
       .stat-pill {
         padding: 0.35rem 0.7rem;
         font-size: 0.68rem;
@@ -2835,11 +2728,6 @@
         padding: 0.5rem;
         gap: 0.35rem;
         border-radius: 16px;
-      }
-
-      .category-dropdown {
-        min-width: 0;
-        font-size: 0.72rem;
       }
 
       main {
@@ -2874,15 +2762,6 @@
         font-size: 0.65rem;
       }
 
-      .card-actions {
-        padding: 0.4rem 0.5rem;
-      }
-
-      .btn-card-read {
-        font-size: 0.72rem;
-        padding: 0.45rem;
-      }
-
       .card-cat-badge {
         font-size: 0.45rem;
         padding: 0.4rem 0.5rem 0.9rem;
@@ -2891,19 +2770,6 @@
       .import-zone {
         padding: 0 0.8rem;
         margin: 1.5rem auto;
-      }
-
-      .import-box {
-        padding: 2rem 1rem;
-        border-radius: 8px;
-      }
-
-      .import-box h2 {
-        font-size: 1.1rem;
-      }
-
-      .import-box p {
-        font-size: 0.82rem;
       }
 
       .modal {
@@ -3056,10 +2922,6 @@
         font-size: 1.4rem;
       }
 
-      .header-stats {
-        gap: 0.4rem;
-      }
-
       .theme-toggle,
       #settings-btn {
         width: 34px;
@@ -3093,11 +2955,6 @@
         padding: 0.4rem 0.5rem;
         font-size: 0.65rem;
       }
-
-      .category-dropdown {
-        padding: 0.45rem 1.8rem 0.45rem 0.6rem;
-        font-size: 0.68rem;
-      }
     }
 
     /* ═══════════════════════════════════════════════════════════
@@ -3118,14 +2975,6 @@
       .book-card:active {
         transform: scale(0.98);
         transition: transform 0.1s;
-      }
-
-      .btn-card-read:hover {
-        transform: none;
-      }
-
-      .btn-card-read:active {
-        transform: scale(0.97);
       }
 
       .view-btn:hover:not(.active) {
@@ -3159,33 +3008,6 @@
 
 
 
-    /* Ã¢â€â‚¬Ã¢â€â‚¬ FILTER DRAWER Ã¢â€â‚¬Ã¢â€â‚¬ */
-    .filter-drawer {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 0.8rem 4rem;
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-      flex-wrap: wrap;
-      background: rgba(232, 220, 200, 0.1);
-    }
-
-    [data-theme="dark"] .book-card {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    [data-theme="dark"] input[type="search"] {
-      background: #1e1e1e;
-      color: #fff;
-    }
-
-    [data-theme="dark"] .meta-chip {
-      background: #2a2a2a;
-      color: #f4f1eb;
-    }
-
     select {
       appearance: none;
       -webkit-appearance: none;
@@ -3207,30 +3029,6 @@
       outline: none;
       border-color: var(--accent);
       box-shadow: 0 0 0 3px var(--accent-glow);
-    }
-
-    .filter-drawer select,
-    .filter-drawer input {
-      padding: 0.5rem 0.8rem;
-      border: 1.5px solid var(--line);
-      border-radius: var(--radius-xs);
-      background: var(--paper);
-      color: var(--ink);
-      font-family: 'Geist', sans-serif;
-      font-size: 0.85rem;
-      outline: none;
-      transition: all var(--transition-fast);
-    }
-
-    .filter-drawer select:focus,
-    .filter-drawer input:focus {
-      border-color: var(--sepia);
-    }
-
-    .filter-group {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
     }
 
     /* ── SMART CHAT PANEL ── */
@@ -5060,9 +4858,6 @@
     /* ═════════════════════════════════════════════════════════════
        Premium Workspace Reader Overlay (PDF + AI Chat)
        ═════════════════════════════════════════════════════════════ */
-    /* ═════════════════════════════════════════════════════════════
-       Premium Workspace Reader Overlay (PDF + AI Chat)
-       ═════════════════════════════════════════════════════════════ */
     .workspace-reader {
       position: fixed;
       inset: 0;
@@ -5141,7 +4936,10 @@
     .workspace-book-meta {
       display: flex;
       flex-direction: column;
-      min-width: 0;
+      gap: 0.15rem;
+      min-width: 80px;
+      flex: 1 1 auto;
+      overflow: hidden;
     }
 
     .workspace-book-cat {
@@ -5167,7 +4965,42 @@
     .workspace-header-right {
       display: flex;
       align-items: center;
-      gap: 1.5rem;
+      gap: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 1150px) {
+      .workspace-header {
+        padding: 0 1rem;
+        gap: 0.75rem;
+      }
+      .workspace-header-right {
+        gap: 0.6rem;
+      }
+      .workspace-status-badge #workspace-status-text {
+        display: none;
+      }
+      .workspace-status-badge {
+        padding: 0.4rem 0.6rem;
+      }
+    }
+
+    @media (max-width: 950px) {
+      .btn-workspace-back .btn-back-text {
+        display: none;
+      }
+      .btn-workspace-back {
+        padding: 0.45rem 0.65rem;
+      }
+      .banner-content .banner-title {
+        display: none;
+      }
+      .workspace-book-banner {
+        padding: 0.45rem 0.65rem;
+      }
+      #workspace-export-btn span {
+        display: none;
+      }
     }
 
     .workspace-status-badge {
@@ -5216,6 +5049,15 @@
       height: 100%;
       background: var(--paper-dark);
       position: relative;
+      container-type: inline-size;
+      container-name: pdfpane;
+    }
+
+    .workspace-reader.is-resizing,
+    .workspace-reader.is-resizing * {
+      user-select: none !important;
+      -webkit-user-select: none !important;
+      transition: none !important;
     }
 
     .workspace-pdf-iframe {
@@ -5267,7 +5109,7 @@
     /* Chat Panel Styles */
     .workspace-chat-pane {
       width: auto;
-      min-width: 300px;
+      min-width: 280px;
       max-width: 800px;
       height: 100%;
       background: var(--paper-dark);
@@ -5276,6 +5118,17 @@
       flex-direction: column;
       flex-shrink: 1;
       z-index: 50;
+      container-type: inline-size;
+      container-name: chatpane;
+    }
+
+    @container chatpane (max-width: 340px) {
+      .btn-copy-chat .btn-copy-text {
+        display: none !important;
+      }
+      .btn-copy-chat {
+        padding: 0.35rem 0.55rem;
+      }
     }
 
     /* Book Loading Banner */
@@ -5870,32 +5723,155 @@
     .pdf-toolbar {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 0.5rem 1rem;
+      justify-content: flex-start;
+      gap: 0.35rem;
+      padding: 0.4rem 0.75rem;
       background: var(--paper);
       border-bottom: 1px solid var(--line);
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
       z-index: 10;
       flex-shrink: 0;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(110, 97, 76, 0.25) transparent;
+      scroll-behavior: smooth;
+    }
+
+    .pdf-toolbar::-webkit-scrollbar {
+      height: 3px;
+    }
+
+    .pdf-toolbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .pdf-toolbar::-webkit-scrollbar-thumb {
+      background: rgba(110, 97, 76, 0.25);
+      border-radius: 3px;
+    }
+
+    .pdf-toolbar::-webkit-scrollbar-thumb:hover {
+      background: var(--accent);
     }
 
     [data-theme="dark"] .pdf-toolbar {
       background: rgba(18, 16, 14, 0.95);
       border-bottom-color: rgba(255, 255, 255, 0.08);
       backdrop-filter: blur(10px);
+      scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    }
+
+    [data-theme="dark"] .pdf-toolbar::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
     }
 
     .pdf-toolbar-group {
       display: flex;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.35rem;
+      flex-shrink: 0;
+      min-width: max-content;
     }
 
     .pdf-toolbar-divider {
       width: 1px;
       height: 20px;
       background: var(--line);
-      margin: 0 0.5rem;
+      margin: 0 0.4rem;
+      flex-shrink: 0;
+    }
+
+    /* ── Adaptive PDF Toolbar: Container Queries (Pane Width Driven) ── */
+    @container pdfpane (max-width: 1250px) {
+      #pdf-fit-width-btn .pdf-btn-label,
+      #pdf-fit-height-btn .pdf-btn-label,
+      #pdf-spread-btn .pdf-btn-label,
+      #btn-lan-handoff .pdf-btn-label {
+        display: none !important;
+      }
+      #pdf-fit-width-btn,
+      #pdf-fit-height-btn,
+      #pdf-spread-btn,
+      #btn-lan-handoff {
+        width: 32px !important;
+        height: 32px !important;
+        padding: 0 !important;
+        justify-content: center !important;
+      }
+    }
+
+    @container pdfpane (max-width: 980px) {
+      .pdf-btn .pdf-btn-label {
+        display: none !important;
+      }
+      .pdf-btn.text-btn,
+      .pdf-btn.toggle-btn {
+        width: 32px !important;
+        height: 32px !important;
+        padding: 0 !important;
+        justify-content: center !important;
+      }
+      .pdf-toolbar {
+        gap: 0.25rem;
+        padding: 0.35rem 0.5rem;
+      }
+      .pdf-toolbar-divider {
+        margin: 0 0.25rem;
+      }
+    }
+
+    @container pdfpane (max-width: 650px) {
+      .pdf-page-indicator {
+        font-size: 0.72rem;
+      }
+      .pdf-page-indicator input {
+        width: 36px;
+        padding: 2px 4px;
+      }
+      .pdf-zoom-label {
+        font-size: 0.72rem;
+        min-width: 36px;
+      }
+      .pdf-toolbar-group {
+        gap: 0.2rem;
+      }
+      .pdf-toolbar-divider {
+        margin: 0 0.15rem;
+      }
+    }
+
+    /* ── Fallback Media Queries for Legacy Viewports ── */
+    @media (max-width: 1280px) {
+      #pdf-fit-width-btn .pdf-btn-label,
+      #pdf-fit-height-btn .pdf-btn-label,
+      #pdf-spread-btn .pdf-btn-label,
+      #btn-lan-handoff .pdf-btn-label {
+        display: none;
+      }
+      #pdf-fit-width-btn,
+      #pdf-fit-height-btn,
+      #pdf-spread-btn,
+      #btn-lan-handoff {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 1050px) {
+      .pdf-btn .pdf-btn-label {
+        display: none !important;
+      }
+      .pdf-btn.text-btn,
+      .pdf-btn.toggle-btn {
+        width: 32px !important;
+        height: 32px !important;
+        padding: 0 !important;
+        justify-content: center !important;
+      }
     }
 
     .pdf-btn {
@@ -5911,6 +5887,8 @@
       cursor: pointer;
       transition: all var(--t-micro) var(--ease-out);
       font-size: 0.85rem;
+      overflow: hidden;
+      white-space: nowrap;
     }
 
     .pdf-btn:hover {
@@ -6225,6 +6203,7 @@
 
     .pdf-page-wrapper {
       position: relative;
+      flex-shrink: 0;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
       background: #fff;
       border-radius: 4px;
@@ -6348,11 +6327,17 @@
     }
 
     .textLayer :is(span, br) {
-      color: transparent;
+      color: transparent !important;
+      -webkit-text-fill-color: transparent !important;
       position: absolute;
       white-space: pre;
       cursor: text;
       transform-origin: 0% 0%;
+    }
+
+    .textLayer span {
+      color: transparent !important;
+      -webkit-text-fill-color: transparent !important;
     }
 
     /* Text spans stay above the endOfContent selection balancer */
@@ -6367,13 +6352,29 @@
       height: 0;
     }
 
-    /* Smooth, uniform and premium selection highlight without flickering */
+    /* Smooth, uniform and premium selection highlight without flickering or duplicate text overlap */
     .textLayer ::-moz-selection {
       background: rgba(110,97,76, 0.35);
+      color: transparent !important;
+      -webkit-text-fill-color: transparent !important;
     }
 
     .textLayer ::selection {
       background: rgba(110,97,76, 0.35);
+      color: transparent !important;
+      -webkit-text-fill-color: transparent !important;
+    }
+
+    .textLayer span::-moz-selection {
+      background: rgba(110,97,76, 0.35);
+      color: transparent !important;
+      -webkit-text-fill-color: transparent !important;
+    }
+
+    .textLayer span::selection {
+      background: rgba(110,97,76, 0.35);
+      color: transparent !important;
+      -webkit-text-fill-color: transparent !important;
     }
 
     /* Prevents br elements from showing selection highlight — fixes Chrome bug */
@@ -7048,32 +7049,527 @@
       color: #fff;
     }
 
-    /* ═══════════ Mobile Responsive Workspace ═══════════ */
-    @media (max-width: 768px) {
-      .workspace-content {
-        flex-direction: column;
-      }
-      .workspace-pdf-pane {
-        flex: 1 1 55%;
-        min-height: 280px;
-        min-width: 100%;
-      }
-      .workspace-resize-handle {
-        display: none;
-      }
-      .workspace-chat-pane {
-        flex: 1 1 45%;
-        width: 100%;
-        min-width: 100%;
-        border-left: none;
-        border-top: 1px solid var(--line);
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
-      }
+    /* ── Desktop Workspace Header Overflow Prevention (Screens 860px - 1150px) ── */
+    @media (max-width: 1150px) {
       .workspace-header {
-        padding: 0 1rem;
+        padding: 0 0.8rem;
+        height: 56px;
       }
-      .workspace-book-info {
-        max-width: 160px;
+      .workspace-book-meta {
+        max-width: 220px;
+      }
+      .workspace-book-title {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 0.95rem;
+      }
+      #workspace-book-banner .banner-content {
+        display: none !important;
+      }
+      #workspace-status-badge #workspace-status-text {
+        display: none !important;
+      }
+      .btn-workspace-action span {
+        display: none !important;
+      }
+    }
+
+    .mobile-reader-top-bar,
+    .mobile-reader-bottom-bar,
+    .mobile-appearance-sheet,
+    .btn-close-mobile-sheet,
+    .mobile-chat-backdrop {
+      display: none;
+    }
+
+    /* ═════════════════════════════════════════════════════════════
+       DEDICATED PURE MOBILE E-READER EXPERIENCE
+       (Full-Screen Immersive Canvas + Floating Top/Bottom Bars + Sheets)
+       ═════════════════════════════════════════════════════════════ */
+    @media (max-width: 860px) {
+      /* Hide desktop top header and desktop toolbar entirely */
+      .workspace-reader .workspace-header {
+        display: none !important;
+      }
+      .workspace-reader .pdf-toolbar {
+        display: none !important;
+      }
+      .workspace-reader .workspace-resize-handle {
+        display: none !important;
+      }
+
+      /* Fixed fullscreen container */
+      .workspace-reader {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        overflow: hidden !important;
+        background: var(--paper) !important;
+        z-index: 5000 !important;
+      }
+
+      .workspace-content {
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        overflow: hidden !important;
+        display: block !important;
+      }
+
+      .workspace-pdf-pane {
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        flex: none !important;
+        overflow: hidden !important;
+        background: var(--paper) !important;
+      }
+
+      .custom-pdf-viewer {
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        overflow: hidden !important;
+        display: block !important;
+      }
+
+      .pdf-viewer-body {
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        overflow: hidden !important;
+      }
+
+      /* PDF Canvas Container: clean full-screen scroll with safe padding */
+      .pdf-canvas-container {
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        padding: 58px 6px 96px 6px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        -webkit-overflow-scrolling: touch !important;
+      }
+
+      .pdf-page-wrapper {
+        margin: 0 auto 16px auto !important;
+        max-width: 100% !important;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08) !important;
+        border-radius: 4px !important;
+      }
+
+      .pdf-page-wrapper canvas {
+        max-width: 100% !important;
+        height: auto !important;
+        display: block !important;
+      }
+
+      /* ── FLOATING MOBILE TOP APP BAR ── */
+      .mobile-reader-top-bar {
+        display: flex !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        height: 48px !important;
+        padding: 0 10px !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 8px !important;
+        background: color-mix(in srgb, var(--paper) 90%, transparent) !important;
+        backdrop-filter: blur(20px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+        border-bottom: 1px solid var(--line) !important;
+        z-index: 5020 !important;
+        transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease !important;
+        transform: translateY(0) !important;
+      }
+
+      .mobile-bar-btn {
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        border-radius: 50% !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border: 1px solid var(--line) !important;
+        background: var(--paper-dark) !important;
+        color: var(--ink) !important;
+        cursor: pointer !important;
+        font-size: 0.9rem !important;
+      }
+
+      .mobile-reader-title-wrap {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        text-align: center !important;
+      }
+
+      .mobile-reader-book-title {
+        font-family: 'Instrument Serif', Georgia, serif !important;
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        color: var(--ink) !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        margin: 0 !important;
+      }
+
+      .mobile-reader-top-actions {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+      }
+
+      .mobile-ai-pill {
+        border-radius: 999px !important;
+        width: auto !important;
+        padding: 0 10px !important;
+        gap: 4px !important;
+        font-size: 0.78rem !important;
+        font-weight: 700 !important;
+        background: var(--accent-light) !important;
+        color: var(--accent) !important;
+        border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent) !important;
+      }
+
+      /* ── FLOATING MOBILE BOTTOM BAR ── */
+      .mobile-reader-bottom-bar {
+        display: flex !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        padding: 6px 12px calc(6px + env(safe-area-inset-bottom, 0px)) 12px !important;
+        flex-direction: column !important;
+        gap: 4px !important;
+        background: color-mix(in srgb, var(--paper) 92%, transparent) !important;
+        backdrop-filter: blur(20px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+        border-top: 1px solid var(--line) !important;
+        box-shadow: 0 -6px 25px rgba(0, 0, 0, 0.08) !important;
+        z-index: 5020 !important;
+        transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease !important;
+        transform: translateY(0) !important;
+      }
+
+      /* Scrubber Stepper Row */
+      .mobile-scrubber-row {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        padding: 0 4px !important;
+      }
+
+      .mobile-scrub-btn {
+        width: 38px !important;
+        height: 32px !important;
+        border-radius: 8px !important;
+        border: 1px solid var(--line) !important;
+        background: var(--paper-dark) !important;
+        color: var(--ink) !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+      }
+
+      .mobile-scrub-indicator {
+        font-family: 'Geist Mono', monospace !important;
+        font-size: 0.85rem !important;
+        font-weight: 600 !important;
+        color: var(--ink) !important;
+        cursor: pointer !important;
+        padding: 4px 14px !important;
+        border-radius: 999px !important;
+        background: var(--paper-dark) !important;
+        border: 1px solid var(--line) !important;
+      }
+
+      /* Navigation Tabs Row */
+      .mobile-nav-tabs {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-around !important;
+        padding-top: 2px !important;
+      }
+
+      .mobile-tab-btn {
+        flex: 1 1 0px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 3px !important;
+        border: none !important;
+        background: transparent !important;
+        color: var(--ink) !important;
+        font-size: 0.68rem !important;
+        font-weight: 500 !important;
+        padding: 4px 0 !important;
+        cursor: pointer !important;
+      }
+
+      .mobile-tab-btn i {
+        font-size: 1.1rem !important;
+        color: var(--accent) !important;
+      }
+
+      /* ── IMMERSIVE FULL-SCREEN MODE (Controls Hidden on Tap) ── */
+      .workspace-reader.controls-hidden .mobile-reader-top-bar {
+        transform: translateY(-110%) !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
+
+      .workspace-reader.controls-hidden .mobile-reader-bottom-bar {
+        transform: translateY(115%) !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
+
+      /* ── BACKDROP & SHEETS ── */
+      .mobile-chat-backdrop {
+        display: block !important;
+        position: fixed !important;
+        inset: 0 !important;
+        background: rgba(0, 0, 0, 0.45) !important;
+        backdrop-filter: blur(2px) !important;
+        -webkit-backdrop-filter: blur(2px) !important;
+        z-index: 999990 !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      }
+
+      .mobile-chat-backdrop.active {
+        opacity: 1 !important;
+        pointer-events: auto !important;
+      }
+
+      /* AI Chat Bottom Sheet */
+      .workspace-chat-pane {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100vw !important;
+        max-width: 100vw !important;
+        min-width: 100vw !important;
+        height: 80vh !important;
+        height: 80dvh !important;
+        max-height: 85vh !important;
+        background: var(--paper) !important;
+        border-radius: 20px 20px 0 0 !important;
+        border: 1px solid var(--line) !important;
+        border-bottom: none !important;
+        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.28) !important;
+        z-index: 999999 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        transform: translateY(0) !important;
+        transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        flex: none !important;
+        overflow: hidden !important;
+      }
+
+      .workspace-chat-pane.collapsed {
+        transform: translateY(105%) !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
+
+      .btn-close-mobile-sheet {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 50% !important;
+        background: var(--paper-dark) !important;
+        border: 1px solid var(--line) !important;
+        color: var(--ink) !important;
+        cursor: pointer !important;
+      }
+
+      /* Appearance Sheet */
+      .mobile-appearance-sheet {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100vw !important;
+        max-width: 100vw !important;
+        background: var(--paper) !important;
+        border-radius: 20px 20px 0 0 !important;
+        border: 1px solid var(--line) !important;
+        border-bottom: none !important;
+        box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.3) !important;
+        z-index: 999999 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        transform: translateY(105%) !important;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        padding-bottom: max(14px, env(safe-area-inset-bottom)) !important;
+      }
+
+      .mobile-appearance-sheet.open {
+        transform: translateY(0) !important;
+      }
+
+      .mobile-sheet-drag-handle {
+        width: 40px;
+        height: 4px;
+        border-radius: 999px;
+        background: var(--muted-light);
+        margin: 8px auto 4px auto;
+      }
+
+      .mobile-sheet-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 16px 10px 16px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .mobile-sheet-title {
+        font-family: 'Instrument Serif', Georgia, serif;
+        font-size: 1.15rem;
+        font-weight: 600;
+        color: var(--ink);
+      }
+
+      .mobile-sheet-body {
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .mobile-sheet-section {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .mobile-sheet-label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+      }
+
+      .mobile-zoom-pill-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .mobile-pill-btn {
+        flex: 1;
+        height: 38px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: var(--paper-dark);
+        color: var(--ink);
+        font-size: 0.82rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+
+      .mobile-pill-btn.active {
+        background: var(--accent);
+        color: #fff;
+        border-color: var(--accent);
+      }
+
+      .mobile-surface-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+      }
+
+      .mobile-surface-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 4px;
+        border-radius: 10px;
+        border: 1.5px solid var(--line);
+        background: var(--paper-dark);
+        color: var(--ink);
+        font-size: 0.72rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .mobile-surface-btn i {
+        font-size: 1.2rem;
+      }
+
+      .mobile-surface-btn.active {
+        border-color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 12%, transparent);
+        color: var(--accent);
+      }
+
+      .mobile-sheet-action-btn {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: var(--paper-dark);
+        color: var(--ink);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      /* TOC and Notes Sidebars on Mobile: 85% width sliding drawers */
+      .pdf-notes-sidebar,
+      .pdf-toc-sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        width: 85% !important;
+        max-width: 320px !important;
+        z-index: 999999 !important;
+        box-shadow: 0 0 35px rgba(0, 0, 0, 0.3) !important;
+        transform: translateX(-105%) !important;
+        transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      }
+
+      .pdf-notes-sidebar.open,
+      .pdf-toc-sidebar.open {
+        transform: translateX(0) !important;
       }
     }
 
