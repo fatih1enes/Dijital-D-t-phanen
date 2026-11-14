@@ -374,3 +374,40 @@ class TestProductivityAndBackupEndpoints:
             assert "yedek_bilgisi.json" in names
             manifest = json.loads(zf.read("yedek_bilgisi.json").decode("utf-8"))
             assert manifest["version"] == "1.0.0"
+
+    @pytest.mark.asyncio
+    async def test_create_database_backup_pathlib_compatibility(self, temp_db, test_data_dir):
+        """create_database_backup accepts Windows short paths (~), special folder chars, and Path objects."""
+        import pathlib
+        import sqlite3
+        import sys
+
+        from app.database import _validate_backup_path, create_database_backup
+
+        backup_target = (
+            pathlib.Path(test_data_dir)
+            / "RUNNER~1"
+            / "ci+build [v1.0]"
+            / "özel (yedek)"
+            / "kutuphane_yedek.db"
+        )
+        created_path = await create_database_backup(backup_path=backup_target)
+        assert pathlib.Path(created_path).is_file()
+        assert pathlib.Path(created_path).name == "kutuphane_yedek.db"
+
+        with sqlite3.connect(created_path) as conn:
+            check = conn.execute("PRAGMA integrity_check").fetchone()
+            assert check == ("ok",)
+
+        if sys.platform == "win32":
+            win_drive_path = _validate_backup_path(
+                r"D:\a\_temp\RUNNER~1\yedekleme\kutuphane_backup.db",
+                pathlib.Path(test_data_dir),
+            )
+            assert win_drive_path.drive == "D:"
+            assert win_drive_path.name == "kutuphane_backup.db"
+
+        for bad_path in ("", "   ", "yedek.txt", "yedek\0.db", "dir/bad:name.db", "dir/bad<char>.db"):
+            with pytest.raises(ValueError):
+                _validate_backup_path(bad_path, pathlib.Path(test_data_dir))
+

@@ -4,6 +4,7 @@ import hashlib
 import os
 import re
 import uuid
+from pathlib import Path
 
 from fastapi import HTTPException
 
@@ -83,17 +84,16 @@ def looks_like_supported_document(content: bytes, filename: str) -> tuple[bool, 
     return False, "unknown"
 
 
-def is_path_within(base_dir: str, candidate_path: str) -> bool:
+def is_path_within(base_dir: str | os.PathLike[str], candidate_path: str | os.PathLike[str]) -> bool:
     """Check if candidate path is within base directory, safe against Windows drive casing and traversal attacks."""
     try:
-        base = os.path.realpath(os.path.abspath(base_dir))
-        candidate = os.path.realpath(os.path.abspath(candidate_path))
+        base = Path(base_dir).resolve(strict=False)
+        candidate = Path(candidate_path).resolve(strict=False)
         if os.name == "nt":
-            base = os.path.normcase(base)
-            candidate = os.path.normcase(candidate)
-        rel = os.path.relpath(candidate, base)
-        return rel == "." or (not rel.startswith("..") and not os.path.isabs(rel))
-    except (ValueError, OSError):
+            base = Path(os.path.normcase(str(base)))
+            candidate = Path(os.path.normcase(str(candidate)))
+        return candidate.is_relative_to(base)
+    except (ValueError, OSError, RuntimeError):
         return False
 
 

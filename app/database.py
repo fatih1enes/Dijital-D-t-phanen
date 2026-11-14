@@ -5,6 +5,7 @@ import re
 import shutil
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import aiosqlite
 
@@ -532,38 +533,61 @@ def _prune_old_backups(backup_dir: str, max_backups: int) -> None:
         log_event("database", "DEBUG", f"Backup retention check warning: {e}")
 
 
-async def create_database_backup(backup_path: str | None = None, max_backups: int = 5) -> str:
-    """Create a consistent point-in-time snapshot backup of the library database with retention policy."""
-    from datetime import datetime
+_FORBIDDEN_PATH_CHARS = frozenset('<>:"|?*')
 
-    backup_dir = os.path.join(os.path.dirname(DB_PATH), "backups")
-    os.makedirs(backup_dir, exist_ok=True)
+
+def _has_control_or_forbidden_chars(segment: str) -> bool:
+    """Return True if a resolved path segment contains control or forbidden filename characters."""
+    return any(ord(ch) < 32 or ch in _FORBIDDEN_PATH_CHARS for ch in segment)
+
+
+def _validate_backup_path(backup_path: str | os.PathLike[str] | None, backup_dir: Path) -> Path:
+    """Resolve and validate a backup database path compatibly with Windows drives and POSIX paths."""
+    from datetime import datetime
 
     if backup_path is None:
         ts_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_path = os.path.join(backup_dir, f"kutuphane_backup_{ts_str}.db")
+        target = backup_dir / f"kutuphane_backup_{ts_str}.db"
+    else:
+        raw_str = os.fspath(backup_path)
+        if not raw_str.strip() or any(ord(ch) < 32 for ch in raw_str):
+            raise ValueError("Geçersiz yedekleme dosya yolu.")
+        target = Path(raw_str)
 
-    abs_backup = os.path.abspath(backup_path)
+    try:
+        resolved = target.expanduser().resolve(strict=False)
+    except (OSError, RuntimeError, ValueError) as exc:
+        raise ValueError("Geçersiz yedekleme dosya yolu.") from exc
 
-    # Whitelist & safety validation on backup path to prevent SQL injection in VACUUM INTO
-    if "\0" in abs_backup or ";" in abs_backup or "--" in abs_backup:
-        raise ValueError("Geçersiz yedekleme dosya yolu.")
-    if not abs_backup.lower().endswith(".db"):
+    if resolved.suffix.lower() != ".db":
         raise ValueError("Yedekleme dosya uzantısı .db olmalıdır.")
-    if not re.match(r"^[\w\-:\\/ .()ğüşıöçĞÜŞİÖÇ]+$", abs_backup):
+
+    # Validate path segments after anchor/drive (e.g. 'D:\\' or '/') so Windows drive colons are permitted.
+    segments = resolved.parts[1:] if resolved.anchor else resolved.parts
+    if not segments or any(_has_control_or_forbidden_chars(seg) for seg in segments):
         raise ValueError("Yedekleme dosya yolu geçersiz karakterler içeriyor.")
 
-    if os.path.exists(abs_backup):
+    return resolved
+
+
+async def create_database_backup(backup_path: str | os.PathLike[str] | None = None, max_backups: int = 5) -> str:
+    """Create a consistent point-in-time snapshot backup of the library database with retention policy."""
+    backup_dir = Path(DB_PATH).resolve(strict=False).parent / "backups"
+    backup_dir.mkdir(parents=True, exist_ok=True)
+
+    resolved_backup = _validate_backup_path(backup_path, backup_dir)
+    resolved_backup.parent.mkdir(parents=True, exist_ok=True)
+
+    if resolved_backup.exists():
         try:
-            os.remove(abs_backup)
+            resolved_backup.unlink(missing_ok=True)
         except OSError as e:
             from app.logger import log_event
 
             log_event("database", "DEBUG", f"Previous backup file removal warning: {e}")
 
     async with aiosqlite.connect(DB_PATH) as conn:
-        clean_path = abs_backup.replace("'", "''")
-        await conn.execute(f"VACUUM INTO '{clean_path}'")
+        await conn.execute("VACUUM INTO ?", (str(resolved_backup),))
 
-    _prune_old_backups(backup_dir, max_backups)
-    return abs_backup
+    _prune_old_backups(str(backup_dir), max_backups)
+    return str(resolved_backup)
