@@ -28,8 +28,19 @@
     href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uo0qcPxh4Plq7G5tGm0rU+1SPhVotteLpBERwTkw==" crossorigin="anonymous" referrerpolicy="no-referrer">
-  <link rel="stylesheet" href="{{ url_for('static', path='/css/app.css') }}?v=2026110805">
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/app.css') }}?v=2026111503">
   <style>
+    @keyframes loginReveal {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     body {
       min-height: 100vh;
       display: flex;
@@ -42,7 +53,7 @@
       font-family: var(--font-ui);
       position: relative;
       box-sizing: border-box;
-      transition: opacity var(--t-ui) var(--ease-out);
+      transition: opacity var(--t-ui) var(--ease-editorial);
     }
 
     .login-topbar {
@@ -53,6 +64,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      animation: loginReveal 420ms var(--ease-editorial) both;
     }
 
     .login-brand-top {
@@ -88,13 +100,19 @@
       font-size: 0.95rem;
       transition: color var(--t-micro) var(--ease-out),
                   border-color var(--t-micro) var(--ease-out),
-                  background-color var(--t-micro) var(--ease-out);
+                  background-color var(--t-micro) var(--ease-out),
+                  transform var(--t-micro) var(--ease-spring-gentle);
     }
 
     .theme-toggle-btn:hover {
       border-color: var(--line-strong);
       color: var(--ink);
       background: var(--paper-dark);
+      transform: translateY(-1px);
+    }
+
+    .theme-toggle-btn:active {
+      transform: scale(0.95);
     }
 
     .login-container {
@@ -113,6 +131,7 @@
       line-height: 1.05;
       margin: 0 0 var(--sp-3) 0;
       text-wrap: balance;
+      animation: loginReveal 460ms var(--ease-editorial) 60ms both;
     }
 
     .login-desc {
@@ -122,12 +141,14 @@
       line-height: 1.55;
       margin: 0 0 var(--sp-6) 0;
       text-wrap: pretty;
+      animation: loginReveal 460ms var(--ease-editorial) 120ms both;
     }
 
     .login-form {
       display: flex;
       flex-direction: column;
       gap: var(--sp-4);
+      animation: loginReveal 480ms var(--ease-editorial) 180ms both;
     }
 
     .input-wrapper {
@@ -149,12 +170,13 @@
       box-sizing: border-box;
       outline: none;
       transition: border-color var(--t-micro) var(--ease-out),
-                  box-shadow var(--t-micro) var(--ease-out);
+                  box-shadow var(--t-micro) var(--ease-out),
+                  background-color var(--t-micro) var(--ease-out);
     }
 
     .login-input:focus {
       border-color: var(--accent);
-      box-shadow: 0 0 0 2px var(--line-strong);
+      box-shadow: 0 0 0 3px var(--border-focus);
     }
 
     @keyframes inputMicroShake {
@@ -180,11 +202,26 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: color var(--t-micro) var(--ease-out);
+      transition: color var(--t-micro) var(--ease-out),
+                  transform var(--t-micro) var(--ease-spring-gentle);
     }
 
     .toggle-pwd-btn:hover {
       color: var(--ink);
+    }
+
+    .toggle-pwd-btn:active {
+      transform: scale(0.92);
+    }
+
+    #submit-btn {
+      transition: transform var(--t-micro) var(--ease-spring-gentle),
+                  background-color var(--t-micro) var(--ease-out),
+                  opacity var(--t-micro) var(--ease-out);
+    }
+
+    #submit-btn:active:not(:disabled) {
+      transform: scale(0.985);
     }
 
     .login-footer-note {
@@ -193,11 +230,22 @@
       font-size: 0.6875rem;
       color: var(--muted);
       letter-spacing: 0.04em;
+      animation: loginReveal 480ms var(--ease-editorial) 240ms both;
     }
 
     @media (prefers-reduced-motion: reduce) {
+      .login-topbar,
+      .login-title,
+      .login-desc,
+      .login-form,
+      .login-footer-note,
       .login-input.input-error {
-        animation: none;
+        animation: none !important;
+      }
+      .theme-toggle-btn,
+      .toggle-pwd-btn,
+      #submit-btn {
+        transition: none !important;
       }
     }
   </style>

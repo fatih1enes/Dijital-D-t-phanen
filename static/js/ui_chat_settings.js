@@ -600,6 +600,8 @@
     }
 
     function switchSettingsTab(tabName) {
+      const tabsWrap = document.querySelector('#settings-modal .settings-tabs') || document.querySelector('.settings-tabs');
+      const prevBtn = tabsWrap ? tabsWrap.querySelector('.settings-tab-btn.active') : document.querySelector('.settings-tab-btn.active');
       const tabBtns = document.querySelectorAll('.settings-tab-btn');
       const tabPanes = document.querySelectorAll('.settings-tab-pane');
       tabBtns.forEach(btn => btn.classList.remove('active'));
@@ -608,6 +610,9 @@
       const activeBtn = document.getElementById(`tab-btn-${tabName}`);
       const activePane = document.getElementById(`tab-pane-${tabName}`);
       if (activeBtn) activeBtn.classList.add('active');
+      if (tabsWrap && prevBtn && activeBtn && prevBtn !== activeBtn && typeof window.animateSegmentedPill === 'function') {
+        window.animateSegmentedPill(tabsWrap, prevBtn, activeBtn);
+      }
       if (activePane) {
         activePane.getBoundingClientRect(); // Clean reflow for restartable spring slide
         activePane.classList.add('active');
@@ -795,7 +800,18 @@
 
     function toggleEditMode(hash) {
       const form = document.getElementById(`edit-form-${hash}`);
-      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+      if (!form) return;
+      const isHidden = form.style.display === 'none' || !form.style.display;
+      if (isHidden) {
+        form.style.display = 'block';
+        form.classList.remove('is-expanding');
+        void form.offsetWidth;
+        form.classList.add('is-expanding');
+        form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } else {
+        form.classList.remove('is-expanding');
+        form.style.display = 'none';
+      }
     }
 
     function saveBookEdit(hash) {
@@ -824,21 +840,48 @@
         });
     }
 
+    function closeChatPanelSmooth() {
+      const panel = document.getElementById('chat-panel');
+      if (!panel || !panel.classList.contains('active')) return;
+      if (panel._closeTimer) clearTimeout(panel._closeTimer);
+      panel.classList.remove('active');
+      panel.classList.add('closing');
+      panel._closeTimer = setTimeout(() => {
+        panel.classList.remove('closing');
+        panel._closeTimer = null;
+      }, 240);
+    }
+    window.closeChatPanelSmooth = closeChatPanelSmooth;
+
+    function closeOpsCenterSmooth() {
+      const ops = document.getElementById('ops-center');
+      const toggleBtn = document.getElementById('ops-toggle');
+      if (toggleBtn) toggleBtn.classList.remove('is-open');
+      if (!ops || !ops.classList.contains('active')) return;
+      if (ops._closeTimer) clearTimeout(ops._closeTimer);
+      ops.classList.remove('active');
+      ops.classList.add('closing');
+      ops._closeTimer = setTimeout(() => {
+        ops.classList.remove('closing');
+        ops._closeTimer = null;
+      }, 240);
+    }
+    window.closeOpsCenterSmooth = closeOpsCenterSmooth;
+
     function toggleAssistant() {
       const panel = document.getElementById('chat-panel');
       if (!panel) return;
       if (panel.classList.contains('active')) {
-        panel.classList.add('closing');
-        panel.classList.remove('active');
-        setTimeout(() => {
-          panel.classList.remove('closing');
-        }, 150);
+        closeChatPanelSmooth();
       } else {
+        if (panel._closeTimer) {
+          clearTimeout(panel._closeTimer);
+          panel._closeTimer = null;
+        }
         panel.classList.remove('closing');
         panel.classList.add('active');
-        // Mutual Exclusion: Close Process Center
-        const ops = document.getElementById('ops-center');
-        if (ops) ops.classList.remove('active');
+        // Mutual Exclusion: Smoothly fold Activity Center
+        closeOpsCenterSmooth();
 
         // Auto Focus: Focus on input when panel opens
         const input = document.getElementById('chat-input');
@@ -848,11 +891,20 @@
 
     function toggleOps() {
       const ops = document.getElementById('ops-center');
-      const isActive = ops.classList.toggle('active');
-      if (isActive) {
-        // Mutual Exclusion: Close Assistant Panel
-        const chat = document.getElementById('chat-panel');
-        if (chat) chat.classList.remove('active');
+      const toggleBtn = document.getElementById('ops-toggle');
+      if (!ops) return;
+      if (ops.classList.contains('active')) {
+        closeOpsCenterSmooth();
+      } else {
+        if (ops._closeTimer) {
+          clearTimeout(ops._closeTimer);
+          ops._closeTimer = null;
+        }
+        ops.classList.remove('closing');
+        ops.classList.add('active');
+        if (toggleBtn) toggleBtn.classList.add('is-open');
+        // Mutual Exclusion: Smoothly fold Assistant Panel
+        closeChatPanelSmooth();
         if (typeof fetchTasksFromAPI === 'function') {
           void fetchTasksFromAPI();
         }

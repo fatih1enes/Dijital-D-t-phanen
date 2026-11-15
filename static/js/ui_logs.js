@@ -173,8 +173,8 @@
 
       navigator.clipboard.writeText(text).then(() => {
         const orig = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-check" style="color:#9db58a"></i> Kopyalandı!';
-        btn.style.color = '#9db58a';
+        btn.innerHTML = '<i class="fas fa-check" style="color:var(--ok)"></i> Kopyalandı!';
+        btn.style.color = 'var(--ok)';
         setTimeout(() => {
           btn.innerHTML = orig;
           btn.style.color = '';
@@ -254,7 +254,7 @@
 
       const logs = window.cachedLogs || [];
       if (logs.length === 0) {
-        body.innerHTML = '<div style="opacity:0.6; font-size:0.8rem; color:#8f8a80; text-align:center; padding:3rem 1rem;"><i class="fas fa-terminal" style="font-size:2rem; margin-bottom:0.75rem; display:block; opacity:0.3;"></i>Henüz kaydedilmiş log bulunmuyor.</div>';
+        body.innerHTML = '<div style="opacity:0.7; font-size:0.8rem; color:var(--muted); text-align:center; padding:3rem 1rem;"><i class="fas fa-terminal" style="font-size:2rem; margin-bottom:0.75rem; display:block; opacity:0.3;"></i>Henüz kaydedilmiş log bulunmuyor.</div>';
         const counter = document.getElementById('logs-counter-info');
         if (counter) counter.textContent = '0 log';
         return;
@@ -283,7 +283,7 @@
       }
 
       if (filtered.length === 0) {
-        body.innerHTML = '<div style="opacity:0.6; font-size:0.8rem; color:#8f8a80; text-align:center; padding:3rem 1rem;"><i class="fas fa-search" style="font-size:2rem; margin-bottom:0.75rem; display:block; opacity:0.3;"></i>Seçilen filtre ve arama kriterlerine uyan log bulunamadı.</div>';
+        body.innerHTML = '<div style="opacity:0.7; font-size:0.8rem; color:var(--muted); text-align:center; padding:3rem 1rem;"><i class="fas fa-search" style="font-size:2rem; margin-bottom:0.75rem; display:block; opacity:0.3;"></i>Seçilen filtre ve arama kriterlerine uyan log bulunamadı.</div>';
         return;
       }
 
@@ -362,15 +362,21 @@
       } catch {
         // UI fallback when logs endpoint is unreachable
         const body = document.getElementById('logs-body');
-        if (body) body.innerHTML = '<div style="opacity:0.7; color:#b0473c; font-size:0.8rem; text-align:center; padding:2rem;"><i class="fas fa-exclamation-triangle"></i> Loglar yüklenirken bir ağ hatası oluştu.</div>';
+        if (body) body.innerHTML = '<div style="opacity:0.8; color:var(--danger); font-size:0.8rem; text-align:center; padding:2rem;"><i class="fas fa-exclamation-triangle"></i> Loglar yüklenirken bir ağ hatası oluştu.</div>';
       }
     }
 
     function setOpsTab(tab) {
+      const tabsWrap = document.querySelector('#ops-center .ops-tabs') || document.querySelector('.ops-tabs');
+      const prevBtn = tabsWrap ? tabsWrap.querySelector('.ops-tab-btn.active') : document.querySelector('.ops-tab-btn.active');
+      const nextBtn = document.getElementById(`ops-tab-${tab}`);
       window.opsActiveTab = tab;
       document.querySelectorAll('.ops-tab-btn').forEach(btn => {
         btn.classList.toggle('active', btn.id === `ops-tab-${tab}`);
       });
+      if (tabsWrap && prevBtn && nextBtn && prevBtn !== nextBtn && typeof window.animateSegmentedPill === 'function') {
+        window.animateSegmentedPill(tabsWrap, prevBtn, nextBtn);
+      }
       updateOpsUI(window.lastActiveTasks, window.lastArchivedTasks);
     }
     window.setOpsTab = setOpsTab;
@@ -455,7 +461,7 @@
         `).join('');
         logDetailsHtml = `
           <details class="ops-log-details" ${logs.length <= 4 ? 'open' : ''}>
-            <summary><i class="fas fa-terminal"></i> Ayrıntılı Loglar (${logs.length})</summary>
+            <summary><i class="fas fa-list-ul"></i> İşlem Günlüğü (${logs.length})</summary>
             <div class="ops-log-stream">${streamLines}</div>
           </details>
         `;
@@ -468,7 +474,7 @@
             <div class="ops-file-info">
               <div class="ops-file-title" title="${esc(t.filename)}">${esc(t.filename)}</div>
               <div class="ops-file-meta">
-                <span class="ops-phase-tag"><i class="fas fa-spinner fa-spin"></i> ${phaseLabel}</span>
+                <span class="ops-phase-tag"><i class="fas fa-circle-notch fa-spin"></i> ${phaseLabel}</span>
                 <span class="ops-time-ago">${formatTimeAgo(t.last_update)}</span>
               </div>
             </div>
@@ -501,7 +507,6 @@
           <div class="ops-status-line">
             <span class="ops-pulse-dot"></span>
             <span class="ops-status-text" title="${esc(t.log_message)}">${esc(t.log_message || 'İşlem yürütülüyor...')}</span>
-            <span class="ops-terminal-cursor">_</span>
           </div>
           ${logDetailsHtml}
         </div>
@@ -509,8 +514,9 @@
     }
 
     function renderOpsSuccessCard(t, title, author, category, bookHash) {
+      const clickAttr = bookHash ? `onclick="openBookFromOps('${bookHash}')"` : '';
       return `
-        <div class="ops-task-card is-success" id="task-${t.id}">
+        <div class="ops-task-card is-success ${bookHash ? 'is-clickable' : ''}" id="task-${t.id}" ${clickAttr}>
           <div class="ops-card-header">
             <div class="ops-file-badge success"><i class="fas fa-book"></i></div>
             <div class="ops-file-info">
@@ -525,7 +531,7 @@
           <div class="ops-result-row">
             <span class="ops-result-filename" title="${esc(t.filename)}"><i class="fas fa-file-alt"></i> ${esc(t.filename)}</span>
             ${bookHash ? `
-              <button class="ops-btn-action" onclick="openBookFromOps('${bookHash}')">
+              <button type="button" class="ops-btn-action" onclick="event.stopPropagation(); openBookFromOps('${bookHash}')">
                 <i class="fas fa-eye"></i> Kitabı Aç
               </button>
             ` : ''}
@@ -555,41 +561,45 @@
     function renderOpsEmptyState(tab) {
       if (tab === 'active') {
         return `
-          <div style="opacity:0.65; font-size:0.75rem; text-align:center; padding:3rem 1rem;">
-            <i class="fas fa-check-circle" style="font-size:1.8rem; color:#5f7a4f; margin-bottom:0.6rem; display:block; opacity:0.8;"></i>
+          <div class="ops-tab-empty">
+            <i class="fas fa-check-circle ops-tab-empty-icon is-ok"></i>
             Devam eden aktif bir işlem yok.<br>
-            <span style="font-size:0.68rem; color:#6f6a60;">Tamamlanan işlemleri görmek için "Tamamlanan" sekmesine tıklayabilirsiniz.</span>
+            <span class="ops-tab-empty-hint">Tamamlanan işlemleri görmek için "Tamamlanan" sekmesine geçebilirsiniz.</span>
           </div>
         `;
       }
       if (tab === 'completed') {
         return `
-          <div style="opacity:0.65; font-size:0.75rem; text-align:center; padding:3rem 1rem;">
-            <i class="fas fa-history" style="font-size:1.8rem; color:#6f6a60; margin-bottom:0.6rem; display:block; opacity:0.6;"></i>
+          <div class="ops-tab-empty">
+            <i class="fas fa-history ops-tab-empty-icon"></i>
             Henüz tamamlanmış işlem kaydı yok.
           </div>
         `;
       }
+      const totalCount = (window.allBooks?.length || 0);
       return `
-        <div class="ops-empty-state">
-          <div class="ops-empty-radar">
-            <div class="ops-radar-sweep"></div>
-            <i class="fas fa-microchip ops-empty-icon"></i>
+        <div class="ops-empty-state ops-editorial-empty">
+          <div class="ops-empty-folio" aria-hidden="true">
+            <svg viewBox="0 0 64 56" width="54" height="48" fill="none">
+              <path d="M8 14C16 11 25 12 32 17V47C25 43 16 42 8 44V14Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              <path d="M56 14C48 11 39 12 32 17V47C39 43 48 42 56 44V14Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              <path d="M14 23H24M14 29H22M40 23H50M40 29H48" stroke="var(--accent)" stroke-width="1.4" stroke-linecap="round"/>
+              <circle cx="32" cy="9" r="2.2" fill="var(--ok)"/>
+            </svg>
           </div>
-          <div class="ops-empty-title">Sistem Hazır ve Dinlemede</div>
+          <div class="ops-empty-title">Etkinlik Merkezi Hazır</div>
           <div class="ops-empty-desc">
-            Yapay zeka kuyruğunda bekleyen işlem yok. Arka plan servisleri canlı ve yanıt vermeye hazır.
+            Yeni bir eser eklediğinizde veya arka plan eşitlemesi başladığında işlem adımları burada zarifçe görünür.
           </div>
-          <div class="ops-empty-specs">
-            <div class="spec-item"><i class="fas fa-brain" style="color:#9a8d77;"></i> AI Motoru: <strong>Gemini 3.5 Flash-Lite</strong></div>
-            <div class="spec-item"><i class="fas fa-wifi" style="color:#5f7a4f;"></i> WebSocket: <strong>Canlı Bağlantı Aktif</strong></div>
-            <div class="spec-item"><i class="fas fa-database" style="color:#b8862f;"></i> Kütüphane: <strong>${(window.allBooks?.length || 0)} Kayıtlı Eser</strong></div>
+          <div class="ops-empty-specs ops-editorial-meta">
+            <div class="spec-item"><span class="ops-meta-dot is-ok"></span> Canlı Bağlantı: <strong>Aktif</strong></div>
+            <div class="spec-item"><span class="ops-meta-dot is-accent"></span> Koleksiyon: <strong>${totalCount} Eser</strong></div>
           </div>
           <div class="ops-empty-actions">
-            <button class="ops-quick-action" onclick="document.getElementById('file-input')?.click();">
-              <i class="fas fa-plus"></i> Kitap Yükle
+            <button type="button" class="ops-quick-action" onclick="document.getElementById('file-input')?.click();">
+              <i class="fas fa-plus"></i> Kitap Ekle
             </button>
-            <button class="ops-quick-action" onclick="if(typeof syncLibrary==='function') syncLibrary();">
+            <button type="button" class="ops-quick-action" onclick="if(typeof syncLibrary==='function') syncLibrary();">
               <i class="fas fa-sync-alt"></i> Klasörleri Tara
             </button>
           </div>
@@ -611,46 +621,103 @@
       });
     }
 
-    function _renderActiveOpsBadges(activeCount) {
+    const OPS_RING_CIRCUMFERENCE = 56.55;
+
+    function _setOpsRingProgress(pct) {
+      const ringFill = document.getElementById('ops-ring-fill');
+      if (!ringFill) return;
+      const clamped = Math.max(0, Math.min(100, Number(pct) || 0));
+      ringFill.style.strokeDasharray = String(OPS_RING_CIRCUMFERENCE);
+      ringFill.style.strokeDashoffset = (OPS_RING_CIRCUMFERENCE - (clamped / 100) * OPS_RING_CIRCUMFERENCE).toFixed(2);
+    }
+
+    function _renderActiveOpsBadges(activeCount, avgPct = 10, primarySummary = '') {
       const activePill = document.getElementById('ops-active-pill');
       const livePulse = document.getElementById('ops-live-pulse');
+      const liveTag = document.getElementById('ops-header-live-tag');
       const toggleBtn = document.getElementById('ops-toggle');
       const floatingBadge = document.getElementById('ops-badge');
+      const pillLabel = document.getElementById('ops-pill-label');
+      const pillSublabel = document.getElementById('ops-pill-sublabel');
+
+      if (window._opsCompleteTimer) {
+        clearTimeout(window._opsCompleteTimer);
+        window._opsCompleteTimer = null;
+      }
 
       if (activePill) {
         activePill.textContent = `${activeCount} Aktif`;
         activePill.className = 'ops-count-pill is-active';
       }
-      if (livePulse) livePulse.className = 'ops-live-pulse pulse-active';
+      if (livePulse) livePulse.className = 'ops-live-pulse ops-header-indicator pulse-active';
+      if (liveTag) liveTag.style.display = 'inline-flex';
+
       if (floatingBadge) {
         floatingBadge.textContent = activeCount;
-        floatingBadge.style.display = 'block';
+        floatingBadge.style.display = 'inline-flex';
       }
+      if (pillLabel) {
+        pillLabel.textContent = activeCount === 1 ? 'Eser İşleniyor' : `${activeCount} İşlem Aktif`;
+      }
+      if (pillSublabel) {
+        pillSublabel.textContent = primarySummary || `%${avgPct}`;
+      }
+      _setOpsRingProgress(avgPct);
+
       if (toggleBtn) {
-        toggleBtn.classList.add('is-processing');
-        toggleBtn.title = `${activeCount} kitap arka planda işleniyor... (Görüntülemek için tıklayın)`;
+        toggleBtn.classList.remove('is-recently-done');
+        toggleBtn.classList.add('is-processing', 'has-active-tasks');
+        toggleBtn.title = `${activeCount} eser arka planda işleniyor...`;
       }
     }
 
-    function _renderIdleOpsBadges() {
+    function _renderIdleOpsBadges(justCompleted = false) {
       const activePill = document.getElementById('ops-active-pill');
       const livePulse = document.getElementById('ops-live-pulse');
+      const liveTag = document.getElementById('ops-header-live-tag');
       const toggleBtn = document.getElementById('ops-toggle');
       const floatingBadge = document.getElementById('ops-badge');
+      const pillLabel = document.getElementById('ops-pill-label');
+      const pillSublabel = document.getElementById('ops-pill-sublabel');
 
       if (activePill) {
         activePill.textContent = 'Hazır';
         activePill.className = 'ops-count-pill';
       }
-      if (livePulse) livePulse.className = 'ops-live-pulse pulse-idle';
+      if (livePulse) livePulse.className = 'ops-live-pulse ops-header-indicator pulse-idle';
+      if (liveTag) liveTag.style.display = 'none';
       if (floatingBadge) floatingBadge.style.display = 'none';
+
+      _setOpsRingProgress(justCompleted ? 100 : 0);
+
       if (toggleBtn) {
-        toggleBtn.classList.remove('is-processing');
-        toggleBtn.title = 'İşlem Merkezi';
+        toggleBtn.classList.remove('is-processing', 'has-active-tasks');
+      }
+
+      if (justCompleted) {
+        if (window._opsCompleteTimer) clearTimeout(window._opsCompleteTimer);
+        if (toggleBtn) toggleBtn.classList.add('is-recently-done');
+        if (pillLabel) pillLabel.textContent = '✓ İşlem tamamlandı';
+        if (pillSublabel) pillSublabel.textContent = 'Kütüphaneye eklendi';
+        if (toggleBtn) toggleBtn.title = 'Etkinlik tamamlandı';
+        window._opsCompleteTimer = setTimeout(() => {
+          window._opsCompleteTimer = null;
+          _setOpsRingProgress(0);
+          if (toggleBtn) {
+            toggleBtn.classList.remove('is-recently-done');
+            toggleBtn.title = 'Etkinlik Merkezi';
+          }
+          if (pillLabel) pillLabel.textContent = 'Etkinlik Merkezi';
+          if (pillSublabel) pillSublabel.textContent = '';
+        }, 3600);
+      } else if (!window._opsCompleteTimer) {
+        if (pillLabel) pillLabel.textContent = 'Etkinlik Merkezi';
+        if (pillSublabel) pillSublabel.textContent = '';
+        if (toggleBtn) toggleBtn.title = 'Etkinlik Merkezi';
       }
     }
 
-    function updateOpsBadges(activeCount, completedCount, totalCount) {
+    function updateOpsBadges(activeCount, completedCount, totalCount, avgPct = 0, primarySummary = '') {
       const queueLabel = document.getElementById('ops-queue-label');
       const badgeAll = document.getElementById('ops-tab-badge-all');
       const badgeActive = document.getElementById('ops-tab-badge-active');
@@ -664,10 +731,14 @@
         queueLabel.textContent = activeCount > 0 ? `${activeCount} Sırada` : 'Boşta';
       }
 
+      const prevCount = window._opsPrevActiveCount || 0;
+      const justCompleted = prevCount > 0 && activeCount === 0;
+      window._opsPrevActiveCount = activeCount;
+
       if (activeCount > 0) {
-        _renderActiveOpsBadges(activeCount);
+        _renderActiveOpsBadges(activeCount, avgPct, primarySummary);
       } else {
-        _renderIdleOpsBadges();
+        _renderIdleOpsBadges(justCompleted);
       }
     }
 
@@ -691,10 +762,10 @@
         // Add section headers in 'all' view
         if (currentTab === 'all') {
           if (isActive && !hasActiveSection) {
-            html += `<div class="ops-section-divider"><i class="fas fa-bolt" style="color:#b8862f;"></i> Devam Eden İşlemler (${activeCount})</div>`;
+            html += `<div class="ops-section-divider"><i class="fas fa-bolt ops-section-icon is-warn"></i> Devam Eden İşlemler (${activeCount})</div>`;
             hasActiveSection = true;
           } else if (!isActive && !hasCompletedSection) {
-            html += `<div class="ops-section-divider" style="margin-top:0.8rem;"><i class="fas fa-check-circle" style="color:#5f7a4f;"></i> Son İşlemler (${completedCount})</div>`;
+            html += `<div class="ops-section-divider ops-section-completed"><i class="fas fa-check-circle ops-section-icon is-ok"></i> Son İşlemler (${completedCount})</div>`;
             hasCompletedSection = true;
           }
         }
@@ -741,7 +812,19 @@
       const completedCount = completedEntries.length;
       const totalCount = activeCount + completedCount;
 
-      updateOpsBadges(activeCount, completedCount, totalCount);
+      let avgPct = 0;
+      let primarySummary = '';
+      if (activeCount > 0) {
+        avgPct = Math.round(
+          activeEntries.reduce((acc, t) => acc + Math.min(99, Math.max(8, Number(t.percentage) || 10)), 0) / activeCount
+        );
+        const lead = activeEntries[0];
+        const leadName = lead.task_data?.kitap_adi || lead.filename || 'İşleniyor';
+        const shortName = leadName.length > 22 ? `${leadName.slice(0, 21)}…` : leadName;
+        primarySummary = activeCount === 1 ? `${shortName} · %${avgPct}` : `Ort. %${avgPct} tamamlandı`;
+      }
+
+      updateOpsBadges(activeCount, completedCount, totalCount, avgPct, primarySummary);
 
       // Filter based on active tab
       const currentTab = window.opsActiveTab || 'all';

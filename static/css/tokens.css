@@ -69,14 +69,21 @@
   --radius-xl: 20px;
   --radius-full: var(--r-full);
 
-  /* ═══════════════ UNIFIED MOTION SYSTEM (Apple Books / Linear Standard) ═══════════════ */
+  /* ═══════════════ UNIFIED MOTION SYSTEM (Editorial & Spatial Continuity) ═══════════════ */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);   /* Varsayılan akıcı çıkış */
+  --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1); /* Modal, çekmece ve düzen geçişleri */
+  --ease-morph: cubic-bezier(0.32, 0.72, 0, 1);     /* Kapak morph ve kapsül genişlemeleri */
+  --ease-spring-gentle: cubic-bezier(0.25, 1.25, 0.4, 1); /* Yumuşak dokunsal geri tepme */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* Büyük geçişler */
   --ease-spring: linear(0, 0.402 7.4%, 0.711 15.3%, 0.929 23.7%, 1.008 33.3%,
                         1.067 41.6%, 1.059 49.2%, 1.015 61.5%, 0.999 74%, 1);
+  --t-instant: 90ms; /* Anlık dokunuş tepkisi */
   --t-micro: 150ms;  /* Hover, renk, basma */
   --t-ui:    280ms;  /* Dropdown, panel, kart, modal */
+  --t-morph: 420ms;  /* Mekansal şekil değiştirme */
   --t-page:  600ms;  /* Okuyucu, hero, büyük geçişler */
+  --stagger-step: 28ms; /* Sıralı kart/satır gecikmesi */
 
   /* Aliases for System Backwards Compatibility */
   --font-reading: var(--font-serif);
@@ -103,9 +110,12 @@
 
 @media (prefers-reduced-motion: reduce) {
   :root {
-    --t-page: 0ms;
-    --t-ui: 150ms;
-    --t-micro: 100ms;
+    --t-instant: 0.01ms;
+    --t-page: 0.01ms;
+    --t-morph: 0.01ms;
+    --t-ui: 0.01ms;
+    --t-micro: 0.01ms;
+    --stagger-step: 0ms;
     --transition-fast: 100ms ease;
     --transition-smooth: 150ms ease;
     --transition-spring: 150ms ease;
@@ -119,6 +129,8 @@
   --paper: #f4f1eb;          /* Ana arka plan (Sıcak krem / kâğıt) */
   --surface: #ffffff;        /* Yükseltilmiş kart, modal, panel yüzeyi */
   --surface-hover: #faf8f5;  /* Yüzey hover */
+  --surface-elevated: rgba(255, 255, 255, 0.92);
+  --surface-floating: rgba(255, 255, 255, 0.86);
   --paper-dark: #ebe7de;     /* Gömülü zemin, tab bar arkası, tag'ler */
   --sepia-pale: #e5dfd2;     /* Kapak placeholder zemini */
   --card-bg: var(--surface);
@@ -145,6 +157,8 @@
   --line: #ddd8cf;           /* Birincil ince ayraç */
   --line-strong: #c4bdb0;    /* İnput, çerçeve ve aktif kenarlıklar */
   --line-subtle: #eae5dc;    /* Çok yumuşak ayırıcılar */
+  --border-subtle: rgba(31, 30, 27, 0.08);
+  --border-focus: rgba(94, 82, 63, 0.45);
 
   --color-border-subtle: var(--line);
   --color-border-medium: var(--line-strong);
@@ -171,6 +185,15 @@
   --danger-bg: #fbeceb;
   --info: #2d587b;
   --info-bg: #eaf1f8;
+
+  --status-active-bg: var(--accent-glow);
+  --status-active-text: var(--accent);
+  --status-success-bg: var(--ok-bg);
+  --status-success-text: var(--ok);
+  --status-warning-bg: var(--warn-bg);
+  --status-warning-text: var(--warn);
+  --status-danger-bg: var(--danger-bg);
+  --status-danger-text: var(--danger);
 
   --color-accent-blue: var(--info);
   --color-accent-green: var(--ok);
@@ -207,6 +230,8 @@ body.dark-mode {
   --paper: #161513;          /* Derin obsidian kömür */
   --surface: #201e1b;        /* Yükseltilmiş kart ve modal yüzeyi */
   --surface-hover: #292723;
+  --surface-elevated: rgba(32, 30, 27, 0.94);
+  --surface-floating: rgba(34, 31, 28, 0.88);
   --paper-dark: #272522;
   --sepia-pale: #292723;
   --card-bg: var(--surface);
@@ -233,6 +258,8 @@ body.dark-mode {
   --line: rgba(240, 236, 227, 0.11);
   --line-strong: rgba(240, 236, 227, 0.22);
   --line-subtle: rgba(240, 236, 227, 0.06);
+  --border-subtle: rgba(240, 236, 227, 0.08);
+  --border-focus: rgba(196, 181, 155, 0.45);
 
   --color-border-subtle: var(--line);
   --color-border-medium: var(--line-strong);
@@ -259,6 +286,15 @@ body.dark-mode {
   --danger-bg: #351b19;
   --info: #78aed9;
   --info-bg: #192633;
+
+  --status-active-bg: var(--accent-glow);
+  --status-active-text: var(--accent);
+  --status-success-bg: var(--ok-bg);
+  --status-success-text: var(--ok);
+  --status-warning-bg: var(--warn-bg);
+  --status-warning-text: var(--warn);
+  --status-danger-bg: var(--danger-bg);
+  --status-danger-text: var(--danger);
 
   /* Shadows */
   --shadow-color: rgba(0, 0, 0, 0.5);

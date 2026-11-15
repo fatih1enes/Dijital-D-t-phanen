@@ -353,8 +353,16 @@
       const formData = new FormData();
       formData.append('file', file);
 
-      // İşlem merkezini anında aç ve pollemeyi baştan tetikle
-      document.getElementById('ops-center').classList.add('active');
+      // Etkinlik Merkezi kapsülünü paneli zorla açmadan nazikçe bilgilendir
+      const opsToggle = document.getElementById('ops-toggle');
+      if (opsToggle) {
+        opsToggle.classList.remove('ops-toggle-pulse');
+        void opsToggle.offsetWidth;
+        opsToggle.classList.add('ops-toggle-pulse');
+      }
+      if (typeof fetchTasksFromAPI === 'function') {
+        void fetchTasksFromAPI();
+      }
 
       const placeholder = uploadingCards.get(tempId);
       if (placeholder) placeholder.label.textContent = 'Sunucuya aktarılıyor...';
@@ -395,7 +403,7 @@
       // İlk sayfa ön izlemesi
       renderPdfPreview(file).then(url => {
         if (url && placeholder?.placeholder) {
-          placeholder.placeholder.innerHTML = `<img src="${url}" alt="${esc(file.name)}" loading="lazy">`;
+          placeholder.placeholder.innerHTML = `<img src="${url}" alt="${esc(file.name)}" loading="lazy" onload="this.classList.add('loaded')">`;
         }
       }).catch(err => {
         console.warn("Önizleme hatası:", err);
@@ -412,13 +420,13 @@
       card.dataset.filename = filename || '';
       card.innerHTML = `
     <div class="card-cover">
-      <div class="card-cat-badge" id="ph-badge-${tempId}">Hazırlanıyor</div>
+      <div class="card-cat-badge uploading-stage-pill" id="ph-badge-${tempId}">Hazırlanıyor</div>
       <div class="card-cover-placeholder" id="ph-img-${tempId}">${BOOK_ICON_LG}<span>${esc(filename)}</span></div>
     </div>
     <div class="card-body">
       <div class="card-title" id="ph-title-${tempId}">${esc(filename)}</div>
       <div class="card-author" id="ph-author-${tempId}">Kuyruğa alındı...</div>
-      <div class="card-summary" id="ph-summary-${tempId}">PDF içeriği okunuyor ve analiz için hazırlanıyor.</div>
+      <div class="card-summary" id="ph-summary-${tempId}">Belge içeriği okunuyor ve kütüphane için analiz ediliyor.</div>
     </div>
     <div class="progress-wrap">
       <div class="progress-bar"><span style="width:5%"></span></div>
@@ -483,20 +491,20 @@
       if (!placeholder) return;
       if (placeholder.badge) {
         placeholder.badge.innerHTML = '<i class="fab fa-telegram-plane"></i> Telegram';
-        placeholder.badge.style.background = '#6e614c';
+        placeholder.badge.style.background = 'var(--accent)';
+        placeholder.badge.style.color = 'var(--on-accent)';
       }
       if (placeholder.author) {
         placeholder.author.textContent = 'Telegram Belgesi';
       }
       if (placeholder.summary) {
-        placeholder.summary.textContent = 'Belge Telegram sunucularından indiriliyor, ardından yapay zeka analizine alınacak...';
+        placeholder.summary.textContent = 'Belge Telegram sunucularından indiriliyor, ardından analiz edilecek.';
       }
       const initialPct = (percent !== undefined && percent !== null)
         ? Math.min(100, Math.max(5, Number.parseFloat(percent) || 0))
         : 10;
       if (placeholder.bar) {
         placeholder.bar.style.width = initialPct + '%';
-        placeholder.bar.style.background = 'linear-gradient(90deg, #6e614c, #9a8d77)';
       }
       if (placeholder.label) {
         placeholder.label.textContent = message || "Telegram'dan indiriliyor...";
@@ -533,12 +541,13 @@
           if (holder.badge) {
             holder.badge.innerHTML = '<i class="fas fa-check-circle"></i> Zaten Kayıtlı';
             holder.badge.style.background = 'var(--accent)';
+            holder.badge.style.color = 'var(--on-accent)';
           }
           if (holder.label) holder.label.textContent = 'Kütüphanede mevcut (Atlandı)';
           if (holder.bar) {
             holder.bar.style.width = '100%';
-            holder.bar.style.background = 'var(--accent)';
           }
+          holder.card?.classList.add('is-upload-complete');
           setTimeout(() => removeUploadingCard(tempId, false), 1200);
         } else {
           removeUploadingCard(tempId, false);
@@ -575,12 +584,13 @@
       if (td.kategori && holder.badge) {
         holder.badge.textContent = td.kategori;
         holder.badge.style.background = '';
+        holder.badge.style.color = '';
       }
       if (td.dosya_hash && holder.placeholder && !holder.coverLoaded) {
         const img = new Image();
         img.src = `/thumbnails/${td.dosya_hash}.jpg?t=${Date.now()}`;
         img.onload = () => {
-          holder.placeholder.innerHTML = `<img src="${img.src}" style="width:100%; height:100%; object-fit:cover; animation: fadeUp 0.5s ease;">`;
+          holder.placeholder.innerHTML = `<img src="${img.src}" class="loaded" alt="${esc(td.kitap_adi || '')}" style="width:100%; height:100%; object-fit:cover;">`;
           holder.coverLoaded = true;
         };
       }
@@ -588,22 +598,34 @@
 
     function handleCardStatusOutcome(holder, task, tempId, taskId) {
       if (task.status === 'success') {
-        if (holder.label) holder.label.textContent = task.log_message || 'Tamamlandı!';
+        if (holder.card) {
+          holder.card.classList.add('is-upload-complete');
+        }
+        if (holder.label) holder.label.textContent = task.log_message || 'Kütüphaneye eklendi';
         if (holder.bar) {
           holder.bar.style.width = '100%';
-          holder.bar.style.background = '#5f7a4f';
+          holder.bar.style.background = '';
         }
+
+        // Yeni eklenen kitabın grid'e vurgulu yerleşmesi için dosya/hash kaydı tut
+        window._recentlyCompletedUploads = window._recentlyCompletedUploads || new Set();
+        const completedFn = (task.filename || holder.filename || '').trim().toLowerCase();
+        const completedHash = (task.task_data?.dosya_hash || '').trim();
+        if (completedFn) window._recentlyCompletedUploads.add(completedFn);
+        if (completedHash) window._recentlyCompletedUploads.add(completedHash);
+
         setTimeout(() => {
           removeUploadingCard(tempId, false);
           if (!completedTasks.has(taskId)) {
             completedTasks.add(taskId);
             void loadBooksFromAPI();
           }
-        }, 700);
+        }, 420);
       } else if (task.status === 'error') {
         holder.card.classList.remove('uploading');
-        if (holder.label) holder.label.textContent = task.log_message || 'Hata!';
-        if (holder.bar) holder.bar.style.background = '#b0473c';
+        holder.card.classList.add('is-upload-error');
+        if (holder.label) holder.label.textContent = task.log_message || 'İşlem başarısız oldu';
+        if (holder.bar) holder.bar.style.background = '';
         setTimeout(() => removeUploadingCard(tempId, true), 8000);
       }
     }
@@ -612,6 +634,11 @@
       const pct = Math.max(5, task.percentage || 0);
       if (holder.bar) holder.bar.style.width = `${pct}%`;
       if (holder.label) holder.label.textContent = task.log_message || 'İşleniyor...';
+      if (holder.badge && pct > 10 && !holder.card?.classList.contains('is-upload-complete')) {
+        if (pct >= 85) holder.badge.textContent = 'Kataloglanıyor';
+        else if (pct >= 50) holder.badge.textContent = 'AI Analizi';
+        else holder.badge.textContent = 'Metin Okunuyor';
+      }
 
       if (task.task_data) {
         applyTaskDataToCard(holder, task.task_data);
@@ -626,7 +653,8 @@
       if (holder) {
         if (holder.badge) {
           holder.badge.innerHTML = '<i class="fab fa-telegram-plane"></i> Telegram';
-          holder.badge.style.background = '#6e614c';
+          holder.badge.style.background = 'var(--accent)';
+          holder.badge.style.color = 'var(--on-accent)';
         }
         if (holder.author) holder.author.textContent = 'Yapay Zeka Analizinde...';
       }
@@ -644,7 +672,8 @@
                      task.log_message?.includes('Telegram');
         if (isTg) {
           placeholder.badge.innerHTML = '<i class="fab fa-telegram-plane"></i> Telegram';
-          placeholder.badge.style.background = '#6e614c';
+          placeholder.badge.style.background = 'var(--accent)';
+          placeholder.badge.style.color = 'var(--on-accent)';
         }
       }
       uploadingCards.set(tempId, placeholder);

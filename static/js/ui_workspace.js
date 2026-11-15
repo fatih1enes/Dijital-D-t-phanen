@@ -316,9 +316,10 @@
       
       // Open overlay
       const readerEl = document.getElementById('workspace-reader');
-      readerEl.classList.add('open');
+      readerEl.classList.add('open', 'workspace-entering');
       readerEl.classList.remove('controls-hidden');
       document.body.classList.add('modal-open');
+      setTimeout(() => readerEl.classList.remove('workspace-entering'), 460);
 
       // Detect dedicated mobile reading mode
       const isMobileDevice = window.innerWidth <= 860 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -365,19 +366,41 @@
       const targetBook = book || (typeof allBooks !== 'undefined' ? allBooks.find(b => b.hash === cardOrCover?.dataset?.hash) : null);
       if (!targetBook) return;
 
-      const card = (cardOrCover instanceof HTMLElement) ? (cardOrCover.closest('.book-card') || cardOrCover) : document.querySelector(`.book-card[data-hash="${targetBook.hash}"]`);
-      const cover = card ? (card.querySelector('.card-cover') || card) : null;
+      const modalEl = document.getElementById('modal');
+      const fromOpenModal = Boolean(modalEl && modalEl.classList.contains('open'));
+      let originTarget = cardOrCover;
+      if (fromOpenModal && !(originTarget instanceof HTMLElement)) {
+        originTarget = modalEl.querySelector('.modal-cover-wrap');
+      }
+
+      const card = (originTarget instanceof HTMLElement)
+        ? (originTarget.closest('.book-card, .shelf-item, .modal-editorial-layout, .modal-layout') || originTarget)
+        : document.querySelector(`.book-card[data-hash="${targetBook.hash}"]`);
+      const cover = card ? (card.querySelector('.card-cover, .shelf-item-cover, .modal-cover-wrap') || card) : null;
+
+      const dismissOpenModalImmediate = () => {
+        if (!fromOpenModal || !modalEl) return;
+        if (typeof window.releaseModalFocus === 'function') window.releaseModalFocus(modalEl);
+        modalEl.classList.remove('open', 'closing');
+        modalEl.style.display = '';
+        window.currentModalHash = null;
+      };
 
       if (!document.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        if (typeof closeModalDirect === 'function') closeModalDirect();
+        dismissOpenModalImmediate();
+        if (!fromOpenModal && typeof closeModalDirect === 'function') closeModalDirect();
         openWorkspace(targetBook);
         return;
       }
 
       if (cover) cover.style.viewTransitionName = 'book-cover';
-      if (typeof closeModalDirect === 'function') closeModalDirect();
 
       const transition = document.startViewTransition(() => {
+        if (fromOpenModal) {
+          dismissOpenModalImmediate();
+        } else if (typeof closeModalDirect === 'function') {
+          closeModalDirect();
+        }
         openWorkspace(targetBook);
         const slot = document.getElementById('workspace-cover-slot');
         if (slot) slot.style.viewTransitionName = 'book-cover';

@@ -8,55 +8,30 @@ function showTelegramToast(msg, type = 'info') {
   if (!toast) {
     toast = document.createElement('div');
     toast.id = 'telegram-toast';
-    toast.style.cssText = `
-      position: fixed;
-      bottom: 30px;
-      right: 30px;
-      padding: 0.85rem 1.4rem;
-      border-radius: 50px;
-      font-family: 'Geist', sans-serif;
-      font-size: 0.9rem;
-      font-weight: 500;
-      z-index: 10000;
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      opacity: 0;
-      transform: translateY(15px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-    `;
+    toast.className = 'telegram-sync-toast';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
     document.body.appendChild(toast);
   }
 
-  const isSuccess = type === 'success';
-  const isError = type === 'error';
-  const isWarning = type === 'warning';
+  const safeType = ['success', 'error', 'warning'].includes(type) ? type : 'info';
+  const iconMap = {
+    info: 'fab fa-telegram-plane',
+    success: 'fas fa-check-circle',
+    error: 'fas fa-exclamation-triangle',
+    warning: 'fas fa-info-circle'
+  };
 
-  let bg = 'var(--accent)';
-  let icon = 'fab fa-telegram-plane';
+  toast.className = `telegram-sync-toast is-${safeType}`;
+  toast.innerHTML = `<i class="${iconMap[safeType]}"></i> <span></span>`;
+  const textSpan = toast.querySelector('span');
+  if (textSpan) textSpan.textContent = String(msg || '');
 
-  if (isSuccess) {
-    bg = 'var(--ok-bg)';
-    icon = 'fas fa-check-circle';
-  } else if (isError) {
-    bg = 'var(--danger-bg)';
-    icon = 'fas fa-exclamation-triangle';
-  } else if (isWarning) {
-    bg = 'var(--warn-bg)';
-    icon = 'fas fa-info-circle';
-  }
-
-  toast.style.background = bg;
-  toast.style.color = '#ffffff';
-  toast.innerHTML = `<i class="${icon}"></i> <span>${msg}</span>`;
-  toast.style.opacity = '1';
-  toast.style.transform = 'translateY(0)';
+  requestAnimationFrame(() => toast.classList.add('is-visible'));
 
   clearTimeout(toast._timer);
   toast._timer = setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateY(15px)';
+    toast.classList.remove('is-visible');
   }, 4500);
 }
 
@@ -323,9 +298,16 @@ async function telegramTriggerSync() {
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // Open operations center so user also sees terminal logs
-    const opsCenter = document.getElementById('ops-center');
-    if (opsCenter) opsCenter.classList.add('active');
+    // Pulse Activity Pill unobtrusively so user stays in library view
+    const opsToggle = document.getElementById('ops-toggle');
+    if (opsToggle) {
+      opsToggle.classList.remove('ops-toggle-pulse');
+      void opsToggle.offsetWidth;
+      opsToggle.classList.add('ops-toggle-pulse');
+    }
+    if (typeof fetchTasksFromAPI === 'function') {
+      fetchTasksFromAPI();
+    }
 
   } catch (err) {
     showTelegramToast(`Hata: ${err.message}`, 'error');

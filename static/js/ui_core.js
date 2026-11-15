@@ -215,18 +215,18 @@
           const inCol = bookCols.includes(String(c.id));
           const encodedName = encData(c.isim);
           return `
-      <div class="col-row" style="display:flex; justify-content:space-between; align-items:center; background:var(--paper); padding: 0.6rem 0.8rem; border-radius:12px; border: 1px solid var(--line); transition: all 0.2s; margin-bottom:0.6rem; min-width: 0;" onmouseover="this.style.borderColor='var(--sepia)'" onmouseout="this.style.borderColor='var(--line)'">
-         <div style="display:flex; align-items:center; gap: 0.8rem; min-width: 0; flex: 1;">
-            <i class="fas fa-folder" style="color: var(--sepia-light); font-size:1.1rem; flex-shrink: 0;"></i>
-            <span style="font-family:'Instrument Serif', serif; font-size:1.05rem; color:var(--ink); font-weight:600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;">${esc(c.isim)}</span>
+      <div class="col-row col-list-item">
+         <div class="col-item-meta">
+            <i class="fas fa-folder col-item-icon"></i>
+            <span class="col-item-name">${esc(c.isim)}</span>
          </div>
-         <div style="display:flex; align-items:center; gap: 0.4rem; flex-shrink: 0; margin-left: 0.8rem;">
-           <button type="button" onclick="event.stopPropagation(); toggleBookCol(${c.id}, ${!inCol})" style="background:${inCol ? 'var(--line)' : 'var(--accent)'}; color:${inCol ? 'var(--ink)' : '#fff'}; border:none; border-radius:50px; padding:0.4rem 0.9rem; font-family:'Geist', sans-serif; font-weight:600; font-size:0.75rem; cursor:pointer; transition: all 0.2s; display:flex; align-items:center; gap:0.4rem; white-space:nowrap;">
+         <div class="col-item-actions">
+           <button type="button" class="col-toggle-btn ${inCol ? 'is-in-col' : ''}" onclick="event.stopPropagation(); toggleBookCol(${c.id}, ${!inCol})">
                ${inCol ? '<i class="fas fa-minus" style="font-size:0.6rem"></i> Çıkar' : '<i class="fas fa-plus" style="font-size:0.6rem"></i> Ekle'}
            </button>
            
            <div class="custom-dropdown share-dropdown" style="position:relative; display:inline-block; min-width: auto;">
-             <button type="button" onclick="event.stopPropagation(); toggleShareMenu(this)" style="background:none; color:var(--muted); border:none; width:34px; height:34px; border-radius:50%; cursor:pointer; font-size: 1rem; transition: all 0.2s; display:flex; align-items:center; justify-content:center;" onmouseover="this.style.background='var(--line)'; this.style.color='var(--accent)';" onmouseout="this.style.background='none'; this.style.color='var(--muted)';" title="Paylaş">
+             <button type="button" class="col-icon-btn" onclick="event.stopPropagation(); toggleShareMenu(this)" title="Paylaş" aria-label="Koleksiyonu Paylaş">
                  <i class="fas fa-share-alt"></i>
              </button>
              <div class="dropdown-menu" style="right:0; top:calc(100% + 5px); min-width:180px; z-index:100; left:auto; width:auto; padding:0.4rem;">
@@ -235,7 +235,7 @@
              </div>
            </div>
 
-           <button type="button" onclick="event.stopPropagation(); deleteCollection(${c.id})" style="background:none; color:var(--muted); border:none; width:34px; height:34px; border-radius:50%; cursor:pointer; font-size: 0.9rem; transition: all 0.2s; display:flex; align-items:center; justify-content:center;" onmouseover="this.style.background='var(--danger-bg)'; this.style.color='var(--danger)'" onmouseout="this.style.background='none'; this.style.color='var(--muted)'" title="Koleksiyonu Sil">
+           <button type="button" class="col-icon-btn col-icon-btn--danger" onclick="event.stopPropagation(); deleteCollection(${c.id})" title="Koleksiyonu Sil" aria-label="Koleksiyonu Sil">
                <i class="fas fa-trash-alt"></i>
            </button>
          </div>
@@ -457,6 +457,151 @@
       }
     }
 
+    // --- MOTION FLOW HELPERS (FLIP GRID & GLIDING PILLS) ---
+    function isMotionReduced() {
+      return Boolean(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    }
+    window.isMotionReduced = isMotionReduced;
+
+    function animateSegmentedPill(containerOrSelector, prevBtn, nextBtn, prevRectOverride = null) {
+      if (isMotionReduced()) return;
+      const container = typeof containerOrSelector === 'string'
+        ? document.querySelector(containerOrSelector)
+        : containerOrSelector;
+      if (!container || !prevBtn || !nextBtn || prevBtn === nextBtn) return;
+      if (!container.contains(prevBtn) || !container.contains(nextBtn)) return;
+
+      const cRect = container.getBoundingClientRect();
+      const pRect = prevRectOverride || prevBtn.getBoundingClientRect();
+      const nRect = nextBtn.getBoundingClientRect();
+      if (!pRect.width || !nRect.width) return;
+
+      container.querySelectorAll('.seg-glide-indicator').forEach(el => el.remove());
+
+      const pill = document.createElement('span');
+      pill.className = 'seg-glide-indicator';
+      const targetStyle = window.getComputedStyle(nextBtn);
+      if (targetStyle.borderRadius) {
+        pill.style.borderRadius = targetStyle.borderRadius;
+      }
+
+      const xFrom = pRect.left - cRect.left + container.scrollLeft;
+      const yFrom = pRect.top - cRect.top + container.scrollTop;
+      const xTo = nRect.left - cRect.left + container.scrollLeft;
+      const yTo = nRect.top - cRect.top + container.scrollTop;
+
+      container.appendChild(pill);
+      nextBtn.classList.add('is-gliding-target');
+
+      let cleaned = false;
+      const cleanup = () => {
+        if (cleaned) return;
+        cleaned = true;
+        pill.remove();
+        nextBtn.classList.remove('is-gliding-target');
+      };
+
+      if (typeof pill.animate === 'function') {
+        const anim = pill.animate([
+          {
+            transform: `translate3d(${xFrom}px, ${yFrom}px, 0)`,
+            width: `${pRect.width}px`,
+            height: `${pRect.height}px`
+          },
+          {
+            transform: `translate3d(${xTo}px, ${yTo}px, 0)`,
+            width: `${nRect.width}px`,
+            height: `${nRect.height}px`
+          }
+        ], {
+          duration: 320,
+          easing: 'cubic-bezier(0.22, 1, 0.36, 1)'
+        });
+        anim.addEventListener('finish', cleanup, { once: true });
+        anim.addEventListener('cancel', cleanup, { once: true });
+        setTimeout(cleanup, 360);
+      } else {
+        cleanup();
+      }
+    }
+    window.animateSegmentedPill = animateSegmentedPill;
+
+    function captureGridPositions(grid) {
+      if (!grid || grid.style.display === 'none' || isMotionReduced()) return null;
+      const rects = new Map();
+      const cards = grid.querySelectorAll('.book-card[data-hash]');
+      const vh = window.innerHeight || 900;
+      for (let i = 0; i < cards.length; i++) {
+        const c = cards[i];
+        if (c.style.display === 'none') continue;
+        const rect = c.getBoundingClientRect();
+        if (!rect.width || rect.bottom < -180 || rect.top > vh + 240) continue;
+        rects.set(c.dataset.hash, rect);
+        if (rects.size >= 48) break;
+      }
+      return rects;
+    }
+
+    function playGridFlip(grid, prevRects, newlyRevealed = []) {
+      if (!grid || isMotionReduced()) return;
+      const vh = window.innerHeight || 900;
+      const moves = [];
+      if (prevRects && prevRects.size > 0) {
+        prevRects.forEach((oldRect, hash) => {
+          const card = cardElementsMap.get(hash) || grid.querySelector(`.book-card[data-hash="${hash}"]`);
+          if (!card || !card.isConnected || card.style.display === 'none') return;
+          const newRect = card.getBoundingClientRect();
+          if (!newRect.width) return;
+          const dx = oldRect.left - newRect.left;
+          const dy = oldRect.top - newRect.top;
+          if (Math.abs(dx) > 1.5 || Math.abs(dy) > 1.5) {
+            moves.push({ card, dx, dy });
+          }
+        });
+      }
+
+      const revealsInView = [];
+      for (let i = 0; i < newlyRevealed.length && revealsInView.length < 16; i++) {
+        const card = newlyRevealed[i];
+        if (!card || !card.isConnected || card.style.display === 'none') continue;
+        const rect = card.getBoundingClientRect();
+        if (rect.width && rect.bottom >= -120 && rect.top <= vh + 200) {
+          revealsInView.push(card);
+        }
+      }
+
+      for (const { card, dx, dy } of moves) {
+        if (card._flipAnim) card._flipAnim.cancel();
+        if (typeof card.animate === 'function') {
+          card._flipAnim = card.animate([
+            { transform: `translate3d(${dx}px, ${dy}px, 0)` },
+            { transform: 'translate3d(0, 0, 0)' }
+          ], {
+            duration: 380,
+            easing: 'cubic-bezier(0.22, 1, 0.36, 1)'
+          });
+          card._flipAnim.addEventListener('finish', () => { card._flipAnim = null; }, { once: true });
+        }
+      }
+
+      revealsInView.forEach((card, idx) => {
+        card.classList.remove('card-revealing');
+        if (card._flipAnim) card._flipAnim.cancel();
+        if (typeof card.animate === 'function') {
+          card._flipAnim = card.animate([
+            { opacity: 0, transform: 'translate3d(0, 14px, 0) scale(0.95)' },
+            { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' }
+          ], {
+            duration: 360,
+            delay: idx * 22,
+            easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+            fill: 'backwards'
+          });
+          card._flipAnim.addEventListener('finish', () => { card._flipAnim = null; }, { once: true });
+        }
+      });
+    }
+
     // --- RENDER ---
     function render() {
       const books = getFiltered();
@@ -585,6 +730,9 @@
           <button type="button" class="btn-favorite-card" onclick="event.stopPropagation(); toggleFavorite('${b.hash}')" title="${favBtnText}" aria-label="${favBtnText}">
              ${favIcon}
           </button>
+          <button type="button" class="btn-card-quick-read" title="Okumaya Başla" aria-label="Okumaya Başla">
+            <i class="fas fa-book-open"></i> <span>Oku</span>
+          </button>
           ${coverInner}
           ${progressBarHtml}
         </div>
@@ -596,6 +744,59 @@
           </div>
         </div>
       `;
+
+      const coverImg = card.querySelector('.card-cover img');
+      if (coverImg && coverImg.complete) coverImg.classList.add('loaded');
+
+      const btnQuickRead = card.querySelector('.btn-card-quick-read');
+      if (btnQuickRead) {
+        btnQuickRead.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const liveBook = (window.allBooks || []).find(x => x.hash === b.hash) || b;
+          if (typeof openBookWithMorph === 'function') openBookWithMorph(card, liveBook);
+          else if (typeof openWorkspace === 'function') openWorkspace(liveBook);
+        });
+      }
+
+      const fileKey = (b.file || '').toLowerCase().trim();
+      const recentSet = window._recentlyCompletedUploads;
+      if (recentSet && (recentSet.has(b.hash) || (fileKey && recentSet.has(fileKey)))) {
+        recentSet.delete(b.hash);
+        if (fileKey) recentSet.delete(fileKey);
+        card.classList.add('just-added');
+        setTimeout(() => card.classList.remove('just-added'), 2600);
+      }
+
+      if (window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+        let tiltRaf = null;
+        const resetTilt = () => {
+          if (tiltRaf) {
+            cancelAnimationFrame(tiltRaf);
+            tiltRaf = null;
+          }
+          card.classList.remove('is-tilting');
+          card.style.removeProperty('--card-rx');
+          card.style.removeProperty('--card-ry');
+        };
+        card.addEventListener('pointermove', (e) => {
+          if (isMotionReduced() || e.pointerType === 'touch') return;
+          if (tiltRaf) cancelAnimationFrame(tiltRaf);
+          const clientX = e.clientX;
+          const clientY = e.clientY;
+          tiltRaf = requestAnimationFrame(() => {
+            tiltRaf = null;
+            const rect = card.getBoundingClientRect();
+            if (!rect.width || !rect.height) return;
+            const px = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+            const py = Math.min(1, Math.max(0, (clientY - rect.top) / rect.height));
+            card.classList.add('is-tilting');
+            card.style.setProperty('--card-rx', `${((0.5 - py) * 5.5).toFixed(2)}deg`);
+            card.style.setProperty('--card-ry', `${((px - 0.5) * 5.5).toFixed(2)}deg`);
+          });
+        });
+        card.addEventListener('pointerleave', resetTilt);
+        card.addEventListener('pointercancel', resetTilt);
+      }
 
       let prefetchHoverTimer = null;
       card.addEventListener('pointerenter', () => {
@@ -621,7 +822,7 @@
           toggleSelectBook(card, b.hash);
         } else {
           const bookObj = (window.allBooks || []).find(x => x.hash === b.hash) || b;
-          openModal(bookObj);
+          openModal(bookObj, card);
         }
       };
 
@@ -658,6 +859,8 @@
 
       const doStagger = Boolean(window.shouldStagger) && !isSearchingOrFiltering;
       const filteredHashes = new Set(books.map(b => b.hash));
+      const prevRects = !doStagger ? captureGridPositions(grid) : null;
+      const newlyRevealed = [];
 
       // 1. Ensure cards exist in cardElementsMap for all available books
       const allBooksList = window.allBooks || books;
@@ -698,15 +901,33 @@
         }
         card.classList.toggle('selected', selectedBooks.has(b.hash));
 
-        // Controlled stagger or instant display
+        const wasHidden = card.style.display === 'none';
+
+        // Check if this card just settled from an active upload
+        const fileKey = (b.file || '').toLowerCase().trim();
+        const recentSet = window._recentlyCompletedUploads;
+        if (recentSet && (recentSet.has(b.hash) || (fileKey && recentSet.has(fileKey)))) {
+          recentSet.delete(b.hash);
+          if (fileKey) recentSet.delete(fileKey);
+          card.classList.add('just-added');
+          setTimeout(() => card.classList.remove('just-added'), 2600);
+        }
+
+        // Controlled stagger, filter reveal, or instant display
         if (doStagger) {
+          card.classList.remove('card-revealing');
           card.classList.add('stagger-in');
           const staggerIdx = i < 12 ? i : 0;
           card.style.setProperty('--card-index', staggerIdx);
-          card.style.animationDelay = i < 12 ? `${i * 30}ms` : '0ms';
+          card.style.animationDelay = i < 12 ? `${i * 28}ms` : '0ms';
         } else {
           card.classList.remove('stagger-in');
-          card.style.animation = 'none';
+          card.style.animation = '';
+          if (wasHidden) {
+            newlyRevealed.push(card);
+            card.classList.add('card-revealing');
+            setTimeout(() => card.classList.remove('card-revealing'), 320);
+          }
         }
 
         card.style.display = '';
@@ -719,6 +940,7 @@
       // Hide cards in DOM that are filtered out (Zero DOM removal, zero image reloads)
       for (const [hash, card] of cardElementsMap.entries()) {
         if (!filteredHashes.has(hash)) {
+          card.classList.remove('card-revealing');
           card.style.display = 'none';
         }
       }
@@ -731,6 +953,10 @@
           const card = cardElementsMap.get(b.hash);
           if (card) grid.appendChild(card);
         });
+      }
+
+      if (!doStagger) {
+        playGridFlip(grid, prevRects, newlyRevealed);
       }
     }
 
@@ -777,7 +1003,7 @@
           toggleSelectBook(tr, b.hash);
         } else {
           const bookObj = (window.allBooks || []).find(x => x.hash === b.hash) || b;
-          openModal(bookObj);
+          openModal(bookObj, tr);
         }
       };
 
@@ -887,7 +1113,7 @@
     }
 
     // --- MODAL ---
-    function openModal(b) {
+    function openModal(b, sourceEl = null) {
       window.currentModalHash = b.hash;
       const isAnalyzed = Boolean(b.category && b.category !== 'Bilinmeyen' && b.category !== 'Bilinmiyor' && (!b.summary || (!b.summary.includes('Analiz başarısız') && !b.summary.includes('API anahtarı yok'))));
       const keywordChips = b.keywords
@@ -900,8 +1126,8 @@
         : '';
 
       const coverHtml = b.has_cover
-        ? `<div class="modal-cover-wrap"><img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" loading="lazy" decoding="async" onload="this.classList.add('loaded')" style="width:200px; height:266px; object-fit:cover; border-radius:8px; box-shadow:0 10px 30px var(--shadow);"></div>`
-        : `<div class="modal-cover-wrap"><div class="modal-cover-empty" style="width:200px; height:266px; background:var(--sepia-pale); border-radius:8px; display:flex; align-items:center; justify-content:center;">${BOOK_ICON_LG}</div></div>`;
+        ? `<div class="modal-cover-wrap"><img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" loading="lazy" decoding="async" onload="this.classList.add('loaded')"></div>`
+        : `<div class="modal-cover-wrap"><div class="modal-cover-empty">${BOOK_ICON_LG}</div></div>`;
 
       const progress = getBookReadingProgress(b);
       const progressModalHtml = progress ? `
@@ -914,97 +1140,99 @@
       ` : '';
 
       document.getElementById('modal-content').innerHTML = `
-    <div class="modal-layout" style="display: flex; gap: 2.5rem; padding: 2.5rem;">
-      <div class="modal-left" style="width: 220px; flex-shrink: 0; display: flex; flex-direction: column; gap: 1rem;">
+    <div class="modal-layout modal-editorial-layout">
+      <div class="modal-left">
         ${coverHtml}
         ${progressModalHtml}
-        <div class="modal-actions" id="modal-actions-sidebar" style="display: flex; flex-direction: column; gap: 0.75rem;">
-          <button class="btn-modal-primary" onclick="closeModalDirect(); const target = (window.allBooks || []).find(x => x.hash === '${b.hash}'); const card = document.querySelector('.book-card[data-hash=\\'${b.hash}\\']'); if (target) { if (typeof openBookWithMorph === 'function') openBookWithMorph(card, target); else openWorkspace(target); }">
+        <div class="modal-actions" id="modal-actions-sidebar">
+          <button type="button" class="btn-modal-primary" onclick="const target = (window.allBooks || []).find(x => x.hash === '${b.hash}'); const modalCover = document.querySelector('#modal .modal-cover-wrap'); if (target) { if (typeof openBookWithMorph === 'function') openBookWithMorph(modalCover, target); else { closeModalDirect(); openWorkspace(target); } }">
             <i class="fas fa-book-open"></i> Kitabı Oku
           </button>
-          <button id="btn-modal-fav" class="${b.is_favorite ? 'btn-modal-fav is-fav' : 'btn-modal-fav'}" onclick="toggleFavorite('${b.hash}')">
+          <button type="button" id="btn-modal-fav" class="${b.is_favorite ? 'btn-modal-fav is-fav' : 'btn-modal-fav'}" onclick="toggleFavorite('${b.hash}')">
             <i class="${b.is_favorite ? 'fas' : 'far'} fa-heart"></i> ${b.is_favorite ? 'Favorilerden Çıkar' : 'Favorilere Ekle'}
           </button>
-          <button class="btn-modal-secondary" onclick="openColModal('${b.hash}')">
+          <button type="button" class="btn-modal-secondary" onclick="openColModal('${b.hash}')">
             <i class="fas fa-folder-plus"></i> Koleksiyona Ekle
           </button>
-          <button class="btn-modal-secondary btn-cover-upload">
+          <button type="button" class="btn-modal-secondary btn-cover-upload">
             <i class="fas fa-image"></i> Kapak Değiştir
             <input type="file" accept="image/*" onchange="uploadCover('${b.hash}', this)">
           </button>
-          <button class="btn-modal-secondary" onclick="toggleEditMode('${b.hash}')">
+          <button type="button" class="btn-modal-secondary" onclick="toggleEditMode('${b.hash}')">
             <i class="fas fa-edit"></i> Düzenle
           </button>
           ${!isAnalyzed ? `
-          <button class="btn-modal-secondary" id="btn-reanalyze-${b.hash}" onclick="reanalyzeBookModal('${b.hash}')" style="background:var(--warn-bg); border:1px solid var(--warn); color:var(--warn); font-weight:600;">
+          <button type="button" class="btn-modal-secondary btn-modal-reanalyze" id="btn-reanalyze-${b.hash}" onclick="reanalyzeBookModal('${b.hash}')">
             <i class="fas fa-magic"></i> Yapay Zeka ile Analiz Et
           </button>
           ` : ''}
-          <button class="btn-modal-secondary" style="font-size:0.75rem;" onclick="window.open('/api/download/${b.hash}', '_blank')">
+          <button type="button" class="btn-modal-secondary modal-btn-compact" onclick="window.open('/api/download/${b.hash}', '_blank')">
             <i class="fas fa-download"></i> PDF İndir
           </button>
-          <div class="export-dropdown-wrapper" style="position:relative; width:100%;">
-            <button class="btn-modal-secondary" style="font-size:0.75rem; width:100%; justify-content:center;" onclick="toggleExportMenu('${b.hash}')">
-              <i class="fas fa-file-export"></i> Dışa Aktar (PKM) <i class="fas fa-chevron-down" style="font-size:0.65rem; margin-left:auto;"></i>
+          <div class="export-dropdown-wrapper">
+            <button type="button" class="btn-modal-secondary modal-btn-compact modal-btn-export" onclick="toggleExportMenu('${b.hash}')">
+              <i class="fas fa-file-export"></i> Dışa Aktar (PKM) <i class="fas fa-chevron-down modal-chevron-right"></i>
             </button>
-            <div id="export-menu-${b.hash}" class="export-menu" style="display:none; position:absolute; top:100%; left:0; right:0; background:var(--color-surface, #fff); border:1px solid var(--line); border-radius:8px; box-shadow:0 8px 16px rgba(0,0,0,0.12); z-index:100; margin-top:4px; overflow:hidden;">
-              <a href="/api/books/${b.hash}/export/obsidian" download class="export-menu-item" style="display:flex; align-items:center; gap:0.5rem; padding:0.6rem 0.8rem; font-size:0.75rem; color:var(--ink); text-decoration:none; cursor:pointer;" onclick="toggleExportMenu('${b.hash}')">
-                <i class="fas fa-gem" style="color:var(--accent);"></i> Obsidian Notu (.md)
+            <div id="export-menu-${b.hash}" class="export-menu export-menu-editorial" style="display:none;">
+              <a href="/api/books/${b.hash}/export/obsidian" download class="export-menu-item" onclick="toggleExportMenu('${b.hash}')">
+                <i class="fas fa-gem"></i> Obsidian Notu (.md)
               </a>
-              <a href="/api/books/${b.hash}/export/anki" download class="export-menu-item" style="display:flex; align-items:center; gap:0.5rem; padding:0.6rem 0.8rem; font-size:0.75rem; color:var(--ink); text-decoration:none; cursor:pointer; border-top:1px solid var(--line);" onclick="toggleExportMenu('${b.hash}')">
-                <i class="fas fa-clone" style="color:var(--accent);"></i> Anki Kartları (.tsv)
+              <a href="/api/books/${b.hash}/export/anki" download class="export-menu-item" onclick="toggleExportMenu('${b.hash}')">
+                <i class="fas fa-clone"></i> Anki Kartları (.tsv)
               </a>
-              <a href="/api/books/${b.hash}/export/bibtex" download class="export-menu-item" style="display:flex; align-items:center; gap:0.5rem; padding:0.6rem 0.8rem; font-size:0.75rem; color:var(--ink); text-decoration:none; cursor:pointer; border-top:1px solid var(--line);" onclick="toggleExportMenu('${b.hash}')">
-                <i class="fas fa-graduation-cap" style="color:var(--accent);"></i> BibTeX Akademik (.bib)
+              <a href="/api/books/${b.hash}/export/bibtex" download class="export-menu-item" onclick="toggleExportMenu('${b.hash}')">
+                <i class="fas fa-graduation-cap"></i> BibTeX Akademik (.bib)
               </a>
             </div>
           </div>
           ${b.file?.toLowerCase().endsWith('.pdf') ? `
-          <button class="btn-modal-secondary" id="btn-compress-${b.hash}" style="font-size:0.75rem;" onclick="compressBook('${b.hash}')" title="Gereksiz verileri temizleyip PDF boyutunu yerel olarak küçültür">
+          <button type="button" class="btn-modal-secondary modal-btn-compact" id="btn-compress-${b.hash}" onclick="compressBook('${b.hash}')" title="Gereksiz verileri temizleyip PDF boyutunu yerel olarak küçültür">
             <i class="fas fa-compress-arrows-alt" style="color:var(--accent);"></i> Boyutu Küçült (Optimize Et)
           </button>
           ` : ''}
-          <button class="btn-modal-danger" onclick="deleteBook('${b.hash}')">
+          <button type="button" class="btn-modal-danger" onclick="deleteBook('${b.hash}')">
             <i class="fas fa-trash-alt"></i> Kaydı Sil
           </button>
         </div>
-        <div class="modal-meta-left" style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.4rem;">
-          <span class="meta-chip" style="font-size: 0.6rem; opacity: 0.85; word-break: break-all; white-space: normal; line-height: 1.4; padding: 0.5rem; text-align: center;">${esc(b.file)}</span>
+        <div class="modal-meta-left">
+          <span class="meta-chip modal-file-chip">${esc(b.file)}</span>
         </div>
       </div>
-      <div class="modal-right" style="flex: 1; border-left: 1px solid var(--line); padding-left: 2rem;">
-        <div class="modal-cat" style="color: var(--accent); font-weight: 600; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.1em;">${esc(b.category)}${b.subcat ? ' / ' + esc(b.subcat) : ''}</div>
-        <h2 class="modal-title" id="modal-book-title" style="margin-top: 0.5rem; font-size: 2.2rem; font-family:'Instrument Serif', serif; line-height: 1.1;">${esc(b.title) || 'İsimsiz Kitap'}</h2>
-        <div class="modal-author" style="margin-bottom: 1.5rem; font-style: italic; font-size: 1.1rem; color: var(--muted); opacity: 0.9;">${esc(b.author) || 'Bilinmeyen Yazar'}</div>
+      <div class="modal-right">
+        <div class="modal-cat modal-stagger-1">${esc(b.category)}${b.subcat ? ' / ' + esc(b.subcat) : ''}</div>
+        <h2 class="modal-title modal-stagger-2" id="modal-book-title">${esc(b.title) || 'İsimsiz Kitap'}</h2>
+        <div class="modal-author modal-stagger-3">${esc(b.author) || 'Bilinmeyen Yazar'}</div>
 
         ${(!b.category || b.category === 'Bilinmeyen' || b.summary?.includes('Analiz başarısız')) ? `
-          <div style="background: var(--warn-bg); border: 1px solid var(--warn); border-radius: var(--r-md); padding: 1.2rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+          <div class="modal-reanalyze-banner modal-stagger-3">
             <div>
-              <div style="font-weight: 600; color: var(--warn); font-size: 0.95rem; display:flex; align-items:center; gap:0.5rem;">
+              <div class="modal-reanalyze-title">
                 <i class="fas fa-exclamation-triangle"></i> Yapay Zeka Analizi Bekliyor
               </div>
-              <div style="font-size: 0.82rem; color: var(--muted); margin-top: 0.3rem;">
+              <div class="modal-reanalyze-desc">
                 Bu kitabın başlığı, yazarı ve özeti henüz yapay zeka ile incelenmedi.
               </div>
             </div>
-            <button id="btn-reanalyze-banner-${b.hash}" onclick="reanalyzeBookModal('${b.hash}')" class="btn btn--primary" style="white-space: nowrap;">
+            <button type="button" id="btn-reanalyze-banner-${b.hash}" onclick="reanalyzeBookModal('${b.hash}')" class="btn btn--primary" style="white-space: nowrap;">
               <i class="fas fa-wand-magic-sparkles"></i> Şimdi Analiz Et
             </button>
           </div>
         ` : ''}
         
-        <div class="modal-section-label" style="font-size: 0.65rem; letter-spacing: 0.2em; opacity: 0.6; margin-bottom: 0.5rem;">ÖZET</div>
-        <p class="modal-summary" style="text-align: left; line-height: 1.8; font-size: 1.05rem; margin-bottom: 2rem;">${esc(b.summary) || 'Özet bulunamadı.'}</p>
+        <div class="modal-editorial-section modal-stagger-4">
+          <div class="modal-section-label">ÖZET</div>
+          <p class="modal-summary">${esc(b.summary) || 'Özet bulunamadı.'}</p>
+        </div>
         
-        ${keywordChips ? `<div class="modal-section-label" style="font-size: 0.65rem; letter-spacing: 0.2em; opacity: 0.6; margin-bottom: 0.5rem;">ANAHTAR KAVRAMLAR</div><div class="modal-keywords" style="margin-bottom: 1.5rem;">${keywordChips}</div>` : ''}
+        ${keywordChips ? `<div class="modal-editorial-section modal-stagger-5"><div class="modal-section-label">ANAHTAR KAVRAMLAR</div><div class="modal-keywords">${keywordChips}</div></div>` : ''}
 
-        <div id="edit-form-${b.hash}" style="display:none; margin-top: 2rem; border-top: 1px solid var(--line); padding-top: 1.5rem;">
-          <div style="display:grid; gap: 1rem;">
+        <div id="edit-form-${b.hash}" class="modal-edit-panel" style="display:none;">
+          <div class="modal-edit-grid">
             <input type="text" id="edit-title-${b.hash}" class="modal-edit-input" value="${esc(b.title)}" placeholder="Kitap Adı" onkeydown="if(event.key==='Enter') saveBookEdit('${b.hash}')">
             <input type="text" id="edit-author-${b.hash}" class="modal-edit-input" value="${esc(b.author)}" placeholder="Yazar" onkeydown="if(event.key==='Enter') saveBookEdit('${b.hash}')">
             <textarea id="edit-summary-${b.hash}" class="modal-edit-textarea" rows="5" onkeydown="if(event.key==='Enter' && !event.shiftKey) { event.preventDefault(); saveBookEdit('${b.hash}'); }">${esc(b.summary)}</textarea>
-            <button class="btn-modal-save" onclick="saveBookEdit('${b.hash}')">DEĞİŞİKLİKLERİ KAYDET</button>
-            <button type="button" class="btn-modal-secondary" id="btn-reanalyze-edit-${b.hash}" onclick="reanalyzeBookModal('${b.hash}')" style="font-size:0.8rem; justify-content:center; opacity:0.85; border:1px dashed var(--line); margin-top:0.25rem;">
+            <button type="button" class="btn-modal-save" onclick="saveBookEdit('${b.hash}')">DEĞİŞİKLİKLERİ KAYDET</button>
+            <button type="button" class="btn-modal-secondary modal-btn-reanalyze-edit" id="btn-reanalyze-edit-${b.hash}" onclick="reanalyzeBookModal('${b.hash}')">
               <i class="fas fa-magic"></i> Yapay Zeka ile Yeniden Analiz Et (Metadata Yenile)
             </button>
           </div>
@@ -1012,9 +1240,42 @@
       </div>
     </div>
   `;
+      const modalImg = document.querySelector('#modal .modal-cover-wrap img');
+      if (modalImg && modalImg.complete) modalImg.classList.add('loaded');
+
       const modalEl = document.getElementById('modal');
-      modalEl.classList.add('open');
-      document.body.classList.add('modal-open');
+      modalEl.classList.remove('closing');
+
+      const originCover = (sourceEl instanceof HTMLElement
+        ? (sourceEl.querySelector('.card-cover, .shelf-item-cover, .td-cover img') || sourceEl)
+        : null) || document.querySelector(`.book-card[data-hash="${b.hash}"] .card-cover`);
+
+      const canMorph = Boolean(
+        document.startViewTransition &&
+        !isMotionReduced() &&
+        originCover &&
+        originCover.offsetParent !== null &&
+        !modalEl.classList.contains('open')
+      );
+
+      if (canMorph) {
+        originCover.style.viewTransitionName = 'book-cover';
+        const transition = document.startViewTransition(() => {
+          originCover.style.removeProperty('view-transition-name');
+          modalEl.classList.add('open');
+          document.body.classList.add('modal-open');
+          const mc = document.querySelector('#modal .modal-cover-wrap');
+          if (mc) mc.style.viewTransitionName = 'book-cover';
+        });
+        void transition.finished.finally(() => {
+          originCover.style.removeProperty('view-transition-name');
+          const mc = document.querySelector('#modal .modal-cover-wrap');
+          if (mc) mc.style.removeProperty('view-transition-name');
+        });
+      } else {
+        modalEl.classList.add('open');
+        document.body.classList.add('modal-open');
+      }
       activateModalFocus(modalEl);
     }
 
@@ -1150,12 +1411,44 @@
           document.body.classList.remove('modal-open');
         }
         if (typeof callback === 'function') callback();
-      }, 150);
+      }, 250);
     }
     window.closeModalWithAnimation = closeModalWithAnimation;
 
     function closeModal(e) { if (e.target === document.getElementById('modal')) closeModalDirect(); }
     function closeModalDirect() {
+      const modalEl = document.getElementById('modal');
+      const bookHash = window.currentModalHash;
+      const gridView = document.getElementById('grid-view');
+      const modalCover = modalEl ? modalEl.querySelector('.modal-cover-wrap') : null;
+      const targetCover = (bookHash && gridView && gridView.style.display !== 'none')
+        ? document.querySelector(`.book-card[data-hash="${bookHash}"] .card-cover`)
+        : null;
+
+      let targetVisible = false;
+      if (targetCover && targetCover.offsetParent !== null) {
+        const rect = targetCover.getBoundingClientRect();
+        targetVisible = rect.width > 0 && rect.bottom > 0 && rect.top < (window.innerHeight || 900);
+      }
+
+      if (modalEl && modalEl.classList.contains('open') && modalCover && targetVisible && document.startViewTransition && !isMotionReduced()) {
+        modalCover.style.viewTransitionName = 'book-cover';
+        releaseModalFocus(modalEl);
+        const transition = document.startViewTransition(() => {
+          modalEl.classList.remove('open', 'closing');
+          modalEl.style.display = '';
+          const anyModal = document.querySelector('.modal-overlay.open, .modal-overlay.closing');
+          if (!anyModal) document.body.classList.remove('modal-open');
+          window.currentModalHash = null;
+          targetCover.style.viewTransitionName = 'book-cover';
+        });
+        void transition.finished.finally(() => {
+          targetCover.style.removeProperty('view-transition-name');
+          modalCover.style.removeProperty('view-transition-name');
+        });
+        return;
+      }
+
       closeModalWithAnimation('modal', () => {
         window.currentModalHash = null;
       });
@@ -1271,8 +1564,13 @@
       let successCount = 0;
       const failedBooks = [];
 
-      // Open process center
-      document.getElementById('ops-center').classList.add('active');
+      // Unobtrusive feedback in Activity Pill instead of forcing drawer open
+      const opsToggle = document.getElementById('ops-toggle');
+      if (opsToggle) {
+        opsToggle.classList.remove('ops-toggle-pulse');
+        void opsToggle.offsetWidth;
+        opsToggle.classList.add('ops-toggle-pulse');
+      }
 
       const results = await Promise.allSettled(toDelete.map(async (hash) => {
         const book = (window.allBooks || []).find(b => b.hash === hash);
@@ -1482,6 +1780,7 @@
           el.classList.remove('view-fade-in');
           el.getBoundingClientRect(); // Force reflow to cleanly restart the entrance animation
           el.classList.add('view-fade-in');
+          el.addEventListener('animationend', () => el.classList.remove('view-fade-in'), { once: true });
         } else {
           el.style.display = 'none';
           el.classList.remove('view-fade-in');
@@ -1491,9 +1790,18 @@
       const btnGrid = document.getElementById('btn-grid');
       const btnTable = document.getElementById('btn-table');
       const btnStats = document.getElementById('btn-stats');
+      const viewToggle = document.querySelector('.view-toggle');
+      const prevBtn = viewToggle ? viewToggle.querySelector('.view-btn.active') : null;
+      const viewBtnMap = { grid: btnGrid, table: btnTable, stats: btnStats };
+      const nextBtn = viewBtnMap[v] || null;
+
       if (btnGrid) btnGrid.classList.toggle('active', v === 'grid');
       if (btnTable) btnTable.classList.toggle('active', v === 'table');
       if (btnStats) btnStats.classList.toggle('active', v === 'stats');
+
+      if (viewToggle && prevBtn && nextBtn && prevBtn !== nextBtn) {
+        animateSegmentedPill(viewToggle, prevBtn, nextBtn);
+      }
 
       window.shouldStagger = true;
       if (v === 'table') {
@@ -1537,11 +1845,13 @@
       const grid = document.getElementById('grid-view');
       if (!window.dragSrcEl || !grid?.contains(window.dragSrcEl)) return;
       if (window.dragSrcEl !== this) {
+        const prevRects = captureGridPositions(grid);
         const cards = [...grid.querySelectorAll('.book-card[data-hash]')];
         const fromIdx = cards.indexOf(window.dragSrcEl);
         const toIdx = cards.indexOf(this);
         if (fromIdx < toIdx) this.after(window.dragSrcEl);
         else this.before(window.dragSrcEl);
+        playGridFlip(grid, prevRects, []);
         // Sıralamayı localStorage'a kaydet
         const newOrder = [...grid.querySelectorAll('.book-card[data-hash]')].map(c => c.dataset.hash);
         window.customOrder = newOrder;
@@ -1722,20 +2032,20 @@
     function renderDeepSearchResults(results) {
       return results.map(r => {
         const coverHtml = r.has_cover
-          ? `<img src="/thumbnails/${r.dosya_hash}.jpg" style="width:48px; height:64px; object-fit:cover; border-radius:6px; flex-shrink:0;">`
-          : `<div style="width:48px; height:64px; background:var(--sepia-pale); border-radius:6px; display:flex; align-items:center; justify-content:center; flex-shrink:0;"><i class="fas fa-book" style="color:var(--muted);"></i></div>`;
+          ? `<img src="/thumbnails/${r.dosya_hash}.jpg" class="deep-search-thumb" alt="${esc(r.kitap_adi)}">`
+          : `<div class="deep-search-thumb-empty"><i class="fas fa-book"></i></div>`;
         return `
-          <div class="deep-search-card" style="display:flex; gap:1rem; padding:0.9rem 1.1rem; background:var(--paper); border:1px solid var(--line); border-radius:10px; align-items:center; transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--line)'">
+          <div class="deep-search-card">
             ${coverHtml}
-            <div style="flex:1; min-width:0;">
-              <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem;">
-                <span style="font-weight:700; color:var(--ink); font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(r.kitap_adi)}</span>
-                <span style="font-size:0.75rem; color:var(--muted);">— ${esc(r.yazar)}</span>
-                <span class="badge" style="background:var(--accent-glow); color:var(--accent); font-size:0.72rem; padding:1px 6px; border-radius:4px; font-weight:600; margin-left:auto;">Sayfa ${r.sayfa_no}</span>
+            <div class="deep-search-body">
+              <div class="deep-search-meta">
+                <span class="deep-search-title">${esc(r.kitap_adi)}</span>
+                <span class="deep-search-author">— ${esc(r.yazar)}</span>
+                <span class="badge deep-search-page-badge">Sayfa ${r.sayfa_no}</span>
               </div>
-              <div class="deep-snippet" style="font-size:0.83rem; color:var(--text); line-height:1.45; font-family:var(--font-serif, serif);">${sanitizeDeepSnippet(r.snippet)}</div>
+              <div class="deep-snippet deep-search-snippet">${sanitizeDeepSnippet(r.snippet)}</div>
             </div>
-            <button type="button" class="btn-empty-add" onclick="openWorkspaceAtPage('${r.dosya_hash}', ${r.sayfa_no})" style="padding:0.45rem 0.85rem; font-size:0.78rem; white-space:nowrap; margin-left:0.5rem; flex-shrink:0;">
+            <button type="button" class="btn-empty-add deep-search-goto-btn" onclick="openWorkspaceAtPage('${r.dosya_hash}', ${r.sayfa_no})">
               Sayfaya Git <i class="fas fa-arrow-right" style="margin-left:4px;"></i>
             </button>
           </div>
@@ -1914,20 +2224,20 @@
           const mb = b.dosya_boyutu ? (b.dosya_boyutu / (1024 * 1024)).toFixed(2) + ' MB' : 'Bilinmiyor';
           const p = b.sayfa_sayisi ? `${b.sayfa_sayisi} sayfa` : '';
           return `
-            <div class="dup-item-card" id="dup-item-${b.dosya_hash}" style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1rem; background:var(--paper-dark); border:1px solid var(--line); border-radius:10px; gap:0.8rem;">
-              <div style="min-width:0; flex:1;">
-                <div style="font-weight:600; font-size:0.88rem; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(b.kitap_adi || 'Başlıksız')}</div>
-                <div style="font-size:0.76rem; color:var(--muted); display:flex; gap:0.6rem; margin-top:2px; flex-wrap:wrap;">
+            <div class="dup-item-card duplicate-item-row" id="dup-item-${b.dosya_hash}">
+              <div class="duplicate-item-meta">
+                <div class="duplicate-item-title">${esc(b.kitap_adi || 'Başlıksız')}</div>
+                <div class="duplicate-item-sub">
                   <span><i class="fas fa-file-alt"></i> ${mb}</span>
                   ${p ? `<span><i class="fas fa-bookmark"></i> ${p}</span>` : ''}
-                  <span style="font-family:var(--font-mono, monospace); font-size:0.7rem; opacity:0.7;">#${b.dosya_hash.substring(0, 10)}</span>
+                  <span class="duplicate-item-hash">#${b.dosya_hash.substring(0, 10)}</span>
                 </div>
               </div>
-              <div style="display:flex; gap:0.4rem; flex-shrink:0;">
-                <button type="button" class="btn-sm" onclick="openWorkspaceAtPage('${b.dosya_hash}', 1)" style="padding:0.4rem 0.7rem; font-size:0.76rem; background:var(--paper); border:1px solid var(--line); border-radius:6px; cursor:pointer;" title="Kitabı Aç">
+              <div class="duplicate-item-actions">
+                <button type="button" class="btn-sm duplicate-btn-inspect" onclick="openWorkspaceAtPage('${b.dosya_hash}', 1)" title="Kitabı Aç">
                   <i class="fas fa-eye"></i> İncele
                 </button>
-                <button type="button" class="btn-sm" onclick="deleteDuplicateBook('${b.dosya_hash}', this, 'dup-group-${gIdx}')" style="padding:0.4rem 0.7rem; font-size:0.76rem; background:rgba(176,71,60,0.12); color:#b0473c; border:1px solid rgba(176,71,60,0.25); border-radius:6px; cursor:pointer; font-weight:600;" title="Bu kopyayı sil">
+                <button type="button" class="btn-sm duplicate-btn-delete" onclick="deleteDuplicateBook('${b.dosya_hash}', this, 'dup-group-${gIdx}')" title="Bu kopyayı sil">
                   <i class="fas fa-trash"></i> Kopyayı Sil
                 </button>
               </div>
@@ -1936,17 +2246,17 @@
         }).join('');
 
         return `
-          <div class="dup-group-card" id="dup-group-${gIdx}" style="border:1px solid var(--line); border-radius:14px; padding:1.1rem; background:var(--paper); box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
-              <div style="font-weight:700; font-size:0.95rem; color:var(--ink); display:flex; align-items:center; gap:0.5rem;">
-                <i class="fas fa-clone" style="color:var(--accent);"></i> ${esc(g.title || 'Mükerrer Grup')}
-                <span style="font-size:0.78rem; font-weight:400; color:var(--muted);">${g.author ? `— ${esc(g.author)}` : ''}</span>
+          <div class="dup-group-card duplicate-group-card" id="dup-group-${gIdx}">
+            <div class="duplicate-group-header">
+              <div class="duplicate-group-title">
+                <i class="fas fa-clone"></i> ${esc(g.title || 'Mükerrer Grup')}
+                <span class="duplicate-group-author">${g.author ? `— ${esc(g.author)}` : ''}</span>
               </div>
-              <span class="badge" style="background:rgba(184,134,47,0.12); color:#b8862f; font-size:0.72rem; padding:2px 8px; border-radius:6px; font-weight:600;">
+              <span class="badge duplicate-count-badge">
                 ${g.items.length} Kopya Bulundu (${esc(g.reason || 'Benzerlik')})
               </span>
             </div>
-            <div style="display:flex; flex-direction:column; gap:0.5rem;">
+            <div class="duplicate-group-list">
               ${itemsHtml}
             </div>
           </div>
