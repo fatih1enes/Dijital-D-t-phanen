@@ -1372,12 +1372,17 @@
     // ═══════════════ F2: UNIVERSAL FOCUS TRAP & ACCESSIBILITY ═══════════════
     let modalFocusStack = [];
 
+    function _getModalFocusables(modalEl) {
+      if (!modalEl) return [];
+      return Array.from(modalEl.querySelectorAll(
+        'button:not([disabled]), [href], input:not([disabled]):not([type="hidden"]):not([type="file"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )).filter(el => el.offsetParent !== null || window.getComputedStyle(el).display !== 'none');
+    }
+
     function handleModalTabKey(e) {
       if (e.key !== 'Tab') return;
       const modalEl = this;
-      const focusables = Array.from(modalEl.querySelectorAll(
-        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      )).filter(el => el.offsetParent !== null || window.getComputedStyle(el).display !== 'none');
+      const focusables = _getModalFocusables(modalEl);
 
       if (focusables.length === 0) {
         e.preventDefault();
@@ -1407,13 +1412,19 @@
       const prevActive = document.activeElement;
       modalFocusStack.push({ modal: modalEl, returnEl: prevActive });
 
-      const focusables = Array.from(modalEl.querySelectorAll(
-        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      )).filter(el => el.offsetParent !== null || window.getComputedStyle(el).display !== 'none');
+      const focusables = _getModalFocusables(modalEl);
 
       if (focusables.length > 0) {
+        const nonTextInputTypes = ['file', 'hidden', 'checkbox', 'radio', 'button', 'submit', 'range', 'color'];
         setTimeout(() => {
-          const firstInput = focusables.find(el => (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') && !el.readOnly);
+          const firstInput = focusables.find(el => {
+            if (el.readOnly) return false;
+            if (el.tagName === 'TEXTAREA') return true;
+            if (el.tagName === 'INPUT') {
+              return !nonTextInputTypes.includes((el.type || 'text').toLowerCase());
+            }
+            return false;
+          });
           if (firstInput) {
             firstInput.focus();
           } else {
@@ -1820,6 +1831,8 @@
     }
 
     document.addEventListener('keydown', e => {
+      if (e.defaultPrevented) return;
+
       // If typing in an input, textarea, or contentEditable, protect shortcuts
       const isInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName) || e.target.isContentEditable;
       if (isInput) {
@@ -1828,6 +1841,11 @@
             e.preventDefault();
             e.target.blur();
             closeChatPanelSmooth({ restoreFocus: true });
+            return;
+          }
+          if (e.target.closest?.('.modal-overlay.open, #ops-center.active, #chat-panel.active') || isModalOrDropdownOpen()) {
+            e.preventDefault();
+            handleEscapeKeyPress();
             return;
           }
           e.target.blur();

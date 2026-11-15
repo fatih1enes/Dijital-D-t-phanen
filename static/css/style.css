@@ -3851,13 +3851,13 @@
     }
 
     .ops-toggle.is-processing {
-      border-color: var(--ok);
-      animation: opsPulse 2s infinite ease-in-out;
+      border-color: var(--accent);
+      animation: none;
     }
 
     .ops-toggle.is-processing i {
-      animation: opsSpin 4s linear infinite;
-      color: var(--ok);
+      animation: none;
+      color: var(--accent);
     }
 
     /* ═══════════ SİSTEM & İŞLEM LOGLARI (MODERN LOG CENTER) ═══════════ */
