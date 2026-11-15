@@ -362,15 +362,34 @@
       }, 300);
     }
 
-    function openBookWithMorph(cardOrCover, book) {
-      const targetBook = book || (typeof allBooks !== 'undefined' ? allBooks.find(b => b.hash === cardOrCover?.dataset?.hash) : null);
+    function openBookWithMorph(cardOrCover, book, initialPage = null) {
+      let originArg = cardOrCover;
+      let bookArg = book;
+      if (typeof cardOrCover === 'string' && (!book || book instanceof HTMLElement)) {
+        const hashStr = cardOrCover;
+        originArg = book instanceof HTMLElement ? book : document.querySelector(`.book-card[data-hash="${hashStr}"]`);
+        bookArg = (typeof allBooks !== 'undefined' ? allBooks.find(b => b.hash === hashStr) : null);
+      }
+
+      const targetBook = bookArg || (typeof allBooks !== 'undefined' ? allBooks.find(b => b.hash === originArg?.dataset?.hash) : null);
       if (!targetBook) return;
 
+      const readerEl = document.getElementById('workspace-reader');
       const modalEl = document.getElementById('modal');
       const fromOpenModal = Boolean(modalEl && modalEl.classList.contains('open'));
-      let originTarget = cardOrCover;
+      let originTarget = originArg;
       if (fromOpenModal && !(originTarget instanceof HTMLElement)) {
         originTarget = modalEl.querySelector('.modal-cover-wrap');
+      }
+
+      // Okuyucu kapatıldığında odağı tetikleyiciye veya eşleşen kitap kartına geri döndür
+      if (readerEl) {
+        const returnCandidate = fromOpenModal
+          ? (modalEl._sourceTriggerEl || document.querySelector(`.book-card[data-hash="${targetBook.hash}"]`))
+          : ((originArg instanceof HTMLElement && originArg.isConnected)
+            ? (originArg.closest('button, .shelf-item, .book-card') || originArg)
+            : (document.activeElement instanceof HTMLElement ? document.activeElement : null));
+        readerEl._returnFocusEl = returnCandidate;
       }
 
       const card = (originTarget instanceof HTMLElement)
@@ -380,53 +399,57 @@
 
       const dismissOpenModalImmediate = () => {
         if (!fromOpenModal || !modalEl) return;
-        if (typeof window.releaseModalFocus === 'function') window.releaseModalFocus(modalEl);
+        modalEl.removeEventListener('keydown', window._modalTabTrapHandler);
+        if (typeof window._clearModalFocusEntry === 'function') {
+          window._clearModalFocusEntry(modalEl);
+        } else if (typeof window.releaseModalFocus === 'function') {
+          window.releaseModalFocus(modalEl, { restore: false });
+        }
         modalEl.classList.remove('open', 'closing');
         modalEl.style.display = '';
+        modalEl._sourceTriggerEl = null;
         window.currentModalHash = null;
       };
 
-      if (!document.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        dismissOpenModalImmediate();
-        if (!fromOpenModal && typeof closeModalDirect === 'function') closeModalDirect();
-        openWorkspace(targetBook);
-        return;
-      }
-
-      if (cover) cover.style.viewTransitionName = 'book-cover';
-
-      const transition = document.startViewTransition(() => {
+      const enterReader = () => {
         if (fromOpenModal) {
           dismissOpenModalImmediate();
-        } else if (typeof closeModalDirect === 'function') {
-          closeModalDirect();
         }
-        openWorkspace(targetBook);
-        const slot = document.getElementById('workspace-cover-slot');
-        if (slot) slot.style.viewTransitionName = 'book-cover';
-        if (cover) cover.style.viewTransitionName = '';
-      });
+        openWorkspace(targetBook, initialPage);
+      };
 
-      void transition.finished.finally(() => {
-        const slot = document.getElementById('workspace-cover-slot');
-        if (slot) slot.style.removeProperty('view-transition-name');
-        if (cover) cover.style.removeProperty('view-transition-name');
-      });
+      if (window.Motion && typeof window.Motion.transition === 'function') {
+        void window.Motion.transition(enterReader, {
+          name: 'book-cover',
+          fromEl: cover,
+          toEl: () => document.getElementById('workspace-cover-slot')
+        });
+      } else {
+        enterReader();
+      }
     }
     window.openBookWithMorph = openBookWithMorph;
 
     function closeWorkspace() {
+      const readerEl = document.getElementById('workspace-reader');
       const currentBook = activeWorkspaceBook;
+      const returnEl = readerEl?._returnFocusEl || null;
       const card = currentBook ? document.querySelector(`.book-card[data-hash="${currentBook.hash}"]`) : null;
-      const cover = card ? (card.querySelector('.card-cover') || card) : null;
+      const candidateCover = card ? (card.querySelector('.card-cover') || card) : null;
+      let targetCover = null;
+      if (candidateCover && candidateCover.offsetParent !== null) {
+        const rect = candidateCover.getBoundingClientRect();
+        if (rect.width > 0 && rect.bottom > 0 && rect.top < (window.innerHeight || 900)) {
+          targetCover = candidateCover;
+        }
+      }
       const slot = document.getElementById('workspace-cover-slot');
 
       const doClose = () => {
-        document.getElementById('workspace-reader').classList.remove('open');
+        if (readerEl) readerEl.classList.remove('open');
         document.body.classList.remove('modal-open');
         document.title = 'Kütüphanem';
-        
-        // Stop ongoing typewriter or TTS
+
         if (activeTypewriterTimer) {
           clearInterval(activeTypewriterTimer);
           activeTypewriterTimer = null;
@@ -444,29 +467,33 @@
           ttsBtn.innerHTML = '<i class="fas fa-volume-high"></i> Dinle';
         }
 
-        // Cleanup custom HTML5 PDF.js Reader resources
         cleanupCustomPdfViewer();
-        
+
         activeWorkspaceBook = null;
         isFullBookLoaded = false;
       };
 
-      if (!document.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches || !cover) {
+      const restoreFocus = () => {
+        if (readerEl) readerEl._returnFocusEl = null;
+        const fallbackCard = currentBook ? document.querySelector(`.book-card[data-hash="${currentBook.hash}"]`) : null;
+        const focusTarget = (returnEl && returnEl.isConnected && returnEl.offsetParent !== null)
+          ? returnEl
+          : ((fallbackCard && fallbackCard.offsetParent !== null) ? fallbackCard : null);
+        if (focusTarget && typeof focusTarget.focus === 'function') {
+          focusTarget.focus({ preventScroll: true });
+        }
+      };
+
+      if (window.Motion && typeof window.Motion.transition === 'function' && targetCover) {
+        void window.Motion.transition(doClose, {
+          name: 'book-cover',
+          fromEl: slot,
+          toEl: targetCover
+        }).finally(restoreFocus);
+      } else {
         doClose();
-        return;
+        restoreFocus();
       }
-
-      if (slot) slot.style.viewTransitionName = 'book-cover';
-      const transition = document.startViewTransition(() => {
-        doClose();
-        if (cover) cover.style.viewTransitionName = 'book-cover';
-        if (slot) slot.style.viewTransitionName = '';
-      });
-
-      void transition.finished.finally(() => {
-        if (cover) cover.style.removeProperty('view-transition-name');
-        if (slot) slot.style.removeProperty('view-transition-name');
-      });
     }
 
     function handleWorkspaceChatKey(e) {

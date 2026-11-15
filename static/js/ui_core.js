@@ -542,64 +542,16 @@
       return rects;
     }
 
-    function playGridFlip(grid, prevRects, newlyRevealed = []) {
-      if (!grid || isMotionReduced()) return;
-      const vh = window.innerHeight || 900;
-      const moves = [];
-      if (prevRects && prevRects.size > 0) {
-        prevRects.forEach((oldRect, hash) => {
-          const card = cardElementsMap.get(hash) || grid.querySelector(`.book-card[data-hash="${hash}"]`);
-          if (!card || !card.isConnected || card.style.display === 'none') return;
-          const newRect = card.getBoundingClientRect();
-          if (!newRect.width) return;
-          const dx = oldRect.left - newRect.left;
-          const dy = oldRect.top - newRect.top;
-          if (Math.abs(dx) > 1.5 || Math.abs(dy) > 1.5) {
-            moves.push({ card, dx, dy });
-          }
+    function playGridFlip(grid, prevRects, newlyRevealed = [], opts = {}) {
+      if (!grid) return;
+      if (window.Motion && typeof window.Motion.flip === 'function') {
+        window.Motion.flip(grid, prevRects, {
+          selector: '.book-card[data-hash]',
+          newlyRevealed,
+          duration: opts.duration || 300,
+          spring: Boolean(opts.spring)
         });
       }
-
-      const revealsInView = [];
-      for (let i = 0; i < newlyRevealed.length && revealsInView.length < 16; i++) {
-        const card = newlyRevealed[i];
-        if (!card || !card.isConnected || card.style.display === 'none') continue;
-        const rect = card.getBoundingClientRect();
-        if (rect.width && rect.bottom >= -120 && rect.top <= vh + 200) {
-          revealsInView.push(card);
-        }
-      }
-
-      for (const { card, dx, dy } of moves) {
-        if (card._flipAnim) card._flipAnim.cancel();
-        if (typeof card.animate === 'function') {
-          card._flipAnim = card.animate([
-            { transform: `translate3d(${dx}px, ${dy}px, 0)` },
-            { transform: 'translate3d(0, 0, 0)' }
-          ], {
-            duration: 380,
-            easing: 'cubic-bezier(0.22, 1, 0.36, 1)'
-          });
-          card._flipAnim.addEventListener('finish', () => { card._flipAnim = null; }, { once: true });
-        }
-      }
-
-      revealsInView.forEach((card, idx) => {
-        card.classList.remove('card-revealing');
-        if (card._flipAnim) card._flipAnim.cancel();
-        if (typeof card.animate === 'function') {
-          card._flipAnim = card.animate([
-            { opacity: 0, transform: 'translate3d(0, 14px, 0) scale(0.95)' },
-            { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' }
-          ], {
-            duration: 360,
-            delay: idx * 22,
-            easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-            fill: 'backwards'
-          });
-          card._flipAnim.addEventListener('finish', () => { card._flipAnim = null; }, { once: true });
-        }
-      });
     }
 
     // --- RENDER ---
@@ -658,7 +610,8 @@
               ? `<img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" loading="lazy" decoding="async" onload="this.classList.add('loaded')">`
               : `<div class="shelf-cover-placeholder"><i class="fas fa-book"></i></div>`;
             const progress = (typeof getBookReadingProgress === 'function') ? getBookReadingProgress(b) : null;
-            const progressBar = progress ? `<div class="card-progress-bar" style="width: ${progress.pct}%;"></div>` : '';
+            const scaleVal = progress ? (progress.pct / 100).toFixed(3) : '0';
+            const progressBar = progress ? `<div class="card-progress-bar" style="--progress:${scaleVal}; transform:scaleX(${scaleVal});"></div>` : '';
             const progressBadge = progress ? `<span class="card-progress-badge" style="font-size:0.6rem; padding:0 4px; margin-left:6px;">%${progress.pct}</span>` : '';
             return `
               <button type="button" class="shelf-item" onclick="const target = (window.allBooks || []).find(x => x.hash === '${b.hash}'); if (target) { if (typeof openBookWithMorph === 'function') openBookWithMorph(this, target); else openWorkspace(target); }" aria-label="${esc(b.title)} - Kitabı Oku">
@@ -705,6 +658,9 @@
       card.className = 'book-card';
       card.id = `book-${b.hash}`;
       card.dataset.hash = b.hash;
+      card.tabIndex = 0;
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', b.title || 'Kitap detayları');
 
       const coverInner = b.has_cover
         ? `<img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" loading="lazy" decoding="async" onload="this.classList.add('loaded')">`
@@ -716,8 +672,9 @@
       const favBtnText = b.is_favorite ? 'Favorilerden Çıkar' : 'Favorilere Ekle';
 
       const progress = getBookReadingProgress(b);
+      const scaleVal = progress ? (progress.pct / 100).toFixed(3) : '0';
       const progressBarHtml = progress
-        ? `<div class="card-progress-bar" style="width: ${progress.pct}%;" title="%${progress.pct} okundu (${progress.readPage}/${progress.totalPages} sayfa)"></div>`
+        ? `<div class="card-progress-bar" style="--progress:${scaleVal}; transform:scaleX(${scaleVal});" title="%${progress.pct} okundu (${progress.readPage}/${progress.totalPages} sayfa)"></div>`
         : '';
       const progressBadgeHtml = progress
         ? `<span class="card-progress-badge">%${progress.pct}</span>`
@@ -767,37 +724,6 @@
         setTimeout(() => card.classList.remove('just-added'), 2600);
       }
 
-      if (window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
-        let tiltRaf = null;
-        const resetTilt = () => {
-          if (tiltRaf) {
-            cancelAnimationFrame(tiltRaf);
-            tiltRaf = null;
-          }
-          card.classList.remove('is-tilting');
-          card.style.removeProperty('--card-rx');
-          card.style.removeProperty('--card-ry');
-        };
-        card.addEventListener('pointermove', (e) => {
-          if (isMotionReduced() || e.pointerType === 'touch') return;
-          if (tiltRaf) cancelAnimationFrame(tiltRaf);
-          const clientX = e.clientX;
-          const clientY = e.clientY;
-          tiltRaf = requestAnimationFrame(() => {
-            tiltRaf = null;
-            const rect = card.getBoundingClientRect();
-            if (!rect.width || !rect.height) return;
-            const px = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
-            const py = Math.min(1, Math.max(0, (clientY - rect.top) / rect.height));
-            card.classList.add('is-tilting');
-            card.style.setProperty('--card-rx', `${((0.5 - py) * 5.5).toFixed(2)}deg`);
-            card.style.setProperty('--card-ry', `${((px - 0.5) * 5.5).toFixed(2)}deg`);
-          });
-        });
-        card.addEventListener('pointerleave', resetTilt);
-        card.addEventListener('pointercancel', resetTilt);
-      }
-
       let prefetchHoverTimer = null;
       card.addEventListener('pointerenter', () => {
         prefetchHoverTimer = setTimeout(() => {
@@ -814,6 +740,13 @@
         }
         if (typeof window.cancelPdfPrefetch === 'function') {
           window.cancelPdfPrefetch(b.hash);
+        }
+      });
+
+      card.addEventListener('keydown', (e) => {
+        if (e.target === card && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          card.click();
         }
       });
 
@@ -885,6 +818,7 @@
       const prevRects = !doStagger ? captureGridPositions(grid) : null;
       const newlyRevealed = [];
       const morphedCards = [];
+      const staggerCards = [];
 
       // 1. Ensure cards exist in cardElementsMap for all available books
       const allBooksList = window.allBooks || books;
@@ -949,11 +883,9 @@
           card.classList.remove('stagger-in', 'card-revealing');
           card.style.animation = '';
         } else if (doStagger) {
-          card.classList.remove('card-revealing');
-          card.classList.add('stagger-in');
-          const staggerIdx = i < 12 ? i : 0;
-          card.style.setProperty('--card-index', staggerIdx);
-          card.style.animationDelay = i < 12 ? `${i * 28}ms` : '0ms';
+          card.classList.remove('card-revealing', 'stagger-in');
+          card.style.animation = '';
+          if (staggerCards.length < 12) staggerCards.push(card);
         } else {
           card.classList.remove('stagger-in');
           card.style.animation = '';
@@ -1008,7 +940,9 @@
         });
       }
 
-      if (!doStagger) {
+      if (doStagger && staggerCards.length > 0 && window.Motion && typeof window.Motion.stagger === 'function') {
+        window.Motion.stagger(staggerCards, { limit: 12, step: 24, maxDelay: 264, y: 12, duration: 280 });
+      } else if (!doStagger) {
         playGridFlip(grid, prevRects, newlyRevealed);
       }
     }
@@ -1183,10 +1117,11 @@
         : `<div class="modal-cover-wrap"><div class="modal-cover-empty">${BOOK_ICON_LG}</div></div>`;
 
       const progress = getBookReadingProgress(b);
+      const modalScale = progress ? (progress.pct / 100).toFixed(3) : '0';
       const progressModalHtml = progress ? `
         <div class="modal-progress-wrap">
           <div class="modal-progress-track">
-            <div class="modal-progress-fill" style="width: ${progress.pct}%;"></div>
+            <div class="modal-progress-fill" style="--progress:${modalScale}; transform:scaleX(${modalScale});"></div>
           </div>
           <span>%${progress.pct} (${progress.readPage} / ${progress.totalPages} sayfa)</span>
         </div>
@@ -1298,10 +1233,31 @@
 
       const modalEl = document.getElementById('modal');
       modalEl.classList.remove('closing');
+      modalEl._sourceTriggerEl = (sourceEl instanceof HTMLElement && sourceEl.isConnected)
+        ? sourceEl
+        : (document.activeElement instanceof HTMLElement ? document.activeElement : null);
 
       const originCover = (sourceEl instanceof HTMLElement
         ? (sourceEl.querySelector('.card-cover, .shelf-item-cover, .td-cover img') || sourceEl)
         : null) || document.querySelector(`.book-card[data-hash="${b.hash}"] .card-cover`);
+
+      const modalBox = modalEl.querySelector('.modal');
+      const originRectSource = (originCover && originCover.offsetParent !== null)
+        ? originCover
+        : (sourceEl instanceof HTMLElement && sourceEl.offsetParent !== null ? sourceEl : null);
+      if (modalBox && originRectSource) {
+        const r = originRectSource.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) {
+          modalBox.style.setProperty('--modal-origin-x', `${Math.round(r.left + r.width / 2)}px`);
+          modalBox.style.setProperty('--modal-origin-y', `${Math.round(r.top + r.height / 2)}px`);
+        } else {
+          modalBox.style.removeProperty('--modal-origin-x');
+          modalBox.style.removeProperty('--modal-origin-y');
+        }
+      } else if (modalBox) {
+        modalBox.style.removeProperty('--modal-origin-x');
+        modalBox.style.removeProperty('--modal-origin-y');
+      }
 
       const canMorph = Boolean(
         document.startViewTransition &&
@@ -1311,23 +1267,19 @@
         !modalEl.classList.contains('open')
       );
 
-      if (canMorph) {
-        originCover.style.viewTransitionName = 'book-cover';
-        const transition = document.startViewTransition(() => {
-          originCover.style.removeProperty('view-transition-name');
-          modalEl.classList.add('open');
-          document.body.classList.add('modal-open');
-          const mc = document.querySelector('#modal .modal-cover-wrap');
-          if (mc) mc.style.viewTransitionName = 'book-cover';
-        });
-        void transition.finished.finally(() => {
-          originCover.style.removeProperty('view-transition-name');
-          const mc = document.querySelector('#modal .modal-cover-wrap');
-          if (mc) mc.style.removeProperty('view-transition-name');
-        });
-      } else {
+      const openDom = () => {
         modalEl.classList.add('open');
         document.body.classList.add('modal-open');
+      };
+
+      if (canMorph && window.Motion && typeof window.Motion.transition === 'function') {
+        void window.Motion.transition(openDom, {
+          name: 'book-cover',
+          fromEl: originCover,
+          toEl: () => document.querySelector('#modal .modal-cover-wrap')
+        });
+      } else {
+        openDom();
       }
       activateModalFocus(modalEl);
     }
@@ -1418,23 +1370,34 @@
       modalEl.removeEventListener('keydown', handleModalTabKey);
       modalEl.addEventListener('keydown', handleModalTabKey);
     }
+    window._modalTabTrapHandler = handleModalTabKey;
     window.activateModalFocus = activateModalFocus;
 
-    function releaseModalFocus(modalRef) {
+    function _clearModalFocusEntry(modalRef) {
+      const modalEl = typeof modalRef === 'string' ? document.getElementById(modalRef) : modalRef;
+      if (!modalEl) return null;
+      modalEl.removeEventListener('keydown', handleModalTabKey);
+      const idx = modalFocusStack.findLastIndex ? modalFocusStack.findLastIndex(e => e.modal === modalEl) : -1;
+      if (idx !== -1) return modalFocusStack.splice(idx, 1)[0];
+      return modalFocusStack.pop() || null;
+    }
+    window._clearModalFocusEntry = _clearModalFocusEntry;
+
+    function releaseModalFocus(modalRef, opts = {}) {
       const modalEl = typeof modalRef === 'string' ? document.getElementById(modalRef) : modalRef;
       if (!modalEl) return;
-      modalEl.removeEventListener('keydown', handleModalTabKey);
+      const entry = _clearModalFocusEntry(modalEl);
+      if (opts.restore === false) return;
 
-      const idx = modalFocusStack.findLastIndex ? modalFocusStack.findLastIndex(e => e.modal === modalEl) : -1;
-      let entry = null;
-      if (idx !== -1) {
-        entry = modalFocusStack.splice(idx, 1)[0];
-      } else {
-        entry = modalFocusStack.pop();
-      }
-
-      if (entry && entry.returnEl && typeof entry.returnEl.focus === 'function' && document.body.contains(entry.returnEl)) {
-        setTimeout(() => entry.returnEl.focus(), 40);
+      const returnCandidate = (entry && entry.returnEl && entry.returnEl.isConnected && entry.returnEl.offsetParent !== null)
+        ? entry.returnEl
+        : ((modalEl._sourceTriggerEl && modalEl._sourceTriggerEl.isConnected && modalEl._sourceTriggerEl.offsetParent !== null)
+          ? modalEl._sourceTriggerEl
+          : null);
+      if (returnCandidate && typeof returnCandidate.focus === 'function') {
+        requestAnimationFrame(() => {
+          if (returnCandidate.isConnected) returnCandidate.focus({ preventScroll: true });
+        });
       }
     }
     window.releaseModalFocus = releaseModalFocus;
@@ -1453,18 +1416,33 @@
       }
 
       releaseModalFocus(modal);
-      modal.classList.add('closing');
-      modal.classList.remove('open');
 
-      setTimeout(() => {
+      const finishClose = () => {
         modal.classList.remove('closing');
         modal.style.display = '';
+        const modalBox = modal.querySelector('.modal');
+        if (modalBox) {
+          modalBox.style.removeProperty('--modal-origin-x');
+          modalBox.style.removeProperty('--modal-origin-y');
+        }
         const anyModal = document.querySelector('.modal-overlay.open, .modal-overlay.closing');
         if (!anyModal) {
           document.body.classList.remove('modal-open');
         }
         if (typeof callback === 'function') callback();
-      }, 250);
+      };
+
+      if (window.Motion && typeof window.Motion.exit === 'function') {
+        void window.Motion.exit(modal, {
+          className: 'closing',
+          removeClass: 'open',
+          afterFn: finishClose
+        });
+      } else {
+        modal.classList.add('closing');
+        modal.classList.remove('open');
+        setTimeout(finishClose, 180);
+      }
     }
     window.closeModalWithAnimation = closeModalWithAnimation;
 
@@ -1484,26 +1462,33 @@
         targetVisible = rect.width > 0 && rect.bottom > 0 && rect.top < (window.innerHeight || 900);
       }
 
-      if (modalEl && modalEl.classList.contains('open') && modalCover && targetVisible && document.startViewTransition && !isMotionReduced()) {
-        modalCover.style.viewTransitionName = 'book-cover';
-        releaseModalFocus(modalEl);
-        const transition = document.startViewTransition(() => {
+      if (modalEl && modalEl.classList.contains('open') && modalCover && targetVisible && window.Motion && typeof window.Motion.transition === 'function' && !isMotionReduced()) {
+        const closeDom = () => {
           modalEl.classList.remove('open', 'closing');
           modalEl.style.display = '';
+          const modalBox = modalEl.querySelector('.modal');
+          if (modalBox) {
+            modalBox.style.removeProperty('--modal-origin-x');
+            modalBox.style.removeProperty('--modal-origin-y');
+          }
           const anyModal = document.querySelector('.modal-overlay.open, .modal-overlay.closing');
           if (!anyModal) document.body.classList.remove('modal-open');
           window.currentModalHash = null;
-          targetCover.style.viewTransitionName = 'book-cover';
-        });
-        void transition.finished.finally(() => {
-          targetCover.style.removeProperty('view-transition-name');
-          modalCover.style.removeProperty('view-transition-name');
+        };
+        void window.Motion.transition(closeDom, {
+          name: 'book-cover',
+          fromEl: modalCover,
+          toEl: targetCover
+        }).finally(() => {
+          releaseModalFocus(modalEl);
+          modalEl._sourceTriggerEl = null;
         });
         return;
       }
 
       closeModalWithAnimation('modal', () => {
         window.currentModalHash = null;
+        if (modalEl) modalEl._sourceTriggerEl = null;
       });
     }
 
@@ -1838,20 +1823,6 @@
         stats: document.getElementById('stats-view')
       };
 
-      Object.entries(viewMap).forEach(([name, el]) => {
-        if (!el) return;
-        if (name === v) {
-          el.style.display = name === 'grid' ? 'grid' : 'block';
-          el.classList.remove('view-fade-in');
-          el.getBoundingClientRect(); // Force reflow to cleanly restart the entrance animation
-          el.classList.add('view-fade-in');
-          el.addEventListener('animationend', () => el.classList.remove('view-fade-in'), { once: true });
-        } else {
-          el.style.display = 'none';
-          el.classList.remove('view-fade-in');
-        }
-      });
-
       const btnGrid = document.getElementById('btn-grid');
       const btnTable = document.getElementById('btn-table');
       const btnStats = document.getElementById('btn-stats');
@@ -1864,19 +1835,38 @@
       if (btnTable) btnTable.classList.toggle('active', v === 'table');
       if (btnStats) btnStats.classList.toggle('active', v === 'stats');
 
-      if (viewToggle && prevBtn && nextBtn && prevBtn !== nextBtn) {
-        animateSegmentedPill(viewToggle, prevBtn, nextBtn);
+      if (viewToggle && prevBtn && nextBtn && prevBtn !== nextBtn && window.Motion && typeof window.Motion.glidePill === 'function') {
+        window.Motion.glidePill(viewToggle, prevBtn, nextBtn);
       }
 
-      window.shouldStagger = true;
-      if (v === 'table') {
-        renderTable(getFiltered());
-      } else if (v === 'grid') {
-        renderGrid(getFiltered());
-        setTimeout(enableDragSort, 100);
+      const applyViewDom = () => {
+        Object.entries(viewMap).forEach(([name, el]) => {
+          if (!el) return;
+          el.classList.remove('view-fade-in');
+          el.style.display = name === v ? (name === 'grid' ? 'grid' : 'block') : 'none';
+        });
+
+        window.shouldStagger = true;
+        if (v === 'table') {
+          renderTable(getFiltered());
+        } else if (v === 'grid') {
+          renderGrid(getFiltered());
+          setTimeout(enableDragSort, 100);
+        }
+        window.shouldStagger = false;
+        if (v === 'stats' && typeof loadStats === 'function') void loadStats();
+      };
+
+      if (window.Motion && typeof window.Motion.transition === 'function' && document.startViewTransition && !isMotionReduced()) {
+        void window.Motion.transition(applyViewDom);
+      } else {
+        applyViewDom();
+        const activeEl = viewMap[v];
+        if (activeEl && !isMotionReduced()) {
+          activeEl.classList.add('view-fade-in');
+          activeEl.addEventListener('animationend', () => activeEl.classList.remove('view-fade-in'), { once: true });
+        }
       }
-      window.shouldStagger = false;
-      if (v === 'stats' && typeof loadStats === 'function') void loadStats();
     }
 
 
@@ -1916,7 +1906,7 @@
         const toIdx = cards.indexOf(this);
         if (fromIdx < toIdx) this.after(window.dragSrcEl);
         else this.before(window.dragSrcEl);
-        playGridFlip(grid, prevRects, []);
+        playGridFlip(grid, prevRects, [], { spring: true, duration: 340 });
         // Sıralamayı localStorage'a kaydet
         const newOrder = [...grid.querySelectorAll('.book-card[data-hash]')].map(c => c.dataset.hash);
         window.customOrder = newOrder;
