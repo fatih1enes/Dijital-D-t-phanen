@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Editoryal "Kâğıt ve Mürekkep" Hareket Sistemi**: Harici animasyon kütüphanesi olmadan `static/css/motion.css` (`@layer motion`) ve `static/js/motion.js` (`window.Motion`: `enter`, `exit`, `stagger`, `flip`, `glidePill`, `transition`) altyapısı ile `--ease-*` / `--t-*` token birleştirme.
+- **Hareket & Etkileşim Dokümantasyonu**: Token referansı, `Motion` API sözleşmesi, İşlem Merkezi uzlaştırma akışı ve erişilebilirlik kararlarını belgeleyen `docs/MOTION_NOTES.md`.
+
+### Changed
+- **Canlı Etkinlik Merkezi (`#ops-toggle` / `#ops-center`)**: Tek satır kapsül tasarımı, gerçek AI motor adı ve WebSocket bağlantı durumu senkronizasyonu, `data-task-id` anahtarlı DOM uzlaştırması (`<details.ops-log-details>` açık durumu ve kaydırma korunumu), kapalı çekmecede `requestAnimationFrame` toplulaştırma, `scaleX` mürekkep ilerleme çubuğu ve `.book-card.uploading` → gerçek kitap kartı morfu.
+- **Mekânsal Süreklilik & İkincil Yüzeyler**: Kitap kartı ↔ detay modalı ↔ `#workspace-reader` arasında `view-transition-name: book-cover` morfları; tema geçişinde (`toggleTheme`) View Transitions çapraz geçişi; karanlık mod yüzey/kenarlık ve terminal log kontrast iyileştirmeleri; tüm ilerleme/grafik çubuklarının `scaleX`/`scaleY` kompozit animasyonuna taşınması; sürekli nabız/dönüş (`opsPulse`/`opsSpin`) ve kart 3B eğimlerinin kaldırılması; `static/sw.js` önbellek sürümü güncellemesi (`v2026111504`).
+- **Tasarım Kimliği Güncellemesi**: `README.md` ve `docs/CHANGELOG.md` içindeki hatalı `"Glassmorphic"` ifadeleri uygulamanın gerçek `"Kâğıt ve Mürekkep" (Paper & Ink)` editoryal tasarım kimliğiyle güncellendi.
+
+### Fixed
+- **Okuyucu ve Mobil Yerleşim İzolasyonu**: Kapalı `.workspace-reader:not(.open)` yüzeyinin sayfa altında görünmesi ve odak alması engellendi; `390px` mobil görünümde `#ops-toggle` ile `#ops-center` çakışması giderildi.
+- **Okuyucu Sohbet Çekmecesi & PDF Arama Odakları**: `toggleWorkspaceChatPane` sonrası fit modunu koruyan `_refitReaderAfterChatToggle` yeniden sığdırma eklendi; `#pdf-search-bar` `Escape` ile odağı `#pdf-search-btn`'e döndürecek şekilde düzenlendi.
+- **Modal Odak Tuzağı & `Escape` Hiyerarşisi**: `_getModalFocusables` ile gizli/file input'ların otomatik odaklanması önlendi ve açık modal/çekmece içindeki bir input odaklıyken `Escape` ile üst modalın kapanması sağlandı.
+
 ## [1.0.0] - 2026-11-08
 
 ### Added
@@ -21,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Otomatik PDF, EPUB, TXT & OCR İşleme**: `pypdfium2`, `pdfplumber` ve Poppler ile kapak görseli/metin çıkarma, yerel PDF boyut sıkıştırma, EPUB/TXT desteği ve Tesseract OCR ile taranmış belgeleri metne dönüştürme.
 - **Gölge Kütüphaneci (Watchfolder) & Masaüstü Kabuğu**: Seçili klasörü otomatik izleyip yeni kitapları kuyruğa alma ve isteğe bağlı PyWebView sistem tepsisi masaüstü deneyimi.
 - **Koleksiyon ve Raf Yönetimi**: Özelleştirilebilir kitap koleksiyonları, JSON dışa aktarım ve Markdown formatında paylaşılabilir okuma listeleri.
-- **Modern Glassmorphic Tasarım & PWA**: Ultra duyarlı mobil uyumlu arayüz, dinamik `theme-color` meta senkronizasyonu, ARIA rolleri ve klavye erişilebilirliği.
+- **Editoryal Kâğıt ve Mürekkep Tasarım & PWA**: Ultra duyarlı mobil uyumlu arayüz, dinamik `theme-color` meta senkronizasyonu, ARIA rolleri ve klavye erişilebilirliği.
 
 ### Security & Architecture
 - **SQLite WAL Modu**: Eşzamanlı okuma ve yazma işlemlerinde yüksek veri bütünlüğü ve hız sağlayan Write-Ahead Logging yapılandırması.

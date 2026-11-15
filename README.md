@@ -18,7 +18,7 @@ A high-performance, AI-powered digital library management system built with Fast
 ```mermaid
 flowchart TD
     subgraph Clients["Erişim Arayüzleri ve Cihazlar (Clients)"]
-        WEB["Modern Web UI ve PWA (Glassmorphic)"]
+        WEB["Editoryal Web Arayüzü ve PWA (Kâğıt ve Mürekkep)"]
         OPDS_CLIENTS["E-Okuyucular (KOReader, Moon+, Apple Books)"]
         MOBILE_HANDOFF["Mobil Cihazlar (QR Kod Handoff)"]
     end
@@ -91,7 +91,7 @@ flowchart TD
 - **Deep Book Chat, FTS5 Search & Auto TOC**: Context-aware workspace companion (Gemini File API / full-text RAG), instant page-level FTS5 deep search, and automatic PDF TOC & page-offset resolution.
 - **Multi-Format Processing & Watchfolder**: PDF, EPUB, and TXT support via `pypdfium2`, `pdfplumber`, Poppler, and Tesseract OCR, plus automated watchfolder monitoring and optional PyWebView desktop shell.
 - **Collection Management & Telegram Sync**: Static and rule-based dynamic collections, JSON/Markdown sharing, and Telethon Telegram document synchronization.
-- **Modern UI & PWA**: Glassmorphic design with dynamic `theme-color` meta synchronization, live WebSocket task/log streaming, keyboard accessibility, and offline-ready PWA support.
+- **Editorial Paper & Ink UI & PWA**: Warm editorial "Paper & Ink" design with spatial View Transitions, live WebSocket task/log streaming, dynamic `theme-color` synchronization, keyboard accessibility, and offline-ready PWA support.
 
 ### User Guide
 For complete setup, Gemini API key acquisition, and Telegram integration instructions, see [**KULLANIM_KILAVUZU.md**](KULLANIM_KILAVUZU.md).
@@ -141,7 +141,7 @@ Key environment variables in `.env`:
 - **Derin Kitap Sohbeti, FTS5 Arama & Otomatik TOC**: Gemini File API ve tam metin bağlamı ile kitap içi sohbet, FTS5 sayfa içi tam metin arama ve otomatik içindekiler/sayfa sapması çözümü.
 - **Çoklu Format, OCR & Gölge Kütüphaneci**: `pypdfium2`, `pdfplumber`, Poppler ve Tesseract OCR ile PDF, EPUB ve TXT işleme; Watchfolder klasör izleme ve isteğe bağlı PyWebView masaüstü kabuğu.
 - **Koleksiyon Yönetimi & Telegram Senkronizasyonu**: Statik ve kural tabanlı dinamik koleksiyonlar, JSON/Markdown paylaşımı ve Telethon ile Telegram'dan kitap aktarımı.
-- **Modern Arayüz & PWA**: Responsive tasarım, WebSocket canlı işlem/log akışı, dinamik `theme-color` senkronizasyonu ve çevrimdışı destekli PWA arayüzü.
+- **Editoryal "Kâğıt ve Mürekkep" Arayüzü & PWA**: Mekânsal View Transitions geçişleri, canlı WebSocket işlem/log akışı, dinamik `theme-color` senkronizasyonu, tam klavye erişilebilirliği ve çevrimdışı destekli PWA arayüzü.
 
 ### Kullanım ve Kurulum Kılavuzu
 Sıfırdan kurulum, Google Gemini API anahtarı alma ve Telegram kitap aktarımı dahil eksiksiz rehber için [**KULLANIM_KILAVUZU.md**](KULLANIM_KILAVUZU.md) dosyasını inceleyin.
