@@ -2085,19 +2085,25 @@
     });
 
     // --- [10.3] Global Deep Search Helpers ---
-    function _activateDeepSearchUI() {
+    function _setDeepSearchButtonState(active) {
       const toggleBtn = document.getElementById('btn-deep-search-toggle');
       const label = document.getElementById('deep-search-label');
+      if (toggleBtn) {
+        toggleBtn.classList.toggle('active', active);
+        toggleBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
+        toggleBtn.closest('.search-wrap')?.classList.toggle('is-deep-search', active);
+      }
+      if (label) {
+        label.textContent = active ? 'Derin Aktif' : 'Derin Arama';
+      }
+    }
+
+    function _activateDeepSearchUI() {
       const input = document.getElementById('search-input');
 
-      if (toggleBtn) {
-        toggleBtn.style.background = 'var(--accent)';
-        toggleBtn.style.color = '#fff';
-        toggleBtn.style.borderColor = 'var(--accent)';
-      }
-      if (label) label.textContent = 'Derin Aktif';
+      _setDeepSearchButtonState(true);
       if (input) {
-        input.placeholder = '500+ kitabın tüm cümlelerinde ara... (Derin Arama)';
+        input.placeholder = 'Kitapların tüm satırlarında ara…';
         input.focus();
         if (input.value.trim()) {
           void executeDeepSearch(input.value.trim());
@@ -2106,19 +2112,12 @@
     }
 
     function _deactivateDeepSearchUI() {
-      const toggleBtn = document.getElementById('btn-deep-search-toggle');
-      const label = document.getElementById('deep-search-label');
       const input = document.getElementById('search-input');
       const resultsContainer = document.getElementById('deep-search-results');
       const gridView = document.getElementById('grid-view');
       const tableView = document.getElementById('table-view');
 
-      if (toggleBtn) {
-        toggleBtn.style.background = 'rgba(255,255,255,0.06)';
-        toggleBtn.style.color = 'var(--muted)';
-        toggleBtn.style.borderColor = 'var(--line)';
-      }
-      if (label) label.textContent = 'Derin Arama';
+      _setDeepSearchButtonState(false);
       if (input) {
         input.placeholder = 'Kitap, yazar, konu ara… (Kısayol: /)';
       }
@@ -2471,7 +2470,7 @@
       deferredPwaPrompt = e;
       const pwaBtn = document.getElementById('btn-pwa-install');
       const compactPwaBtn = document.getElementById('compact-pwa-install');
-      if (pwaBtn) pwaBtn.style.display = 'inline-flex';
+      if (pwaBtn) pwaBtn.style.display = 'flex';
       if (compactPwaBtn) compactPwaBtn.style.display = 'flex';
     });
 

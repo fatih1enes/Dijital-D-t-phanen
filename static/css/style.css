@@ -25,10 +25,12 @@
       bottom: 140%;
       background: #292825;
       color: #fff;
-      padding: 0.85rem 1.1rem;
+      padding: 0.75rem 0.95rem;
       border-radius: 6px;
       font-size: 0.72rem;
-      width: 260px;
+      width: min(230px, calc(100vw - 4.5rem));
+      white-space: normal;
+      word-break: break-word;
       text-align: left;
       line-height: 1.5;
       pointer-events: none;
@@ -65,9 +67,9 @@
 
     /* Direction: Opens to the LEFT (for right-column items) */
     .tooltip-left .tooltip {
-      right: 0;
+      right: -4px;
       left: auto;
-      transform: translateY(10px);
+      transform: translateY(8px);
     }
     .tooltip-left:hover .tooltip {
       opacity: 1;
@@ -78,10 +80,34 @@
       content: "";
       position: absolute;
       top: 100%;
-      right: 10px;
+      right: 8px;
       border-width: 5px;
       border-style: solid;
       border-color: #292825 transparent transparent transparent;
+    }
+
+    /* Direction: Opens DOWNWARD centered inside panel */
+    .tooltip-bottom .tooltip {
+      top: calc(100% + 10px);
+      bottom: auto;
+      left: 50%;
+      right: auto;
+      transform: translate(-50%, -6px);
+    }
+    .tooltip-bottom:hover .tooltip {
+      opacity: 1;
+      visibility: visible;
+      transform: translate(-50%, 0);
+    }
+    .tooltip-bottom .tooltip::after {
+      content: "";
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: transparent transparent #292825 transparent;
     }
 
     /* Drag & Drop Overlay */
@@ -203,14 +229,14 @@
       box-shadow: 0 0 0 4px var(--accent-glow), inset 0 1px 3px rgba(0, 0, 0, 0.02);
     }
 
-    .search-wrap i {
+    .search-wrap > i {
       margin: 0 0.6rem;
       color: var(--muted);
       font-size: 0.85rem;
       transition: color var(--transition-fast), transform var(--t-ui) var(--ease-out);
     }
 
-    .search-wrap:focus-within i {
+    .search-wrap:focus-within > i {
       color: var(--accent);
       transform: scale(1.08);
     }
@@ -1543,10 +1569,10 @@
     .cascade-slot-row {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
+      gap: 0.7rem;
       background: var(--paper);
       border: 1px solid var(--line);
-      padding: 0.45rem 0.65rem;
+      padding: 0.55rem 0.75rem;
       border-radius: 8px;
       width: 100%;
       box-sizing: border-box;
@@ -1561,10 +1587,12 @@
     .cascade-level-pill {
       font-size: 0.72rem;
       font-weight: 700;
-      width: 82px;
+      min-width: 92px;
+      width: auto;
+      white-space: nowrap;
       flex-shrink: 0;
       font-family: 'Geist Mono', monospace;
-      padding: 0.25rem 0.5rem;
+      padding: 0.3rem 0.65rem;
       border-radius: 6px;
       display: inline-flex;
       align-items: center;

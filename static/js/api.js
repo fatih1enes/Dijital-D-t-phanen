@@ -180,9 +180,9 @@
 
     function updateAIProviderInputs(provider, cloudInputs, urlContainer, modelContainer, localWarning, modelNameEl) {
       const isGemini = provider === 'gemini';
-      if (cloudInputs) cloudInputs.style.display = isGemini ? 'block' : 'none';
-      if (urlContainer) urlContainer.style.display = isGemini ? 'none' : 'block';
-      if (modelContainer) modelContainer.style.display = 'block';
+      if (cloudInputs) cloudInputs.style.display = isGemini ? 'flex' : 'none';
+      if (urlContainer) urlContainer.style.display = isGemini ? 'none' : 'flex';
+      if (modelContainer) modelContainer.style.display = 'flex';
       if (localWarning) localWarning.style.display = isGemini ? 'none' : 'block';
 
       if (!modelNameEl) return;
@@ -205,7 +205,7 @@
       const modelBadge = document.getElementById('ai-model-status-badge');
       const modelHint = document.getElementById('ai-model-hint');
 
-      if (cascadeContainer) cascadeContainer.style.display = provider === 'gemini' ? 'block' : 'none';
+      if (cascadeContainer) cascadeContainer.style.display = provider === 'gemini' ? 'flex' : 'none';
       
       const isCascadeActive = provider === 'gemini' && (!cascadeCheckbox || cascadeCheckbox.checked);
 

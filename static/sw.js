@@ -1,5 +1,5 @@
 /* ═══════════ sw.js — Dijital Kütüphane PWA Service Worker ═══════════ */
-const CACHE_NAME = 'dijital-kutuphane-v2026111504';
+const CACHE_NAME = 'dijital-kutuphane-v2026111505';
 const STATIC_ASSETS = [
   '/',
   '/static/favicon.svg',

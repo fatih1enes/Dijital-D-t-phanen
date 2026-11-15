@@ -50,7 +50,7 @@
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     }
   </script>
-  <link rel="stylesheet" href="{{ url_for('static', path='/css/app.css') }}?v=2026111504">
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/app.css') }}?v=2026111505">
 </head>
 
 <body>
@@ -88,62 +88,10 @@
           <i class="fas fa-moon"></i>
         </button>
 
-        <!-- Tools Dropdown (Organized Utilities: Logs, Telegram, Sync, Duplicates, Shortcuts, PWA) -->
-        <div class="header-tools-wrapper" id="header-tools-wrapper">
-          <button type="button" class="header-icon-btn" id="header-tools-btn" aria-haspopup="menu" aria-expanded="false" onclick="toggleToolsMenu(event)" title="Araçlar &amp; Sistem Menüsü" aria-label="Araçlar ve Sistem Menüsü">
-            <i class="fas fa-sliders-h"></i>
-            <span class="header-logs-badge" id="header-logs-badge" style="display:none;"></span>
-          </button>
-          <div class="header-tools-menu" id="header-tools-menu" role="menu" aria-label="Araçlar ve Sistem Menüsü" style="display:none;">
-            <div class="tools-menu-label">Araçlar &amp; Sistem</div>
-            <button type="button" class="tools-menu-item" id="header-logs-btn" onclick="openLogsModal(); closeToolsMenu();">
-              <i class="fas fa-terminal"></i>
-              <div class="tools-item-content">
-                <span class="tools-item-title">Canlı İşlem Logları</span>
-                <span class="tools-item-desc">Arka plan görevleri ve sistem akışı</span>
-              </div>
-            </button>
-            <button type="button" class="tools-menu-item" id="header-telegram-btn" onclick="openTelegramModal(); closeToolsMenu();">
-              <i class="fab fa-telegram-plane"></i>
-              <div class="tools-item-content">
-                <span class="tools-item-title">Telegram'dan Aktar</span>
-                <span class="tools-item-desc">Kanal veya bot üzerinden kitap çek</span>
-              </div>
-            </button>
-            <button type="button" class="tools-menu-item" onclick="syncLibrary(); closeToolsMenu();">
-              <i class="fas fa-sync-alt"></i>
-              <div class="tools-item-content">
-                <span class="tools-item-title">Kütüphaneyi Eşitle</span>
-                <span class="tools-item-desc">Klasördeki yeni belgeleri tara</span>
-              </div>
-            </button>
-            <button type="button" class="tools-menu-item" onclick="openDuplicatesModal(); closeToolsMenu();">
-              <i class="fas fa-copy"></i>
-              <div class="tools-item-content">
-                <span class="tools-item-title">Çift Kitap Avcısı</span>
-                <span class="tools-item-desc">Mükerrer dosyaları tespit et</span>
-              </div>
-            </button>
-            <button type="button" class="tools-menu-item" id="header-shortcuts-btn" onclick="openShortcutsModal(); closeToolsMenu();">
-              <i class="fas fa-keyboard"></i>
-              <div class="tools-item-content">
-                <span class="tools-item-title">Klavye Kısayolları</span>
-                <span class="tools-item-desc">Hızlı erişim kombinasyonları (?)</span>
-              </div>
-            </button>
-            <button type="button" class="tools-menu-item" id="btn-pwa-install" onclick="triggerPwaInstall(); closeToolsMenu();" style="display:none;">
-              <i class="fas fa-download"></i>
-              <div class="tools-item-content">
-                <span class="tools-item-title">Uygulamayı Yükle</span>
-                <span class="tools-item-desc">Masaüstü/Mobil PWA</span>
-              </div>
-            </button>
-          </div>
-        </div>
-
         <!-- Settings Cog -->
-        <button type="button" class="header-icon-btn" id="settings-btn" onclick="openSettings()" title="Ayarlar" aria-label="Ayarlar">
+        <button type="button" class="header-icon-btn" id="settings-btn" onclick="openSettings()" title="Ayarlar" aria-label="Ayarlar" style="position: relative;">
           <i class="fas fa-cog"></i>
+          <span class="header-logs-badge" id="header-logs-badge" style="display:none;"></span>
         </button>
       </div>
     </div>
@@ -183,7 +131,7 @@
     <div class="search-wrap" style="position:relative; display:flex; align-items:center;">
       <i class="fas fa-search"></i>
       <input type="search" id="search-input" placeholder="Kitap, yazar, konu ara… (Kısayol: /)" aria-label="Kitap, yazar veya konu ara">
-      <button type="button" id="btn-deep-search-toggle" class="btn-deep-search-toggle" onclick="toggleDeepSearchMode()" title="Global Derin Arama: Tüm kitapların sayfalarında ara">
+      <button type="button" id="btn-deep-search-toggle" class="btn-deep-search-toggle" aria-pressed="false" onclick="toggleDeepSearchMode()" title="Global Derin Arama: Tüm kitapların sayfalarında ara">
         <i class="fas fa-layer-group"></i> <span id="deep-search-label">Derin Arama</span>
       </button>
     </div>
@@ -872,7 +820,7 @@
       <div class="settings-header">
         <div class="settings-header-left">
           <div class="settings-header-icon">
-            <i class="fas fa-sliders-h"></i>
+            <i class="fas fa-cog"></i>
           </div>
           <div>
             <h2 id="settings-modal-title">Kütüphane Ayarları</h2>
@@ -944,12 +892,14 @@
 
           <!-- Kademeli Model Zinciri (Cascade Engine) -->
           <div id="ai-cascade-container" class="settings-section-card">
-            <div style="display: flex; align-items: center; justify-content: space-between;">
-              <label for="set-gemini-cascade-mode" style="font-size: 0.82rem; font-weight: 700; cursor: pointer; user-select: none; display: flex; align-items: center; gap: 0.5rem; color: var(--ink); margin: 0;">
-                <i class="fas fa-layer-group" style="color: var(--accent);"></i>
-                Kademeli Model Zinciri (Cascade Engine)
-                <span class="tooltip-wrap tooltip-right"><i class="fas fa-info-circle info-icon"></i><span class="tooltip">İstekler ilk modelden başlar. Model yoğunsa (503) veya kotası dolarsa bekleme yapmadan sıradaki modele aktarılır.</span></span>
-              </label>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;">
+              <div style="display: flex; align-items: center; gap: 0.45rem;">
+                <label for="set-gemini-cascade-mode" style="font-size: 0.84rem; font-weight: 700; cursor: pointer; user-select: none; display: inline-flex; align-items: center; gap: 0.5rem; color: var(--ink); margin: 0;">
+                  <i class="fas fa-layer-group" style="color: var(--accent);"></i>
+                  Kademeli Model Zinciri (Cascade Engine)
+                </label>
+                <span class="tooltip-wrap tooltip-bottom"><i class="fas fa-info-circle info-icon"></i><span class="tooltip">İstekler ilk modelden başlar. Model yoğunsa (503) veya kotası dolarsa bekleme yapmadan sıradaki modele aktarılır.</span></span>
+              </div>
               <label class="ui-toggle-switch" for="set-gemini-cascade-mode" title="Kademeli zinciri aç/kapat" aria-label="Kademeli zinciri aç veya kapat">
                 <input type="checkbox" id="set-gemini-cascade-mode" aria-label="Kademeli zincir modu" checked onchange="updateAIUI()">
                 <span class="ui-toggle-slider"></span>
@@ -1066,17 +1016,17 @@
             <span class="settings-section-label">Analiz limitleri</span>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
               <div class="settings-field-group">
-                <label for="set-pages">
-                  <span>Max Sayfa <small style="color:var(--muted); font-weight:400;">(1-100)</small></span>
-                  <span class="tooltip-wrap tooltip-right"><i class="fas fa-info-circle info-icon"></i><span class="tooltip">Yapay zekanın kitabın toplamda kaç sayfasını incelemesini istiyorsunuz? 1 ile 100 sayfa arasında bir değer seçebilirsiniz.</span></span>
-                </label>
+                <div class="settings-label-row">
+                  <label for="set-pages">Max Sayfa <small style="color:var(--muted); font-weight:400;">(1-100)</small></label>
+                  <span class="tooltip-wrap tooltip-left"><i class="fas fa-info-circle info-icon"></i><span class="tooltip">Yapay zekanın kitabın toplamda kaç sayfasını incelemesini istiyorsunuz? 1 ile 100 sayfa arasında bir değer seçebilirsiniz.</span></span>
+                </div>
                 <input type="number" id="set-pages" class="settings-input" min="1" max="100">
               </div>
               <div class="settings-field-group">
-                <label for="set-ocr-pages">
-                  <span>OCR Sayfa <small style="color:var(--muted); font-weight:400;">(0-60)</small></span>
+                <div class="settings-label-row">
+                  <label for="set-ocr-pages">OCR Sayfa <small style="color:var(--muted); font-weight:400;">(0-60)</small></label>
                   <span class="tooltip-wrap tooltip-left"><i class="fas fa-info-circle info-icon"></i><span class="tooltip">Eğer kitap taranmış resim formatındaysa, kaç sayfanın yazılarının okunacağını belirler. 0 ile 60 sayfa arası sınır koyabilirsiniz.</span></span>
-                </label>
+                </div>
                 <input type="number" id="set-ocr-pages" class="settings-input" min="0" max="60">
               </div>
             </div>
@@ -1086,25 +1036,25 @@
             <span class="settings-section-label" style="color:var(--accent);">Görüntü / Vision ayarları</span>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
               <div class="settings-field-group">
-                <label for="set-vision-pages">
-                  <span>Vision Sayfa <small style="color:var(--muted); font-weight:400;">(0-60)</small></span>
-                  <span class="tooltip-wrap tooltip-right"><i class="fas fa-info-circle info-icon"></i><span class="tooltip">Yapay zekanın kitap kapaklarını ve içindeki görselleri görerek analiz edeceği sayfa sayısıdır.</span></span>
-                </label>
+                <div class="settings-label-row">
+                  <label for="set-vision-pages">Vision Sayfa <small style="color:var(--muted); font-weight:400;">(0-60)</small></label>
+                  <span class="tooltip-wrap tooltip-left"><i class="fas fa-info-circle info-icon"></i><span class="tooltip">Yapay zekanın kitap kapaklarını ve içindeki görselleri görerek analiz edeceği sayfa sayısıdır.</span></span>
+                </div>
                 <input type="number" id="set-vision-pages" class="settings-input" min="0" max="60">
               </div>
               <div class="settings-field-group">
-                <label for="set-vision-quality">
-                  <span>JPEG Kalite <small style="color:var(--muted); font-weight:400;">(40-95)</small></span>
+                <div class="settings-label-row">
+                  <label for="set-vision-quality">JPEG Kalite <small style="color:var(--muted); font-weight:400;">(40-95)</small></label>
                   <span class="tooltip-wrap tooltip-left"><i class="fas fa-info-circle info-icon"></i><span class="tooltip">İncelenen resimlerin netlik kalitesidir. 82 değeri ideal hız ve netlik dengesidir.</span></span>
-                </label>
+                </div>
                 <input type="number" id="set-vision-quality" class="settings-input" min="40" max="95">
               </div>
             </div>
             <div class="settings-field-group" style="margin-top: 0.3rem;">
-              <label for="set-vision-dim">
-                <span>Çözünürlük Sınırı <small style="color:var(--muted); font-weight:400;">(256-2400)</small></span>
-                <span class="tooltip-wrap tooltip-right"><i class="fas fa-info-circle info-icon"></i><span class="tooltip">Gönderilen resimlerin büyüklüğünü belirler. 1200 piksel çoğu kitap için en iyi sonuçtur.</span></span>
-              </label>
+              <div class="settings-label-row">
+                <label for="set-vision-dim">Çözünürlük Sınırı <small style="color:var(--muted); font-weight:400;">(256-2400)</small></label>
+                <span class="tooltip-wrap tooltip-left"><i class="fas fa-info-circle info-icon"></i><span class="tooltip">Gönderilen resimlerin büyüklüğünü belirler. 1200 piksel çoğu kitap için en iyi sonuçtur.</span></span>
+              </div>
               <input type="number" id="set-vision-dim" class="settings-input" min="256" max="2400">
             </div>
           </div>
@@ -1126,10 +1076,10 @@
             </p>
 
             <div class="settings-field-group">
-              <label for="set-access-password">
-                <span>Erişim Şifresi</span>
+              <div class="settings-label-row">
+                <label for="set-access-password">Erişim Şifresi</label>
                 <span class="tooltip-wrap tooltip-left"><i class="fas fa-info-circle info-icon"></i><span class="tooltip">Şifre belirlendiğinde harici cihazlar kütüphaneye girmeden önce bu şifreyi girmek zorundadır.</span></span>
-              </label>
+              </div>
               <div style="display: flex; align-items: center; gap: 0.5rem;">
                 <div style="position: relative; flex: 1; display: flex; align-items: center;">
                   <input type="password" id="set-access-password" class="settings-input" placeholder="Şifre belirlenmemiş" style="padding-right: 2.5rem;" autocomplete="new-password" onkeydown="if(event.key==='Enter'){event.preventDefault();saveAccessPasswordDirect();}">
@@ -1223,11 +1173,11 @@
           <div class="settings-section-card">
             <span class="settings-section-label">Gölge kütüphaneci (otomatik izleme klasörü)</span>
             <div class="settings-field-group">
-              <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+              <label class="settings-checkbox-label" for="set-watchfolder-enabled">
                 <input type="checkbox" id="set-watchfolder-enabled" aria-label="Klasör İzlemeyi Etkinleştir">
                 <span>İndirilenleri Otomatik Ekle (Auto-Watchfolder)</span>
               </label>
-              <div style="font-size:0.75rem; color:var(--muted); margin-top:0.3rem;">
+              <div style="font-size:0.75rem; color:var(--muted); margin-top:0.35rem; line-height:1.45;">
                 Belirlediğiniz klasöre inen PDF ve EPUB dosyaları tespit edilip indirme tamamlandığında otomatik kütüphaneye eklenir.
               </div>
             </div>
@@ -1239,18 +1189,38 @@
 
           <div class="settings-section-card">
             <span class="settings-section-label">Veri ve sistem araçları</span>
-            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-              <button type="button" class="btn-modal-secondary" style="width:100%; padding: 0.8rem 1rem; border-radius: var(--radius-xs); display: flex; align-items: center; justify-content: center; gap: 0.6rem;" onclick="exportToExcel()">
-                <i class="fas fa-file-excel" style="color: var(--accent); font-size: 1.05rem;"></i> Kütüphaneyi Excel'e Aktar (.xlsx)
+            <div class="settings-tools-grid">
+              <button type="button" class="btn-modal-secondary settings-tool-btn" onclick="closeSettingsDirect(); syncLibrary();">
+                <i class="fas fa-sync-alt"></i>
+                <span>Kütüphaneyi Eşitle</span>
               </button>
-              <button type="button" class="btn-modal-secondary" style="width:100%; padding: 0.8rem 1rem; border-radius: var(--radius-xs); display: flex; align-items: center; justify-content: center; gap: 0.6rem;" onclick="openDuplicatesModal()">
-                <i class="fas fa-copy" style="color: var(--accent); font-size: 1.05rem;"></i> Mükerrer / Çift Kitapları Tara ve Temizle
+              <button type="button" class="btn-modal-secondary settings-tool-btn" onclick="closeSettingsDirect(); openTelegramModal();">
+                <i class="fab fa-telegram-plane"></i>
+                <span>Telegram'dan Aktar</span>
               </button>
-              <button type="button" class="btn-modal-secondary" style="width:100%; padding: 0.8rem 1rem; border-radius: var(--radius-xs); display: flex; align-items: center; justify-content: center; gap: 0.6rem;" onclick="exportFullLibraryZip()">
-                <i class="fas fa-file-archive" style="color: var(--accent); font-size: 1.05rem;"></i> Taşınabilir Tam Kütüphane Yedeği (.zip)
+              <button type="button" class="btn-modal-secondary settings-tool-btn" onclick="exportToExcel()">
+                <i class="fas fa-file-excel"></i>
+                <span>Excel'e Aktar (.xlsx)</span>
               </button>
-              <button type="button" class="btn-modal-secondary" style="width:100%; padding: 0.8rem 1rem; border-radius: var(--radius-xs); display:flex; align-items:center; justify-content:center; gap:0.6rem;" onclick="closeSettingsDirect(); openLogsModal();">
-                <i class="fas fa-terminal" style="color: var(--accent); font-size: 1.05rem;"></i> Sistem &amp; İşlem Günlüklerini (Log) Görüntüle
+              <button type="button" class="btn-modal-secondary settings-tool-btn" onclick="closeSettingsDirect(); openDuplicatesModal();">
+                <i class="fas fa-copy"></i>
+                <span>Çift Kitap Avcısı</span>
+              </button>
+              <button type="button" class="btn-modal-secondary settings-tool-btn" onclick="exportFullLibraryZip()">
+                <i class="fas fa-file-archive"></i>
+                <span>Tam Kütüphane Yedeği (.zip)</span>
+              </button>
+              <button type="button" class="btn-modal-secondary settings-tool-btn" onclick="closeSettingsDirect(); openLogsModal();">
+                <i class="fas fa-terminal"></i>
+                <span>Canlı İşlem Logları</span>
+              </button>
+              <button type="button" class="btn-modal-secondary settings-tool-btn" onclick="closeSettingsDirect(); openShortcutsModal();">
+                <i class="fas fa-keyboard"></i>
+                <span>Klavye Kısayolları (?)</span>
+              </button>
+              <button type="button" class="btn-modal-secondary settings-tool-btn" id="btn-pwa-install" style="display:none;" onclick="closeSettingsDirect(); triggerPwaInstall();">
+                <i class="fas fa-download"></i>
+                <span>Uygulamayı Yükle (PWA)</span>
               </button>
             </div>
           </div>
@@ -1607,16 +1577,16 @@
     </div>
   </div>
 
-  <script src="{{ url_for('static', path='/js/state.js') }}?v=2026111504"></script>
-  <script src="{{ url_for('static', path='/js/motion.js') }}?v=2026111504"></script>
-  <script src="{{ url_for('static', path='/js/api.js') }}?v=2026111504"></script>
-  <script src="{{ url_for('static', path='/js/ui_core.js') }}?v=2026111504"></script>
-  <script src="{{ url_for('static', path='/js/ui_logs.js') }}?v=2026111504"></script>
-  <script src="{{ url_for('static', path='/js/ui_chat_settings.js') }}?v=2026111504"></script>
-  <script src="{{ url_for('static', path='/js/ui_telegram.js') }}?v=2026111504"></script>
-  <script src="{{ url_for('static', path='/js/ui_workspace.js') }}?v=2026111504"></script>
-  <script src="{{ url_for('static', path='/js/websocket.js') }}?v=2026111504"></script>
-  <script src="{{ url_for('static', path='/js/app.js') }}?v=2026111504"></script>
+  <script src="{{ url_for('static', path='/js/state.js') }}?v=2026111505"></script>
+  <script src="{{ url_for('static', path='/js/motion.js') }}?v=2026111505"></script>
+  <script src="{{ url_for('static', path='/js/api.js') }}?v=2026111505"></script>
+  <script src="{{ url_for('static', path='/js/ui_core.js') }}?v=2026111505"></script>
+  <script src="{{ url_for('static', path='/js/ui_logs.js') }}?v=2026111505"></script>
+  <script src="{{ url_for('static', path='/js/ui_chat_settings.js') }}?v=2026111505"></script>
+  <script src="{{ url_for('static', path='/js/ui_telegram.js') }}?v=2026111505"></script>
+  <script src="{{ url_for('static', path='/js/ui_workspace.js') }}?v=2026111505"></script>
+  <script src="{{ url_for('static', path='/js/websocket.js') }}?v=2026111505"></script>
+  <script src="{{ url_for('static', path='/js/app.js') }}?v=2026111505"></script>
 </body>
 
 </html>
