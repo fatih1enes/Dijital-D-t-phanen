@@ -850,7 +850,8 @@ i[class*="fa-heart"] {
   opacity: 0;
   visibility: hidden;
   transform: translateY(-4px);
-  transition: opacity var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out), visibility var(--t-micro);
+  transform-origin: top center;
+  transition: opacity var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out);
   pointer-events: none;
 }
 
@@ -862,6 +863,12 @@ i[class*="fa-heart"] {
   transform: translateY(0);
   pointer-events: auto;
   animation: dropdownIn var(--t-micro) var(--ease-out);
+}
+
+.dropdown-menu.closing {
+  visibility: visible;
+  pointer-events: none;
+  animation: dropdownOut var(--t-micro) var(--ease-out) forwards;
 }
 
 .dropdown-item {
@@ -2160,7 +2167,6 @@ i[class*="fa-heart"] {
   cursor: pointer;
   transition: background-color var(--t-micro) var(--ease-out),
               border-color var(--t-micro) var(--ease-out),
-              box-shadow var(--t-micro) var(--ease-out),
               transform var(--t-micro) var(--ease-out);
 }
 
@@ -4159,4 +4165,21 @@ button:active:not(:disabled),
 .pdf-toc-sidebar.open > * {
   opacity: 1;
   transform: translateX(0);
+}
+
+.header-tools-menu {
+  transform-origin: top right;
+}
+
+.pdf-search-bar {
+  transform-origin: top right;
+}
+
+.pdf-search-bar.closing {
+  pointer-events: none;
+  animation: mExit var(--t-exit) var(--ease-out) forwards;
+}
+
+.pdf-search-results-drawer {
+  transform-origin: top center;
 }

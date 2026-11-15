@@ -98,12 +98,31 @@ async function openTelegramModal() {
   const modal = document.getElementById('telegram-modal');
   if (!modal) return;
 
+  const triggerEl = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  modal._sourceTriggerEl = triggerEl;
+
+  const modalBox = modal.querySelector('.modal');
+  if (modalBox && triggerEl && triggerEl !== document.body && typeof triggerEl.getBoundingClientRect === 'function') {
+    const r = triggerEl.getBoundingClientRect();
+    if (r.width > 0 || r.height > 0) {
+      modalBox.style.setProperty('--modal-origin-x', `${Math.round(r.left + r.width / 2)}px`);
+      modalBox.style.setProperty('--modal-origin-y', `${Math.round(r.top + r.height / 2)}px`);
+    }
+  }
+
   const errEl = document.getElementById('tg-modal-error');
   if (errEl) errEl.style.display = 'none';
 
   modal.classList.remove('closing');
-  modal.classList.add('open');
   document.body.classList.add('modal-open');
+  if (window.Motion && typeof window.Motion.enter === 'function') {
+    void window.Motion.enter(modal, { className: '', addClass: 'open', cleanExitClass: 'closing' });
+    if (modalBox) {
+      void window.Motion.enter(modalBox, { className: 'm-enter', origin: null });
+    }
+  } else {
+    modal.classList.add('open');
+  }
   if (typeof activateModalFocus === 'function') activateModalFocus(modal);
 
   // Check connection status

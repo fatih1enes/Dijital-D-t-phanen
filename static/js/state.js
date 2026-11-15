@@ -82,28 +82,63 @@ function showToast(message, type = 'info', duration = 4000) {
   toast.innerHTML = `
     <div class="toast-icon"><i class="fas ${icon}"></i></div>
     <div class="toast-content">${formattedMsg}</div>
-    <button class="toast-close" onclick="this.closest('.toast-item').remove()" aria-label="Kapat">&times;</button>
+    <button type="button" class="toast-close" aria-label="Kapat">&times;</button>
   `;
 
   container.appendChild(toast);
 
-  requestAnimationFrame(() => {
-    toast.classList.add('show');
-  });
+  let dismissTimer = null;
+  let isDismissed = false;
 
-  let dismissTimer = setTimeout(() => {
-    toast.classList.remove('show');
-    toast.classList.add('hide');
-    setTimeout(() => toast.remove(), 280);
-  }, duration);
-
-  toast.addEventListener('mouseenter', () => clearTimeout(dismissTimer));
-  toast.addEventListener('mouseleave', () => {
-    dismissTimer = setTimeout(() => {
+  const dismissToast = () => {
+    if (isDismissed || !toast.isConnected) return;
+    isDismissed = true;
+    if (dismissTimer) {
+      clearTimeout(dismissTimer);
+      dismissTimer = null;
+    }
+    if (window.Motion && typeof window.Motion.exit === 'function') {
+      void window.Motion.exit(toast, {
+        className: 'm-exit',
+        removeClass: 'show',
+        afterFn: () => toast.remove()
+      });
+    } else {
       toast.classList.remove('show');
       toast.classList.add('hide');
-      setTimeout(() => toast.remove(), 280);
-    }, 1200);
+      setTimeout(() => toast.remove(), 220);
+    }
+  };
+
+  const closeBtn = toast.querySelector('.toast-close');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', dismissToast);
+  }
+
+  if (window.Motion && typeof window.Motion.enter === 'function') {
+    void window.Motion.enter(toast, {
+      className: 'm-enter',
+      addClass: 'show',
+      origin: 'top right'
+    });
+  } else {
+    requestAnimationFrame(() => {
+      toast.classList.add('show');
+    });
+  }
+
+  dismissTimer = setTimeout(dismissToast, duration);
+
+  toast.addEventListener('mouseenter', () => {
+    if (dismissTimer) {
+      clearTimeout(dismissTimer);
+      dismissTimer = null;
+    }
+  });
+  toast.addEventListener('mouseleave', () => {
+    if (isDismissed) return;
+    if (dismissTimer) clearTimeout(dismissTimer);
+    dismissTimer = setTimeout(dismissToast, 1200);
   });
 }
 

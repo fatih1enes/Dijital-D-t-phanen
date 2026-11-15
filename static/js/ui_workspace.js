@@ -500,6 +500,14 @@
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         void sendWorkspaceMessage();
+      } else if (e.key === 'Escape') {
+        const chatPane = document.getElementById('workspace-chat-pane');
+        if (chatPane && !chatPane.classList.contains('collapsed')) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.target.blur();
+          toggleWorkspaceChatPane();
+        }
       }
     }
 
@@ -880,6 +888,24 @@
       }
     });
 
+    let workspaceChatPaneTimer = null;
+
+    function _refitReaderAfterChatToggle(prevScrollRatio) {
+      const container = document.getElementById('pdf-canvas-container');
+      const applyScrollRatio = () => {
+        if (container && prevScrollRatio > 0 && container.scrollHeight > container.clientHeight) {
+          container.scrollTop = Math.round(prevScrollRatio * (container.scrollHeight - container.clientHeight));
+        }
+      };
+      if (pdfDoc && (pdfIsFitWidth || pdfIsFitHeight) && typeof resizeAllPagesForZoom === 'function') {
+        resizeAllPagesForZoom();
+        setTimeout(() => requestAnimationFrame(applyScrollRatio), 90);
+      } else {
+        requestAnimationFrame(applyScrollRatio);
+      }
+      window.dispatchEvent(new Event('resize'));
+    }
+
     function toggleWorkspaceChatPane() {
       const chatPane = document.getElementById('workspace-chat-pane');
       const pdfPane = document.getElementById('workspace-pdf-pane');
@@ -887,10 +913,21 @@
       const toggleBtn = document.getElementById('btn-toggle-workspace-chat');
       const label = document.getElementById('workspace-chat-toggle-label');
       const backdrop = document.getElementById('mobile-chat-backdrop');
+      const scrollContainer = document.getElementById('pdf-canvas-container');
       if (!chatPane) return;
 
-      const isCollapsed = chatPane.classList.toggle('collapsed');
+      if (workspaceChatPaneTimer) {
+        clearTimeout(workspaceChatPaneTimer);
+        workspaceChatPaneTimer = null;
+      }
+
+      const prevScrollRatio = (scrollContainer && scrollContainer.scrollHeight > scrollContainer.clientHeight)
+        ? scrollContainer.scrollTop / (scrollContainer.scrollHeight - scrollContainer.clientHeight)
+        : 0;
+      const isCurrentlyCollapsed = chatPane.classList.contains('collapsed') || chatPane.classList.contains('m-exit');
+      const isCollapsed = !isCurrentlyCollapsed;
       const isMobile = window.innerWidth <= 860 || document.getElementById('workspace-reader')?.classList.contains('is-mobile-reader');
+      const reduced = window.Motion && typeof window.Motion.reduced === 'function' && window.Motion.reduced();
 
       if (backdrop) {
         backdrop.classList.toggle('active', !isCollapsed && isMobile);
@@ -901,6 +938,7 @@
       }
       if (toggleBtn) {
         toggleBtn.classList.toggle('active', !isCollapsed);
+        toggleBtn.setAttribute('aria-expanded', String(!isCollapsed));
         toggleBtn.title = isCollapsed ? 'AI Asistan Panelini Aç' : 'AI Asistan Panelini Gizle (Odaklı Okuma)';
       }
       if (label) {
@@ -911,25 +949,14 @@
         }
       }
 
-      if (isMobile) {
-        // Reset any inline desktop sizing so mobile responsive CSS rules take full effect
-        chatPane.style.flex = '';
-        chatPane.style.width = '';
-        chatPane.style.minWidth = '';
-        chatPane.style.maxWidth = '';
-        if (pdfPane) pdfPane.style.flex = '';
-      } else if (pdfPane) {
-        if (isCollapsed) {
-          if (chatPane.style.flex && chatPane.style.flex !== '0 0 0px') {
-            lastChatFlex = chatPane.style.flex;
-            lastPdfFlex = pdfPane.style.flex;
-          }
-          chatPane.style.flex = '0 0 0px';
-          chatPane.style.width = '0px';
-          chatPane.style.minWidth = '0px';
-          chatPane.style.maxWidth = '0px';
-          pdfPane.style.flex = '1 1 100%';
-        } else {
+      const applyDesktopExpandedLayout = () => {
+        if (isMobile) {
+          chatPane.style.flex = '';
+          chatPane.style.width = '';
+          chatPane.style.minWidth = '';
+          chatPane.style.maxWidth = '';
+          if (pdfPane) pdfPane.style.flex = '';
+        } else if (pdfPane) {
           chatPane.style.maxWidth = '800px';
           chatPane.style.minWidth = '280px';
           if (lastPdfFlex && lastChatFlex) {
@@ -942,15 +969,64 @@
             chatPane.style.width = '380px';
           }
         }
-      }
+      };
 
-      // Smoothly trigger a resize / refit on the PDF canvas so reader is responsive
-      setTimeout(() => {
-        if (typeof pdfFitWidth === 'function') {
-          pdfFitWidth();
+      const applyCollapsedLayout = () => {
+        chatPane.classList.add('collapsed');
+        chatPane.classList.remove('m-exit', 'm-enter');
+        if (isMobile) {
+          chatPane.style.flex = '';
+          chatPane.style.width = '';
+          chatPane.style.minWidth = '';
+          chatPane.style.maxWidth = '';
+          if (pdfPane) pdfPane.style.flex = '';
+        } else if (pdfPane) {
+          if (chatPane.style.flex && chatPane.style.flex !== '0 0 0px') {
+            lastChatFlex = chatPane.style.flex;
+            lastPdfFlex = pdfPane.style.flex;
+          }
+          chatPane.style.flex = '0 0 0px';
+          chatPane.style.width = '0px';
+          chatPane.style.minWidth = '0px';
+          chatPane.style.maxWidth = '0px';
+          pdfPane.style.flex = '1 1 100%';
         }
-        window.dispatchEvent(new Event('resize'));
-      }, 280);
+        _refitReaderAfterChatToggle(prevScrollRatio);
+        if (toggleBtn && toggleBtn.isConnected && typeof toggleBtn.focus === 'function') {
+          toggleBtn.focus({ preventScroll: true });
+        }
+      };
+
+      if (!isCollapsed) {
+        chatPane.classList.remove('collapsed', 'm-exit');
+        applyDesktopExpandedLayout();
+        const chatInput = document.getElementById('workspace-chat-input');
+        if (!isMobile && window.Motion && typeof window.Motion.enter === 'function') {
+          void window.Motion.enter(chatPane, {
+            className: 'm-enter',
+            origin: 'right center',
+            cleanExitClass: 'm-exit',
+            focusEl: chatInput
+          });
+        } else {
+          chatPane.style.transformOrigin = isMobile ? 'bottom center' : 'right center';
+          if (chatInput) {
+            setTimeout(() => chatInput.focus({ preventScroll: true }), reduced ? 20 : 220);
+          }
+        }
+        workspaceChatPaneTimer = setTimeout(() => {
+          workspaceChatPaneTimer = null;
+          _refitReaderAfterChatToggle(prevScrollRatio);
+        }, reduced ? 16 : 240);
+      } else if (!isMobile && window.Motion && typeof window.Motion.exit === 'function') {
+        chatPane.style.transformOrigin = 'right center';
+        void window.Motion.exit(chatPane, {
+          className: 'm-exit',
+          afterFn: applyCollapsedLayout
+        });
+      } else {
+        applyCollapsedLayout();
+      }
     }
     window.toggleWorkspaceChatPane = toggleWorkspaceChatPane;
 
@@ -1942,6 +2018,30 @@
       hideFloatingBar();
       closePdfSearch();
       pdfSearchTextCache = {};
+      if (pdfSearchDebounceTimer) {
+        clearTimeout(pdfSearchDebounceTimer);
+        pdfSearchDebounceTimer = null;
+      }
+      if (saveProgressDebounceTimer) {
+        clearTimeout(saveProgressDebounceTimer);
+        saveProgressDebounceTimer = null;
+      }
+      if (zoomWillChangeTimer) {
+        clearTimeout(zoomWillChangeTimer);
+        zoomWillChangeTimer = null;
+      }
+      if (resizeSpreadTimer) {
+        clearTimeout(resizeSpreadTimer);
+        resizeSpreadTimer = null;
+      }
+      if (workspaceChatPaneTimer) {
+        clearTimeout(workspaceChatPaneTimer);
+        workspaceChatPaneTimer = null;
+      }
+      if (copyChatBtnTimeout) {
+        clearTimeout(copyChatBtnTimeout);
+        copyChatBtnTimeout = null;
+      }
       if (selectionChangeAbortController) {
         try { selectionChangeAbortController.abort(); } catch (_) {}
         selectionChangeAbortController = null;
@@ -1951,8 +2051,21 @@
       selectionDragState = null;
       prevSelectionRange = null;
       isUserSelectingText = false;
+      const readerEl = document.getElementById('workspace-reader');
+      if (readerEl) readerEl.style.viewTransitionName = '';
+      const chatPane = document.getElementById('workspace-chat-pane');
+      if (chatPane) {
+        chatPane.classList.remove('m-enter', 'm-exit', 'closing');
+        chatPane.style.transformOrigin = '';
+        chatPane.style.viewTransitionName = '';
+      }
+      const searchBar = document.getElementById('pdf-search-bar');
+      if (searchBar) {
+        searchBar.classList.remove('m-enter', 'm-exit', 'closing');
+      }
       const container = document.getElementById('pdf-canvas-container');
       if (container) {
+        container.style.willChange = '';
         container.removeEventListener('mouseup', handleTextSelection);
         container.removeEventListener('touchend', handleTextSelection);
       }
@@ -2671,26 +2784,42 @@
     }
 
     // Sticky Note Modals Functions
+    function _presentPdfNoteModal(triggerEl) {
+      const noteModal = document.getElementById('pdf-note-modal');
+      if (!noteModal) return;
+      noteModal._sourceTriggerEl = triggerEl || document.activeElement || null;
+      const modalBox = noteModal.querySelector('.modal');
+      if (modalBox) {
+        modalBox.style.setProperty('--modal-origin-x', 'center');
+        modalBox.style.setProperty('--modal-origin-y', 'center');
+      }
+      noteModal.classList.remove('closing', 'm-exit');
+      document.body.classList.add('modal-open');
+      if (window.Motion && typeof window.Motion.enter === 'function') {
+        void window.Motion.enter(noteModal, { className: '', addClass: 'open', cleanExitClass: 'closing' });
+        if (modalBox) {
+          void window.Motion.enter(modalBox, { className: 'm-enter', origin: 'center center', cleanExitClass: 'm-exit' });
+        }
+      } else {
+        noteModal.classList.add('open');
+      }
+      if (typeof activateModalFocus === 'function') activateModalFocus(noteModal);
+    }
+
     function openNoteModalForSelection() {
       if (!pdfSelectedText) return;
-      
+      const triggerEl = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
       pdfActiveHighlightIdForNote = generateHighlightId();
-      
+
       // Default to yellow for new selections
       selectModalNoteColor('#e8dca0', 'yellow');
-      
+
       // Populate previews
       document.getElementById('pdf-selected-text-preview').textContent = `"${pdfSelectedText}"`;
       document.getElementById('pdf-note-textarea').value = "";
-      
-      // Show Modal
-      const noteModal = document.getElementById('pdf-note-modal');
-      if (noteModal) {
-        noteModal.classList.remove('closing');
-        noteModal.classList.add('open');
-        document.body.classList.add('modal-open');
-        if (typeof activateModalFocus === 'function') activateModalFocus(noteModal);
-      }
+
+      _presentPdfNoteModal(triggerEl);
     }
 
     function closePdfNoteModalDirect() {
@@ -2829,9 +2958,10 @@
 
     // Edit note modal trigger
     function editExistingNote(hlId, quote, currentNote, pageNum) {
+      const triggerEl = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       pdfActiveHighlightIdForNote = hlId;
       pdfPageNum = pageNum; // sync page context
-      
+
       let hl = null;
       if (pdfHighlights[pageNum]) {
         hl = pdfHighlights[pageNum].find(h => h.id === hlId);
@@ -2839,12 +2969,10 @@
       const activeColorHex = hl ? hl.colorHex : '#e8dca0';
       const activeColorClass = hl ? hl.colorClass : 'yellow';
       selectModalNoteColor(activeColorHex, activeColorClass);
-      
+
       document.getElementById('pdf-selected-text-preview').textContent = `"${quote}"`;
       document.getElementById('pdf-note-textarea').value = currentNote;
-      document.getElementById('pdf-note-modal').classList.add('open');
-      document.body.classList.add('modal-open');
-      setTimeout(() => document.getElementById('pdf-note-textarea').focus(), 150);
+      _presentPdfNoteModal(triggerEl);
     }
 
     // Annotation Sidebar populating & interactive jump-to-page trigger
@@ -2983,6 +3111,7 @@
     let isPdfSearchDrawerOpen = false;
     let pdfSearchDebounceTimer = null;
     let pdfSearchToken = 0; // Incremental cancellation token preventing search race conditions
+    let _pdfSearchTriggerEl = null;
 
     // Toggle search bar
     function togglePdfSearch(forceOpen) {
@@ -2991,32 +3120,82 @@
       const input = document.getElementById('pdf-search-input');
       if (!searchBar) return;
 
-      const shouldOpen = (forceOpen !== undefined) ? forceOpen : (searchBar.style.display === 'none' || !searchBar.style.display);
+      const isHidden = searchBar.style.display === 'none' || !searchBar.style.display || searchBar.classList.contains('closing');
+      const shouldOpen = (forceOpen !== undefined) ? forceOpen : isHidden;
       if (shouldOpen) {
-        searchBar.style.display = 'block';
+        if (document.activeElement instanceof HTMLElement && !searchBar.contains(document.activeElement)) {
+          _pdfSearchTriggerEl = document.activeElement;
+        } else {
+          _pdfSearchTriggerEl = toggleBtn;
+        }
         toggleBtn?.classList.add('active');
+        toggleBtn?.setAttribute('aria-expanded', 'true');
         isPdfSearchOpen = true;
-        setTimeout(() => {
-          input?.focus();
-          input?.select();
-        }, 50);
+        if (window.Motion && typeof window.Motion.enter === 'function') {
+          void window.Motion.enter(searchBar, {
+            className: '',
+            showDisplay: 'block',
+            origin: 'top right',
+            cleanExitClass: 'closing',
+            focusEl: input
+          });
+          requestAnimationFrame(() => input?.select());
+        } else {
+          searchBar.classList.remove('closing');
+          searchBar.style.display = 'block';
+          requestAnimationFrame(() => {
+            input?.focus({ preventScroll: true });
+            input?.select();
+          });
+        }
       } else {
-        closePdfSearch();
+        closePdfSearch({ restoreFocus: true });
       }
     }
 
-    function closePdfSearch() {
+    function closePdfSearch(opts = {}) {
       const searchBar = document.getElementById('pdf-search-bar');
       const toggleBtn = document.getElementById('pdf-search-btn');
       const drawer = document.getElementById('pdf-search-results-drawer');
       const listBtn = document.getElementById('pdf-search-list-btn');
-      if (searchBar) searchBar.style.display = 'none';
-      if (drawer) drawer.style.display = 'none';
+
       toggleBtn?.classList.remove('active');
+      toggleBtn?.setAttribute('aria-expanded', 'false');
       listBtn?.classList.remove('active');
+      listBtn?.setAttribute('aria-expanded', 'false');
       isPdfSearchOpen = false;
       isPdfSearchDrawerOpen = false;
       clearPdfSearch(true); // clear visual highlights
+
+      const restoreFocus = () => {
+        if (opts.restoreFocus) {
+          const target = (_pdfSearchTriggerEl && _pdfSearchTriggerEl.isConnected) ? _pdfSearchTriggerEl : toggleBtn;
+          if (target && typeof target.focus === 'function') {
+            target.focus({ preventScroll: true });
+          }
+        }
+      };
+
+      if (drawer) {
+        drawer.classList.remove('m-enter', 'm-exit');
+        drawer.style.display = 'none';
+      }
+
+      if (searchBar && searchBar.style.display !== 'none' && !searchBar.classList.contains('closing')) {
+        if (window.Motion && typeof window.Motion.exit === 'function') {
+          void window.Motion.exit(searchBar, {
+            className: 'closing',
+            hideDisplay: true,
+            afterFn: restoreFocus
+          });
+        } else {
+          searchBar.style.display = 'none';
+          restoreFocus();
+        }
+      } else {
+        if (searchBar) searchBar.style.display = 'none';
+        restoreFocus();
+      }
     }
 
     function clearPdfSearch(onlyClearHighlights) {
@@ -3057,11 +3236,29 @@
       const listBtn = document.getElementById('pdf-search-list-btn');
       if (!drawer) return;
       isPdfSearchDrawerOpen = !isPdfSearchDrawerOpen;
-      drawer.style.display = isPdfSearchDrawerOpen ? 'block' : 'none';
+      listBtn?.setAttribute('aria-expanded', String(isPdfSearchDrawerOpen));
       if (isPdfSearchDrawerOpen) {
         listBtn?.classList.add('active');
+        if (window.Motion && typeof window.Motion.enter === 'function') {
+          void window.Motion.enter(drawer, {
+            className: 'm-enter',
+            showDisplay: 'block',
+            origin: 'top center',
+            cleanExitClass: 'm-exit'
+          });
+        } else {
+          drawer.style.display = 'block';
+        }
       } else {
         listBtn?.classList.remove('active');
+        if (window.Motion && typeof window.Motion.exit === 'function') {
+          void window.Motion.exit(drawer, {
+            className: 'm-exit',
+            hideDisplay: true
+          });
+        } else {
+          drawer.style.display = 'none';
+        }
       }
     }
 
@@ -3087,7 +3284,8 @@
         }
       } else if (e.key === 'Escape') {
         e.preventDefault();
-        closePdfSearch();
+        e.stopPropagation();
+        closePdfSearch({ restoreFocus: true });
       }
     }
 

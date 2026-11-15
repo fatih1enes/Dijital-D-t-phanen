@@ -429,7 +429,9 @@
   .modal-overlay.closing,
   .modal-overlay.closing .modal,
   #ops-center.closing,
-  #chat-panel.closing {
+  #chat-panel.closing,
+  .dropdown-menu.closing,
+  .pdf-search-bar.closing {
     animation-duration: 120ms !important;
     animation-timing-function: ease !important;
   }

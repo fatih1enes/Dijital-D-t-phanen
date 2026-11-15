@@ -316,7 +316,7 @@
       visibility: hidden;
       transform: translateY(-6px) scale(0.97);
       transform-origin: top center;
-      transition: opacity var(--t-ui) var(--ease-out), transform var(--t-ui) var(--ease-out), visibility var(--t-ui);
+      transition: opacity var(--t-ui) var(--ease-out), transform var(--t-ui) var(--ease-out);
       padding: 0.5rem;
       max-height: 350px;
       overflow-y: auto;
@@ -3147,7 +3147,7 @@
       visibility: hidden;
       pointer-events: none;
       overflow: hidden;
-      transition: opacity var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out), visibility var(--t-micro);
+      transition: opacity var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out);
     }
 
     #ops-center.active {
@@ -6535,7 +6535,8 @@
       line-height: 1.45;
       opacity: 0;
       transform: translateX(45px) scale(0.95);
-      transition: color var(--t-ui) var(--ease-out), background-color var(--t-ui) var(--ease-out), border-color var(--t-ui) var(--ease-out), opacity var(--t-ui) var(--ease-out), transform var(--t-ui) var(--ease-out);
+      transform-origin: top right;
+      transition: opacity var(--t-ui) var(--ease-out), transform var(--t-ui) var(--ease-out);
     }
 
     .toast-item.show {
@@ -7135,7 +7136,7 @@
         display: flex !important;
         flex-direction: column !important;
         transform: translateY(0) !important;
-        transition: transform 0.32s var(--ease-out), opacity 0.25s ease !important;
+        transition: transform var(--t-ui) var(--ease-out), opacity var(--t-ui) var(--ease-out) !important;
         opacity: 1 !important;
         pointer-events: auto !important;
         flex: none !important;

@@ -303,9 +303,26 @@
         updateAIUI();
         
         if (modal) {
+          const triggerEl = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+          modal._sourceTriggerEl = triggerEl;
+          const modalBox = modal.querySelector('.modal');
+          if (modalBox && triggerEl && triggerEl !== document.body && typeof triggerEl.getBoundingClientRect === 'function') {
+            const r = triggerEl.getBoundingClientRect();
+            if (r.width > 0 || r.height > 0) {
+              modalBox.style.setProperty('--modal-origin-x', `${Math.round(r.left + r.width / 2)}px`);
+              modalBox.style.setProperty('--modal-origin-y', `${Math.round(r.top + r.height / 2)}px`);
+            }
+          }
           modal.classList.remove('closing');
-          modal.classList.add('open');
           document.body.classList.add('modal-open');
+          if (window.Motion && typeof window.Motion.enter === 'function') {
+            void window.Motion.enter(modal, { className: '', addClass: 'open', cleanExitClass: 'closing' });
+            if (modalBox) {
+              void window.Motion.enter(modalBox, { className: 'm-enter', origin: null });
+            }
+          } else {
+            modal.classList.add('open');
+          }
           switchSettingsTab('ai');
           if (typeof activateModalFocus === 'function') activateModalFocus(modal);
         }
@@ -614,8 +631,11 @@
         window.animateSegmentedPill(tabsWrap, prevBtn, activeBtn);
       }
       if (activePane) {
-        activePane.getBoundingClientRect(); // Clean reflow for restartable spring slide
-        activePane.classList.add('active');
+        if (window.Motion && typeof window.Motion.enter === 'function') {
+          void window.Motion.enter(activePane, { className: 'm-settle', addClass: 'active', origin: 'top center' });
+        } else {
+          activePane.classList.add('active');
+        }
       }
 
       const settingsBody = document.querySelector('#settings-modal .settings-body');
@@ -840,16 +860,42 @@
         });
     }
 
-    function closeChatPanelSmooth() {
+    let _chatPanelTriggerEl = null;
+
+    function closeChatPanelSmooth(opts = {}) {
       const panel = document.getElementById('chat-panel');
       if (!panel || !panel.classList.contains('active')) return;
-      if (panel._closeTimer) clearTimeout(panel._closeTimer);
-      panel.classList.remove('active');
-      panel.classList.add('closing');
-      panel._closeTimer = setTimeout(() => {
-        panel.classList.remove('closing');
+      if (panel._closeTimer) {
+        clearTimeout(panel._closeTimer);
         panel._closeTimer = null;
-      }, 240);
+      }
+      const headerBtn = panel.querySelector('.chat-header');
+      if (headerBtn) headerBtn.setAttribute('aria-expanded', 'false');
+
+      const restoreTrigger = () => {
+        if (opts.restoreFocus) {
+          const target = _chatPanelTriggerEl || headerBtn;
+          if (target && target.isConnected && typeof target.focus === 'function') {
+            target.focus({ preventScroll: true });
+          }
+        }
+      };
+
+      if (window.Motion && typeof window.Motion.exit === 'function') {
+        void window.Motion.exit(panel, {
+          className: 'closing',
+          removeClass: 'active',
+          afterFn: restoreTrigger
+        });
+      } else {
+        panel.classList.remove('active');
+        panel.classList.add('closing');
+        panel._closeTimer = setTimeout(() => {
+          panel.classList.remove('closing');
+          panel._closeTimer = null;
+          restoreTrigger();
+        }, 200);
+      }
     }
     window.closeChatPanelSmooth = closeChatPanelSmooth;
 
@@ -897,20 +943,33 @@
       const panel = document.getElementById('chat-panel');
       if (!panel) return;
       if (panel.classList.contains('active')) {
-        closeChatPanelSmooth();
+        closeChatPanelSmooth({ restoreFocus: true });
       } else {
         if (panel._closeTimer) {
           clearTimeout(panel._closeTimer);
           panel._closeTimer = null;
         }
-        panel.classList.remove('closing');
-        panel.classList.add('active');
+        const headerBtn = panel.querySelector('.chat-header');
+        _chatPanelTriggerEl = document.getElementById('assistant-toggle') || headerBtn || document.activeElement;
+        if (headerBtn) headerBtn.setAttribute('aria-expanded', 'true');
+
         // Mutual Exclusion: Smoothly fold Activity Center
         closeOpsCenterSmooth({ restoreFocus: false });
 
-        // Auto Focus: Focus on input when panel opens
         const input = document.getElementById('chat-input');
-        if (input) setTimeout(() => input.focus(), 280);
+        if (window.Motion && typeof window.Motion.enter === 'function') {
+          void window.Motion.enter(panel, {
+            className: '',
+            addClass: 'active',
+            origin: 'bottom right',
+            cleanExitClass: 'closing',
+            focusEl: input
+          });
+        } else {
+          panel.classList.remove('closing');
+          panel.classList.add('active');
+          if (input) setTimeout(() => input.focus({ preventScroll: true }), 180);
+        }
       }
     }
 
@@ -1031,13 +1090,15 @@
     }
 
     function renderBarChart(monthly) {
+      const container = document.getElementById('bar-chart');
+      if (!container) return;
       if (!monthly || monthly.length === 0) {
-        document.getElementById('bar-chart').innerHTML = '<div style="color:var(--muted);font-size:0.8rem;">Henüz veri yok</div>';
+        container.innerHTML = '<div style="color:var(--muted);font-size:0.8rem;">Henüz veri yok</div>';
         return;
       }
       const maxVal = Math.max(...monthly.map(m => m.count), 1);
       const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
-      document.getElementById('bar-chart').innerHTML = monthly.map(m => {
+      container.innerHTML = monthly.map(m => {
         const pct = (m.count / maxVal) * 100;
         const [, mo] = m.month.split('-');
         const label = months[Number.parseInt(mo, 10) - 1] || m.month;
@@ -1049,6 +1110,26 @@
       </div>
     `;
       }).join('');
+
+      const reduced = window.Motion && typeof window.Motion.reduced === 'function' && window.Motion.reduced();
+      if (!reduced) {
+        container.querySelectorAll('.bar-fill').forEach((barEl, idx) => {
+          if (typeof barEl.animate === 'function') {
+            barEl.animate(
+              [
+                { transform: 'scaleY(0.05)', opacity: 0.45 },
+                { transform: 'scaleY(1)', opacity: 1 }
+              ],
+              {
+                duration: 280,
+                delay: Math.min(idx * 22, 180),
+                easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+                fill: 'both'
+              }
+            );
+          }
+        });
+      }
     }
 
     // â•â•â•â•â•â•â•â•â•â• DRAG & DROP SORT â•â•â•â•â•â•â•â•â•â•
