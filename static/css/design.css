@@ -1501,7 +1501,6 @@ i[class*="fa-heart"] {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out), visibility var(--t-micro);
 }
 
 #ops-center.active {
@@ -1509,7 +1508,6 @@ i[class*="fa-heart"] {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
-  animation: opsCenterIn var(--t-ui) var(--ease-out);
 }
 
 .ops-header {
@@ -1518,22 +1516,22 @@ i[class*="fa-heart"] {
   color: var(--ink);
 }
 
-/* Sol Alt İşlem Merkezi Kapsülü (Floating Status Pill) */
+/* Sol Alt Etkinlik Merkezi Kapsülü (Tek Satır Ambiyans Hapı) */
 .ops-toggle {
   position: fixed;
   left: 1.75rem;
   bottom: 1.5rem;
   width: auto;
-  height: 42px;
-  padding: 0 16px;
+  height: 40px;
+  padding: 0 14px 0 10px;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   background: var(--surface);
-  color: var(--ink);
-  border: 1px solid var(--line-strong);
+  color: var(--muted);
+  border: 1px solid var(--line);
   border-radius: var(--r-full);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
   font-family: var(--font-ui);
   font-size: 0.8125rem;
   font-weight: 500;
@@ -1543,30 +1541,31 @@ i[class*="fa-heart"] {
   transition: transform var(--t-ui) var(--ease-out),
               background-color var(--t-micro) var(--ease-out),
               border-color var(--t-micro) var(--ease-out),
+              color var(--t-micro) var(--ease-out),
               opacity var(--t-ui) var(--ease-out);
 }
 
 
 .ops-status-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: var(--ok);
-  box-shadow: 0 0 0 3px var(--ok-bg);
+  opacity: 0.85;
   flex-shrink: 0;
   transition: background-color var(--t-ui) var(--ease-out), opacity var(--t-ui) var(--ease-out), transform var(--t-ui) var(--ease-out);
 }
 
 .ops-toggle.is-processing .ops-status-dot {
-  background: var(--warn);
-  box-shadow: 0 0 0 3px var(--warn-bg);
-  animation: pulseBeacon 1.2s infinite ease-in-out;
+  background: var(--accent);
+  opacity: 1;
+  transform: scale(1.1);
 }
 
 .ops-toggle .ops-label {
   display: inline;
   letter-spacing: -0.01em;
-  color: var(--ink);
+  color: inherit;
 }
 
 .ops-badge {
@@ -2858,11 +2857,10 @@ button:active:not(:disabled),
 .book-card.uploading {
   background: var(--surface-elevated);
   border: 1px solid var(--border-subtle);
-  box-shadow: var(--shadow-md);
-  transition: transform var(--t-ui) var(--ease-editorial),
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--t-ui) var(--ease-out),
               opacity var(--t-ui) var(--ease-out),
-              border-color var(--t-micro) var(--ease-out),
-              box-shadow var(--t-ui) var(--ease-out);
+              border-color var(--t-micro) var(--ease-out);
 }
 
 .book-card.uploading .card-cover {
@@ -2895,45 +2893,80 @@ button:active:not(:disabled),
   padding: 3px 9px;
   border-radius: var(--r-full);
   font-family: var(--font-mono);
-  font-size: 0.66rem;
+  font-size: 0.65rem;
   font-weight: 500;
   letter-spacing: 0.02em;
-  background: var(--surface-floating);
+  background: var(--surface);
   color: var(--ink);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--line-strong);
   box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(8px);
   max-width: calc(100% - 20px);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.book-card.uploading .progress-wrap {
+/* Kapak altındaki ince mürekkep ilerleme çizgisi (legacy overlay sıfırlamalı) */
+.book-card.uploading .uploading-ink-track,
+.book-card.is-upload-error .uploading-ink-track {
   position: relative;
-  height: 4px;
   width: 100%;
-  margin-top: var(--sp-2);
+  height: 3px;
   background: var(--line);
-  border-radius: var(--r-full);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.book-card.uploading .uploading-ink-track .progress-bar,
+.book-card.is-upload-error .uploading-ink-track .progress-bar {
+  position: static;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
   overflow: hidden;
 }
 
-.book-card.uploading .progress-bar {
+.book-card.uploading .uploading-ink-track .progress-bar span,
+.book-card.is-upload-error .uploading-ink-track .progress-bar span {
+  display: block;
   width: 100%;
   height: 100%;
   background: var(--accent);
-  border-radius: var(--r-full);
+  border-radius: 0;
   transform-origin: left center;
   transform: scaleX(var(--progress, 0.05));
-  transition: transform var(--t-ui) var(--ease-editorial),
+  transition: transform var(--t-ui) var(--ease-out),
               background-color var(--t-micro) var(--ease-out);
+}
+
+.book-card.uploading .uploading-stage-caption,
+.book-card.is-upload-error .uploading-stage-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.book-card.uploading .uploading-stage-caption .progress-label,
+.book-card.is-upload-error .uploading-stage-caption .progress-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .book-card.uploading.is-upload-complete {
   border-color: var(--ok);
-  transform: scale(0.985);
-  opacity: 0.92;
+  transform: none;
+  opacity: 1;
 }
 
 .book-card.uploading.is-upload-complete .uploading-stage-pill {
@@ -2942,18 +2975,30 @@ button:active:not(:disabled),
   border-color: transparent;
 }
 
-.book-card.uploading.is-upload-complete .progress-bar {
+.book-card.uploading.is-upload-complete .uploading-ink-track .progress-bar span {
   background: var(--ok);
 }
 
-.book-card.uploading.is-upload-error {
+.book-card.uploading.is-upload-error,
+.book-card.is-upload-error {
   border-color: var(--danger);
+  background: var(--surface-elevated);
 }
 
-.book-card.uploading.is-upload-error .uploading-stage-pill {
+.book-card.uploading.is-upload-error .uploading-stage-pill,
+.book-card.is-upload-error .uploading-stage-pill {
   background: var(--status-danger-bg);
   color: var(--status-danger-text);
   border-color: transparent;
+}
+
+.book-card.uploading.is-upload-error .uploading-ink-track .progress-bar span,
+.book-card.is-upload-error .uploading-ink-track .progress-bar span {
+  background: var(--danger);
+}
+
+.book-card.is-upload-error .uploading-stage-caption {
+  color: var(--danger);
 }
 
 .book-card.just-added {
@@ -3019,16 +3064,16 @@ button:active:not(:disabled),
 
 /* Contextual Activity Pill & Drawer (#ops-toggle / #ops-center) */
 .ops-toggle {
-  height: auto;
-  min-height: 42px;
-  padding: 6px 15px 6px 10px;
-  gap: 10px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 14px 0 10px;
+  gap: 8px;
 }
 
 .ops-toggle:hover {
   transform: translateY(-1px);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--accent);
+  border-color: var(--line-strong);
+  color: var(--ink);
 }
 
 .ops-toggle:active {
@@ -3037,8 +3082,8 @@ button:active:not(:disabled),
 
 .ops-pill-ring-wrap {
   position: relative;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3048,8 +3093,8 @@ button:active:not(:disabled),
 .ops-pill-ring {
   position: absolute;
   inset: 0;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   transform: rotate(-90deg);
   pointer-events: none;
 }
@@ -3057,13 +3102,13 @@ button:active:not(:disabled),
 .ops-ring-track {
   fill: none;
   stroke: var(--line);
-  stroke-width: 2;
+  stroke-width: 1.8;
 }
 
 .ops-ring-fill {
   fill: none;
   stroke: var(--accent);
-  stroke-width: 2.2;
+  stroke-width: 2;
   stroke-linecap: round;
   stroke-dasharray: 56.55;
   stroke-dashoffset: 56.55;
@@ -3072,37 +3117,42 @@ button:active:not(:disabled),
 }
 
 .ops-pill-ring-wrap .ops-status-dot {
-  width: 7px;
-  height: 7px;
+  width: 6.5px;
+  height: 6.5px;
 }
 
 .ops-pill-copy {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 7px;
   min-width: 0;
   text-align: left;
 }
 
 .ops-pill-label {
-  font-size: 0.8125rem;
+  font-size: 0.8rem;
   font-weight: 500;
-  line-height: 1.2;
-  color: var(--ink);
+  line-height: 1;
+  color: inherit;
   white-space: nowrap;
 }
 
 .ops-pill-sublabel {
   font-family: var(--font-mono);
-  font-size: 0.675rem;
-  line-height: 1.2;
+  font-size: 0.68rem;
+  line-height: 1;
   color: var(--muted);
-  max-width: 175px;
+  max-width: min(195px, 36vw);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  margin-top: 2px;
+}
+
+.ops-pill-sublabel:not(:empty)::before {
+  content: "·";
+  margin-right: 6px;
+  opacity: 0.55;
 }
 
 .ops-pill-sublabel:empty {
@@ -3110,16 +3160,18 @@ button:active:not(:disabled),
 }
 
 #ops-toggle.has-active-tasks {
+  color: var(--ink);
   border-color: var(--accent);
   background: var(--surface-elevated);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-md);
 }
 
 #ops-toggle.has-active-tasks .ops-ring-fill {
-  stroke: var(--warn);
+  stroke: var(--accent);
 }
 
 #ops-toggle.is-recently-done {
+  color: var(--ink);
   border-color: var(--ok);
   background: var(--surface-elevated);
 }
@@ -3130,11 +3182,25 @@ button:active:not(:disabled),
 
 #ops-toggle.is-recently-done .ops-status-dot {
   background: var(--ok);
-  box-shadow: 0 0 0 3px var(--ok-bg);
+  opacity: 1;
+}
+
+#ops-toggle.is-ws-reconnecting .ops-status-dot {
+  background: var(--warn);
+  opacity: 1;
+}
+
+#ops-toggle.is-ws-offline {
+  border-color: var(--danger);
+}
+
+#ops-toggle.is-ws-offline .ops-status-dot {
+  background: var(--danger);
+  opacity: 1;
 }
 
 #ops-toggle.ops-toggle-pulse {
-  animation: opsTogglePulse 900ms var(--ease-editorial) 1;
+  animation: opsTogglePulse 700ms var(--ease-out) 1;
 }
 
 .ops-header-indicator {
@@ -3155,7 +3221,7 @@ button:active:not(:disabled),
 }
 
 .ops-section-icon.is-warn {
-  color: var(--warn);
+  color: var(--accent);
 }
 
 .ops-section-icon.is-ok {
@@ -3166,17 +3232,30 @@ button:active:not(:disabled),
   margin-top: 0.8rem;
 }
 
+#ops-center .ops-task-card.is-active {
+  border-color: var(--accent);
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-sm);
+}
+
+#ops-center .ops-progress-bar,
+#ops-center .ops-progress-bar.animated {
+  background: var(--accent);
+}
+
+#ops-center .ops-status-line {
+  border-left-color: var(--accent);
+}
+
 .ops-task-card.is-clickable {
   cursor: pointer;
   transition: transform var(--t-micro) var(--ease-spring-gentle),
-              border-color var(--t-micro) var(--ease-out),
-              box-shadow var(--t-micro) var(--ease-out);
+              border-color var(--t-micro) var(--ease-out);
 }
 
 .ops-task-card.is-clickable:hover {
   transform: translateY(-1px);
   border-color: var(--accent);
-  box-shadow: var(--shadow-sm);
 }
 
 .ops-tab-empty {
@@ -3974,7 +4053,16 @@ button:active:not(:disabled),
 #ops-toggle.is-open {
   border-color: var(--ink);
   background: var(--paper-dark);
-  transform: translateY(-2px);
+  color: var(--ink);
+  transform: translateY(-1px);
+}
+
+.ops-live-pulse.pulse-reconnecting {
+  background: var(--warn);
+}
+
+.ops-live-pulse.pulse-offline {
+  background: var(--danger);
 }
 
 #chat-panel.closing {

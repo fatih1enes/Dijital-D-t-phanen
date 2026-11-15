@@ -15,19 +15,49 @@ function debouncedLoadBooksWs(page = 1, append = false) {
 }
 
 function setLogsConnectionStatus(status) {
+  const prev = window._wsConnectionState;
+  window._wsConnectionState = status;
+
   const indicator = document.getElementById('logs-status-indicator');
   const text = document.getElementById('logs-status-text');
-  if (!indicator || !text) return;
+  if (indicator && text) {
+    indicator.className = `logs-status-pill status-${status}`;
+    if (status === 'online') {
+      text.textContent = 'Canlı';
+    } else if (status === 'reconnecting') {
+      text.textContent = 'Yeniden bağlanıyor…';
+    } else {
+      text.textContent = 'Çevrimdışı';
+    }
+  }
 
-  indicator.className = `logs-status-pill status-${status}`;
-  if (status === 'online') {
-    text.textContent = 'Canlı';
-  } else if (status === 'reconnecting') {
-    text.textContent = 'Bağlanıyor...';
-  } else {
-    text.textContent = 'Bağlantı Yok';
+  const labelText = status === 'online'
+    ? 'Canlı'
+    : (status === 'reconnecting' ? 'Yeniden bağlanıyor…' : 'Çevrimdışı');
+
+  const opsWs = document.getElementById('ops-ws-status');
+  if (opsWs) opsWs.textContent = labelText;
+
+  const emptyWs = document.getElementById('ops-empty-ws-status');
+  if (emptyWs) emptyWs.textContent = labelText;
+
+  const livePulse = document.getElementById('ops-live-pulse');
+  if (livePulse && !livePulse.classList.contains('pulse-active')) {
+    const pulseCls = status === 'online' ? 'idle' : (status === 'reconnecting' ? 'reconnecting' : 'offline');
+    livePulse.className = `ops-live-pulse ops-header-indicator pulse-${pulseCls}`;
+  }
+
+  const opsToggle = document.getElementById('ops-toggle');
+  if (opsToggle) {
+    opsToggle.classList.toggle('is-ws-reconnecting', status === 'reconnecting');
+    opsToggle.classList.toggle('is-ws-offline', status !== 'online' && status !== 'reconnecting');
+  }
+
+  if (prev !== status && typeof scheduleOpsUIUpdate === 'function' && window.lastActiveTasks) {
+    scheduleOpsUIUpdate(window.lastActiveTasks, window.lastArchivedTasks || {});
   }
 }
+window.setLogsConnectionStatus = setLogsConnectionStatus;
 
 function processIncomingLogBatch() {
   if (logBatchQueue.length === 0) return;
@@ -105,22 +135,13 @@ function handleWsTaskMessage(data) {
     window.lastActiveTasks[tid] = task;
   }
 
-  if (typeof updateOpsUI === 'function') {
+  if (typeof scheduleOpsUIUpdate === 'function') {
+    scheduleOpsUIUpdate(window.lastActiveTasks, window.lastArchivedTasks);
+  } else if (typeof updateOpsUI === 'function') {
     updateOpsUI(window.lastActiveTasks, window.lastArchivedTasks);
   }
   if (typeof updateUploadCards === 'function') {
     updateUploadCards({ ...window.lastActiveTasks, ...window.lastArchivedTasks });
-  }
-
-  const taskIds = Object.keys(window.lastActiveTasks);
-  const activeCount = taskIds.filter(id => {
-    const st = window.lastActiveTasks[id]?.status;
-    return st !== 'success' && st !== 'error';
-  }).length;
-  const badge = document.getElementById('ops-badge');
-  if (badge) {
-    badge.textContent = activeCount;
-    badge.style.display = activeCount > 0 ? 'block' : 'none';
   }
 }
 

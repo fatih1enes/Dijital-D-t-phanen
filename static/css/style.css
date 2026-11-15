@@ -3201,13 +3201,18 @@
 
     .ops-live-pulse.pulse-idle {
       background: var(--ok);
-      box-shadow: 0 0 8px var(--ok);
     }
 
     .ops-live-pulse.pulse-active {
       background: var(--warn);
-      box-shadow: 0 0 12px var(--warn);
-      animation: pulseBeacon 1.2s infinite ease-in-out;
+    }
+
+    .ops-live-pulse.pulse-reconnecting {
+      background: var(--warn);
+    }
+
+    .ops-live-pulse.pulse-offline {
+      background: var(--danger);
     }
 
     .ops-count-pill {
@@ -3224,7 +3229,6 @@
       background: var(--warn-bg);
       color: var(--warn);
       border-color: var(--warn);
-      animation: pulseBeacon 1.5s infinite;
     }
 
     .ops-header-actions {
@@ -3565,15 +3569,13 @@
     }
 
     .ops-step.active .step-num {
-      background: var(--ok);
-      color: var(--surface);
-      border-color: var(--ok);
-      box-shadow: 0 0 10px var(--ok-bg);
-      animation: pulseBeacon 1.2s infinite;
+      background: var(--accent);
+      color: var(--on-accent);
+      border-color: var(--accent);
     }
 
     .ops-step.active {
-      color: var(--ok);
+      color: var(--accent);
       font-weight: 600;
     }
 
@@ -3592,7 +3594,7 @@
       height: 2px;
       background: var(--line);
       margin: 0 4px -10px 4px;
-      transition: background var(--t-ui);
+      transition: background-color var(--t-ui) var(--ease-out);
     }
 
     .ops-step-line.done {
@@ -3639,9 +3641,7 @@
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: var(--ok);
-      box-shadow: 0 0 6px var(--ok);
-      animation: pulseBeacon 1s infinite;
+      background: var(--accent);
       flex-shrink: 0;
     }
 
@@ -3650,12 +3650,6 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-    }
-
-    .ops-terminal-cursor {
-      color: var(--ok);
-      font-weight: 700;
-      animation: blinkCursor var(--t-page) infinite;
     }
 
     /* Log Details Dropdown */
@@ -3779,27 +3773,6 @@
       align-items: center;
       text-align: center;
       gap: 0.7rem;
-    }
-
-    .ops-empty-radar {
-      position: relative;
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      border: 1.5px solid var(--line);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--paper-dark);
-      margin-bottom: 0.1rem;
-    }
-
-    .ops-radar-sweep {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      border-top: 2px solid var(--accent);
-      animation: radarSweep 2.5s linear infinite;
     }
 
     .ops-empty-icon {

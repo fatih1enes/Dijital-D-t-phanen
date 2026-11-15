@@ -834,15 +834,38 @@
       const grid = document.getElementById('grid-view');
       if (!grid) return;
 
-      // Clean up any stale/ghost uploading cards whose book has already been added to the library
+      // Yer tutucu yükleme kartlarından kütüphaneye yeni yerleşen kitapları yakala (konumu morph için sakla)
+      const morphMap = window._pendingUploadMorphRects || (window._pendingUploadMorphRects = new Map());
       if (typeof uploadingCards !== 'undefined' && uploadingCards.size > 0 && typeof removeUploadingCard === 'function') {
-        const completedFiles = new Set(books.map(b => (b.file || '').toLowerCase().trim()));
-        const completedTitles = new Set(books.map(b => (b.title || '').toLowerCase().trim()));
+        const byHash = new Map();
+        const byFile = new Map();
+        const byTitle = new Map();
+        books.forEach((b) => {
+          if (b.hash) byHash.set(String(b.hash), b);
+          const fn = (b.file || '').toLowerCase().trim();
+          if (fn) byFile.set(fn, b);
+          const tt = (b.title || '').toLowerCase().trim();
+          if (tt) byTitle.set(tt, b);
+        });
         for (const [tempId, holder] of Array.from(uploadingCards.entries())) {
+          const cardHash = (holder?.card?.dataset?.completedHash || '').trim();
           const cardFn = (holder?.filename || holder?.card?.dataset?.filename || '').toLowerCase().trim();
           const cardTitle = (holder?.title?.textContent || '').toLowerCase().trim();
-          if ((cardFn && completedFiles.has(cardFn)) || (cardTitle && completedTitles.has(cardTitle))) {
-            removeUploadingCard(tempId, false);
+          const matchedBook = (cardHash && byHash.get(cardHash))
+            || (cardFn && byFile.get(cardFn))
+            || (cardTitle && byTitle.get(cardTitle));
+          if (matchedBook) {
+            if (holder?.card?.isConnected) {
+              const rect = holder.card.getBoundingClientRect();
+              if (matchedBook.hash && !morphMap.has(matchedBook.hash)) {
+                morphMap.set(matchedBook.hash, rect);
+              }
+              const matchedFn = (matchedBook.file || '').toLowerCase().trim();
+              if (matchedFn && !morphMap.has(matchedFn)) {
+                morphMap.set(matchedFn, rect);
+              }
+            }
+            removeUploadingCard(tempId, false, true);
           }
         }
       }
@@ -861,6 +884,7 @@
       const filteredHashes = new Set(books.map(b => b.hash));
       const prevRects = !doStagger ? captureGridPositions(grid) : null;
       const newlyRevealed = [];
+      const morphedCards = [];
 
       // 1. Ensure cards exist in cardElementsMap for all available books
       const allBooksList = window.allBooks || books;
@@ -905,6 +929,13 @@
 
         // Check if this card just settled from an active upload
         const fileKey = (b.file || '').toLowerCase().trim();
+        const morphRect = morphMap.get(b.hash) || (fileKey ? morphMap.get(fileKey) : null);
+        if (morphRect) {
+          morphMap.delete(b.hash);
+          if (fileKey) morphMap.delete(fileKey);
+          morphedCards.push({ card, rect: morphRect });
+        }
+
         const recentSet = window._recentlyCompletedUploads;
         if (recentSet && (recentSet.has(b.hash) || (fileKey && recentSet.has(fileKey)))) {
           recentSet.delete(b.hash);
@@ -914,7 +945,10 @@
         }
 
         // Controlled stagger, filter reveal, or instant display
-        if (doStagger) {
+        if (morphRect) {
+          card.classList.remove('stagger-in', 'card-revealing');
+          card.style.animation = '';
+        } else if (doStagger) {
           card.classList.remove('card-revealing');
           card.classList.add('stagger-in');
           const staggerIdx = i < 12 ? i : 0;
@@ -952,6 +986,25 @@
         books.forEach(b => {
           const card = cardElementsMap.get(b.hash);
           if (card) grid.appendChild(card);
+        });
+      }
+
+      if (morphedCards.length > 0 && !isMotionReduced()) {
+        morphedCards.forEach(({ card, rect }) => {
+          const destRect = card.getBoundingClientRect();
+          if (destRect.width > 0 && rect.width > 0 && typeof card.animate === 'function') {
+            const dx = rect.left - destRect.left;
+            const dy = rect.top - destRect.top;
+            const sx = rect.width / destRect.width;
+            const sy = rect.height / destRect.height;
+            card.animate(
+              [
+                { transform: `translate3d(${dx}px, ${dy}px, 0) scale(${sx}, ${sy})`, opacity: 0.78 },
+                { transform: 'translate3d(0, 0, 0) scale(1, 1)', opacity: 1 }
+              ],
+              { duration: 360, easing: 'cubic-bezier(0.32, 0.72, 0, 1)', fill: 'both' }
+            );
+          }
         });
       }
 
@@ -1672,6 +1725,18 @@
           if (typeof fn === 'function') fn();
           return;
         }
+      }
+
+      const opsCenter = document.getElementById('ops-center');
+      if (opsCenter?.classList.contains('active') && typeof closeOpsCenterSmooth === 'function') {
+        closeOpsCenterSmooth({ restoreFocus: true });
+        return;
+      }
+
+      const chatPanel = document.getElementById('chat-panel');
+      if (chatPanel?.classList.contains('active') && typeof closeChatPanelSmooth === 'function') {
+        closeChatPanelSmooth({ restoreFocus: true });
+        return;
       }
 
       if (window.isDeepSearchActive && typeof closeDeepSearch === 'function') {

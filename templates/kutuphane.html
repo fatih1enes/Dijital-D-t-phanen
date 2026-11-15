@@ -358,11 +358,11 @@
       </button>
     </div>
 
-    <!-- Live System Banner (Quick heartbeat strip) -->
+    <!-- Live System Strip (Real runtime status) -->
     <div class="ops-system-strip" id="ops-system-strip">
-      <div class="ops-strip-item"><i class="fas fa-brain"></i> <span id="ops-engine-label">Gemini 3.5 Flash-Lite</span></div>
+      <div class="ops-strip-item"><i class="fas fa-microchip"></i> <span id="ops-engine-label">AI Motoru</span></div>
       <div class="ops-strip-item"><i class="fas fa-wifi"></i> <span id="ops-ws-status">Canlı</span></div>
-      <div class="ops-strip-item"><i class="fas fa-tasks"></i> <span id="ops-queue-label">0 Sırada</span></div>
+      <div class="ops-strip-item"><i class="fas fa-tasks"></i> <span id="ops-queue-label">Boşta</span></div>
     </div>
 
     <div class="ops-body" id="ops-body">
@@ -515,7 +515,7 @@
     </div>
   </div>
 
-  <button type="button" class="ops-toggle" id="ops-toggle" onclick="toggleOps()" aria-label="Etkinlik merkezini aç veya kapat" title="Etkinlik Merkezi">
+  <button type="button" class="ops-toggle" id="ops-toggle" onclick="toggleOps()" aria-expanded="false" aria-controls="ops-center" aria-label="Etkinlik merkezini aç veya kapat" title="Etkinlik Merkezi">
     <span class="ops-pill-ring-wrap" aria-hidden="true">
       <svg class="ops-pill-ring" viewBox="0 0 24 24">
         <circle class="ops-ring-track" cx="12" cy="12" r="9"></circle>

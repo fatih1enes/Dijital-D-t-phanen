@@ -390,6 +390,12 @@
       } catch (error) {
         console.error("Yükleme hatası:", error);
         addChatMessage('ai', "Sunucuya bağlanılamadı.");
+        const holder = uploadingCards.get(tempId);
+        if (holder?.card) {
+          holder.card.classList.remove('uploading');
+          holder.card.classList.add('is-upload-error');
+          if (holder.label) holder.label.textContent = 'Sunucuya bağlanılamadı';
+        }
         removeUploadingCard(tempId, true);
       }
     }
@@ -412,6 +418,14 @@
       await uploadFile(file, tempId);
     }
 
+    function _setCardInkProgress(holder, pct) {
+      if (!holder?.bar) return;
+      const clamped = Math.min(100, Math.max(5, Number(pct) || 5));
+      const scale = (clamped / 100).toFixed(3);
+      holder.bar.style.setProperty('--progress', scale);
+      holder.bar.style.transform = `scaleX(${scale})`;
+    }
+
     function createUploadingCard(tempId, filename, dedupeKey) {
       const grid = document.getElementById('grid-view');
       const card = document.createElement('div');
@@ -423,14 +437,16 @@
       <div class="card-cat-badge uploading-stage-pill" id="ph-badge-${tempId}">Hazırlanıyor</div>
       <div class="card-cover-placeholder" id="ph-img-${tempId}">${BOOK_ICON_LG}<span>${esc(filename)}</span></div>
     </div>
+    <div class="uploading-ink-track" aria-hidden="true">
+      <div class="progress-bar"><span style="--progress:0.05; transform:scaleX(0.05);"></span></div>
+    </div>
     <div class="card-body">
       <div class="card-title" id="ph-title-${tempId}">${esc(filename)}</div>
       <div class="card-author" id="ph-author-${tempId}">Kuyruğa alındı...</div>
+      <div class="uploading-stage-caption">
+        <span class="progress-label">Bekliyor...</span>
+      </div>
       <div class="card-summary" id="ph-summary-${tempId}">Belge içeriği okunuyor ve kütüphane için analiz ediliyor.</div>
-    </div>
-    <div class="progress-wrap">
-      <div class="progress-bar"><span style="width:5%"></span></div>
-      <span class="progress-label">Bekliyor...</span>
     </div>
   `;
       grid.prepend(card);
@@ -482,8 +498,7 @@
       if (!holder) return;
       if (holder.label) holder.label.textContent = message || "Telegram'dan indiriliyor...";
       if (holder.bar && percent !== undefined && percent !== null) {
-        const pctVal = Math.min(100, Math.max(5, Number.parseFloat(percent) || 0));
-        holder.bar.style.width = pctVal + '%';
+        _setCardInkProgress(holder, Number.parseFloat(percent) || 0);
       }
     }
 
@@ -501,11 +516,9 @@
         placeholder.summary.textContent = 'Belge Telegram sunucularından indiriliyor, ardından analiz edilecek.';
       }
       const initialPct = (percent !== undefined && percent !== null)
-        ? Math.min(100, Math.max(5, Number.parseFloat(percent) || 0))
+        ? (Number.parseFloat(percent) || 0)
         : 10;
-      if (placeholder.bar) {
-        placeholder.bar.style.width = initialPct + '%';
-      }
+      _setCardInkProgress(placeholder, initialPct);
       if (placeholder.label) {
         placeholder.label.textContent = message || "Telegram'dan indiriliyor...";
       }
@@ -544,9 +557,7 @@
             holder.badge.style.color = 'var(--on-accent)';
           }
           if (holder.label) holder.label.textContent = 'Kütüphanede mevcut (Atlandı)';
-          if (holder.bar) {
-            holder.bar.style.width = '100%';
-          }
+          _setCardInkProgress(holder, 100);
           holder.card?.classList.add('is-upload-complete');
           setTimeout(() => removeUploadingCard(tempId, false), 1200);
         } else {
@@ -598,41 +609,60 @@
 
     function handleCardStatusOutcome(holder, task, tempId, taskId) {
       if (task.status === 'success') {
+        const alreadyHandled = Boolean(holder.outcomeHandled);
+        holder.outcomeHandled = true;
         if (holder.card) {
           holder.card.classList.add('is-upload-complete');
         }
         if (holder.label) holder.label.textContent = task.log_message || 'Kütüphaneye eklendi';
-        if (holder.bar) {
-          holder.bar.style.width = '100%';
-          holder.bar.style.background = '';
-        }
+        _setCardInkProgress(holder, 100);
 
-        // Yeni eklenen kitabın grid'e vurgulu yerleşmesi için dosya/hash kaydı tut
+        // Yeni eklenen kitabın yer tutucu karttan gerçek karta kesintisiz yerleşmesi için konumunu kaydet
         window._recentlyCompletedUploads = window._recentlyCompletedUploads || new Set();
+        window._pendingUploadMorphRects = window._pendingUploadMorphRects || new Map();
         const completedFn = (task.filename || holder.filename || '').trim().toLowerCase();
         const completedHash = (task.task_data?.dosya_hash || '').trim();
         if (completedFn) window._recentlyCompletedUploads.add(completedFn);
         if (completedHash) window._recentlyCompletedUploads.add(completedHash);
-
-        setTimeout(() => {
-          removeUploadingCard(tempId, false);
-          if (!completedTasks.has(taskId)) {
-            completedTasks.add(taskId);
-            void loadBooksFromAPI();
+        if (holder.card?.isConnected) {
+          const rect = holder.card.getBoundingClientRect();
+          if (completedHash) {
+            holder.card.dataset.completedHash = completedHash;
+            window._pendingUploadMorphRects.set(completedHash, rect);
           }
-        }, 420);
+          if (completedFn) window._pendingUploadMorphRects.set(completedFn, rect);
+        }
+
+        if (!alreadyHandled) {
+          if (holder.cleanupTimer) clearTimeout(holder.cleanupTimer);
+          holder.cleanupTimer = setTimeout(() => {
+            holder.cleanupTimer = null;
+            if (uploadingCards.has(tempId)) {
+              removeUploadingCard(tempId, false);
+            }
+          }, 4200);
+
+          setTimeout(() => {
+            if (!completedTasks.has(taskId)) {
+              completedTasks.add(taskId);
+              if (typeof loadBooksFromAPI === 'function') {
+                void loadBooksFromAPI(1, false);
+              }
+            }
+          }, 140);
+        }
       } else if (task.status === 'error') {
         holder.card.classList.remove('uploading');
         holder.card.classList.add('is-upload-error');
         if (holder.label) holder.label.textContent = task.log_message || 'İşlem başarısız oldu';
-        if (holder.bar) holder.bar.style.background = '';
-        setTimeout(() => removeUploadingCard(tempId, true), 8000);
+        if (holder.cleanupTimer) clearTimeout(holder.cleanupTimer);
+        holder.cleanupTimer = setTimeout(() => removeUploadingCard(tempId, false), 8000);
       }
     }
 
     function updateSingleCardProgress(holder, task, tempId, taskId) {
       const pct = Math.max(5, task.percentage || 0);
-      if (holder.bar) holder.bar.style.width = `${pct}%`;
+      _setCardInkProgress(holder, pct);
       if (holder.label) holder.label.textContent = task.log_message || 'İşleniyor...';
       if (holder.badge && pct > 10 && !holder.card?.classList.contains('is-upload-complete')) {
         if (pct >= 85) holder.badge.textContent = 'Kataloglanıyor';
@@ -744,12 +774,25 @@
       });
     }
 
-    function removeUploadingCard(tempId, keep = false) {
+    function removeUploadingCard(tempId, keep = false, immediate = false) {
       const holder = uploadingCards.get(tempId);
+      if (holder?.cleanupTimer) {
+        clearTimeout(holder.cleanupTimer);
+        holder.cleanupTimer = null;
+      }
       if (holder?.dedupeKey) pendingUploads.delete(holder.dedupeKey);
       if (holder?.card && !keep) {
-        holder.card.classList.add('fadeOut');
-        setTimeout(() => holder.card.remove(), 300);
+        if (immediate) {
+          holder.card.remove();
+        } else if (window.Motion && typeof window.Motion.exit === 'function') {
+          void window.Motion.exit(holder.card, {
+            className: 'm-exit',
+            afterFn: (el) => { if (el.isConnected) el.remove(); }
+          });
+        } else {
+          holder.card.classList.add('fadeOut');
+          setTimeout(() => holder.card.remove(), 300);
+        }
       }
       uploadingCards.delete(tempId);
       for (const [tid, tmp] of taskToTemp.entries()) {
@@ -921,9 +964,14 @@
         await loadBooksFromAPI(1, false);
 
         if (count > 0) {
-          // Open operation center
+          // Etkinlik merkezini düzenli köken animasyonuyla aç
           const opsCenter = document.getElementById('ops-center');
-          if (opsCenter) opsCenter.classList.add('active');
+          if (opsCenter && !opsCenter.classList.contains('active') && typeof toggleOps === 'function') {
+            toggleOps();
+          } else if (opsCenter) {
+            opsCenter.classList.add('active');
+            if (typeof flushOpsBodyIfDirty === 'function') flushOpsBodyIfDirty();
+          }
           
           showToast(`Kütüphane dizininde ${count} yeni kitap bulundu ve analiz kuyruğuna eklendi!`, 'info', 5000);
         } else {

@@ -853,18 +853,43 @@
     }
     window.closeChatPanelSmooth = closeChatPanelSmooth;
 
-    function closeOpsCenterSmooth() {
+    function closeOpsCenterSmooth(opts = {}) {
       const ops = document.getElementById('ops-center');
       const toggleBtn = document.getElementById('ops-toggle');
-      if (toggleBtn) toggleBtn.classList.remove('is-open');
-      if (!ops || !ops.classList.contains('active')) return;
-      if (ops._closeTimer) clearTimeout(ops._closeTimer);
-      ops.classList.remove('active');
-      ops.classList.add('closing');
-      ops._closeTimer = setTimeout(() => {
-        ops.classList.remove('closing');
+      const restoreFocus = opts.restoreFocus !== false;
+      const wasActive = Boolean(ops && ops.classList.contains('active'));
+      if (toggleBtn) {
+        toggleBtn.classList.remove('is-open');
+        toggleBtn.setAttribute('aria-expanded', 'false');
+      }
+      if (!ops || !wasActive) return;
+
+      if (ops._closeTimer) {
+        clearTimeout(ops._closeTimer);
         ops._closeTimer = null;
-      }, 240);
+      }
+
+      const onClosed = () => {
+        if (restoreFocus && toggleBtn && toggleBtn.isConnected && typeof toggleBtn.focus === 'function') {
+          toggleBtn.focus();
+        }
+      };
+
+      if (window.Motion && typeof window.Motion.exit === 'function') {
+        void window.Motion.exit(ops, {
+          className: 'closing',
+          removeClass: 'active',
+          afterFn: onClosed
+        });
+      } else {
+        ops.classList.remove('active');
+        ops.classList.add('closing');
+        ops._closeTimer = setTimeout(() => {
+          ops.classList.remove('closing');
+          ops._closeTimer = null;
+          onClosed();
+        }, 200);
+      }
     }
     window.closeOpsCenterSmooth = closeOpsCenterSmooth;
 
@@ -881,7 +906,7 @@
         panel.classList.remove('closing');
         panel.classList.add('active');
         // Mutual Exclusion: Smoothly fold Activity Center
-        closeOpsCenterSmooth();
+        closeOpsCenterSmooth({ restoreFocus: false });
 
         // Auto Focus: Focus on input when panel opens
         const input = document.getElementById('chat-input');
@@ -894,17 +919,36 @@
       const toggleBtn = document.getElementById('ops-toggle');
       if (!ops) return;
       if (ops.classList.contains('active')) {
-        closeOpsCenterSmooth();
+        closeOpsCenterSmooth({ restoreFocus: true });
       } else {
         if (ops._closeTimer) {
           clearTimeout(ops._closeTimer);
           ops._closeTimer = null;
         }
-        ops.classList.remove('closing');
-        ops.classList.add('active');
-        if (toggleBtn) toggleBtn.classList.add('is-open');
+        if (typeof flushOpsBodyIfDirty === 'function') {
+          flushOpsBodyIfDirty();
+        }
+        if (toggleBtn) {
+          toggleBtn.classList.add('is-open');
+          toggleBtn.setAttribute('aria-expanded', 'true');
+        }
         // Mutual Exclusion: Smoothly fold Assistant Panel
-        closeChatPanelSmooth();
+        closeChatPanelSmooth({ restoreFocus: false });
+
+        const focusTarget = ops.querySelector('.ops-btn-close, .ops-tab-btn.active, button') || ops;
+        if (window.Motion && typeof window.Motion.enter === 'function') {
+          void window.Motion.enter(ops, {
+            className: null,
+            addClass: 'active',
+            origin: '24px calc(100% + 10px)',
+            cleanExitClass: 'closing',
+            focusEl: focusTarget
+          });
+        } else {
+          ops.classList.remove('closing');
+          ops.classList.add('active');
+          if (focusTarget && typeof focusTarget.focus === 'function') focusTarget.focus();
+        }
         if (typeof fetchTasksFromAPI === 'function') {
           void fetchTasksFromAPI();
         }

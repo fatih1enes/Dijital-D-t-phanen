@@ -2,6 +2,7 @@
     function openLogsModal() {
       const modal = document.getElementById('logs-modal');
       if (!modal) return;
+      modal._returnFocusEl = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       window.unreadLogErrors = 0;
       updateHeaderLogsBadge();
 
@@ -12,9 +13,18 @@
         renderLogsModalBody();
       }
 
-      modal.classList.remove('closing');
-      modal.classList.add('open');
       document.body.classList.add('modal-open');
+      if (window.Motion && typeof window.Motion.enter === 'function') {
+        void window.Motion.enter(modal, {
+          className: null,
+          addClass: 'open',
+          cleanExitClass: 'closing',
+          focusEl: modal.querySelector('.logs-close, .logs-action-btn') || modal
+        });
+      } else {
+        modal.classList.remove('closing');
+        modal.classList.add('open');
+      }
       if (typeof activateModalFocus === 'function') activateModalFocus(modal);
 
       // Setup smart scroll detection on logs container
@@ -48,15 +58,21 @@
     }
 
     function closeLogsModalDirect() {
+      const modal = document.getElementById('logs-modal');
+      const restoreFocus = () => {
+        updateHeaderLogsBadge();
+        const ret = modal?._returnFocusEl;
+        if (ret && ret.isConnected && typeof ret.focus === 'function') {
+          ret.focus();
+        }
+        if (modal) modal._returnFocusEl = null;
+      };
       if (typeof window.closeModalWithAnimation === 'function') {
-        window.closeModalWithAnimation('logs-modal', () => {
-          updateHeaderLogsBadge();
-        });
+        window.closeModalWithAnimation('logs-modal', restoreFocus);
       } else {
-        const modal = document.getElementById('logs-modal');
         if (modal) modal.classList.remove('open');
         document.body.classList.remove('modal-open');
-        updateHeaderLogsBadge();
+        restoreFocus();
       }
     }
 
@@ -381,21 +397,45 @@
     }
     window.setOpsTab = setOpsTab;
 
+    function getRealEngineLabel() {
+      const cfg = typeof getAISettings === 'function' ? getAISettings() : {};
+      const settings = window.appSettings || {};
+      const provider = String(cfg.provider || settings.ai_provider || 'gemini').toLowerCase();
+      const model = String(cfg.modelName || '').trim();
+      if (provider === 'ollama') return model ? `Ollama · ${model}` : 'Ollama';
+      if (provider === 'lmstudio') return model ? `LM Studio · ${model}` : 'LM Studio';
+      return model || 'Gemini';
+    }
+
+    function refreshOpsSystemStrip() {
+      const engineEl = document.getElementById('ops-engine-label');
+      if (engineEl) engineEl.textContent = getRealEngineLabel();
+
+      const wsState = window._wsConnectionState || 'online';
+      const wsLabel = wsState === 'online'
+        ? 'Canlı'
+        : (wsState === 'reconnecting' ? 'Yeniden bağlanıyor…' : 'Çevrimdışı');
+      const wsEl = document.getElementById('ops-ws-status');
+      if (wsEl) wsEl.textContent = wsLabel;
+      const emptyWsEl = document.getElementById('ops-empty-ws-status');
+      if (emptyWsEl) emptyWsEl.textContent = wsLabel;
+    }
+    window.refreshOpsSystemStrip = refreshOpsSystemStrip;
+
     function openBookFromOps(fileHash) {
       if (!fileHash) return;
+      const triggerEl = document.querySelector(`.ops-task-card[data-book-hash="${fileHash}"]`);
       const allB = window.allBooks || [];
       const book = allB.find(b => b.dosya_hash === fileHash || b.hash === fileHash);
       if (book && typeof openModal === 'function') {
-        openModal(book);
-        const ops = document.getElementById('ops-center');
-        if (ops) ops.classList.remove('active');
+        if (typeof closeOpsCenterSmooth === 'function') closeOpsCenterSmooth({ restoreFocus: false });
+        openModal(book, triggerEl || undefined);
       } else if (typeof loadBooksFromAPI === 'function') {
         loadBooksFromAPI(1, false).then(() => {
           const b = (window.allBooks || []).find(x => x.dosya_hash === fileHash || x.hash === fileHash);
           if (b && typeof openModal === 'function') {
-            openModal(b);
-            const ops = document.getElementById('ops-center');
-            if (ops) ops.classList.remove('active');
+            if (typeof closeOpsCenterSmooth === 'function') closeOpsCenterSmooth({ restoreFocus: false });
+            openModal(b, triggerEl || undefined);
           }
         }).catch(err => console.error("Book open from ops error:", err));
       }
@@ -407,7 +447,7 @@
       const m = String(msg || '');
       if (pct >= 90 || m.includes('Veritabanı') || m.includes('kaydedildi')) return 4;
       if (pct >= 70 || m.includes('Kapak') || m.includes('arşivleniyor')) return 3;
-      if (pct >= 25 || m.includes('Yapay zeka') || m.includes('GEMINI')) return 2;
+      if (pct >= 25 || m.includes('Yapay zeka') || m.includes('GEMINI') || m.includes('AI')) return 2;
       return 1;
     }
 
@@ -417,7 +457,7 @@
       const m = String(msg || '');
       if (pct >= 90 || m.includes('Veritabanı')) return '4/4 Veritabanı Kaydı';
       if (pct >= 70 || m.includes('Kapak') || m.includes('arşivleniyor')) return '3/4 Kapak & Görsel';
-      if (pct >= 25 || m.includes('Yapay zeka') || m.includes('GEMINI')) return '2/4 Gemini 3.5 AI Analizi';
+      if (pct >= 25 || m.includes('Yapay zeka') || m.includes('GEMINI') || m.includes('AI')) return '2/4 AI Analizi';
       return '1/4 Belge Okuma';
     }
 
@@ -446,66 +486,82 @@
       return step > target ? '<i class="fas fa-check" style="font-size:0.65em;"></i>' : String(target);
     }
 
+    function _renderStreamLineHtml(l) {
+      return `
+        <div class="ops-stream-line ${esc(l.state || l.status || '')}">
+          <span class="line-time">${formatLogTime(l.ts)}</span>
+          <span class="line-dot"></span>
+          <span class="line-msg">${esc(l.message || '')}</span>
+        </div>
+      `;
+    }
+
+    function _shouldDetailsBeOpen(taskId, logsCount, existingDetails) {
+      window._opsOpenDetailIds = window._opsOpenDetailIds || new Set();
+      window._opsCollapsedDetailIds = window._opsCollapsedDetailIds || new Set();
+      if (window._opsOpenDetailIds.has(taskId)) return true;
+      if (window._opsCollapsedDetailIds.has(taskId)) return false;
+      if (existingDetails) return existingDetails.open;
+      return logsCount <= 4;
+    }
+
     function renderOpsActiveCard(t, pct, logs) {
       const step = getTaskStep(pct, t.log_message, t.status);
       const phaseLabel = getTaskPhaseLabel(pct, t.log_message, t.status);
+      const scaleRatio = (pct / 100).toFixed(3);
+      const visibleLogs = logs.slice(-24);
 
       let logDetailsHtml = '';
       if (logs.length > 0) {
-        const streamLines = logs.slice(-6).map(l => `
-          <div class="ops-stream-line ${l.state || l.status || ''}">
-            <span class="line-time">${formatLogTime(l.ts)}</span>
-            <span class="line-dot"></span>
-            <span class="line-msg">${esc(l.message || '')}</span>
-          </div>
-        `).join('');
+        const isOpen = _shouldDetailsBeOpen(t.id, logs.length, null);
+        const streamLines = visibleLogs.map(_renderStreamLineHtml).join('');
         logDetailsHtml = `
-          <details class="ops-log-details" ${logs.length <= 4 ? 'open' : ''}>
-            <summary><i class="fas fa-list-ul"></i> İşlem Günlüğü (${logs.length})</summary>
-            <div class="ops-log-stream">${streamLines}</div>
+          <details class="ops-log-details" data-task-id="${esc(t.id)}" ${isOpen ? 'open' : ''}>
+            <summary><i class="fas fa-list-ul"></i> <span class="ops-log-summary-text">İşlem Günlüğü (${logs.length})</span></summary>
+            <div class="ops-log-stream" data-rendered-count="${logs.length}">${streamLines}</div>
           </details>
         `;
       }
 
       return `
-        <div class="ops-task-card is-active" id="task-${t.id}">
+        <div class="ops-task-card is-active" id="task-${esc(t.id)}" data-task-id="${esc(t.id)}" data-task-status="active" data-step="${step}">
           <div class="ops-card-header">
             <div class="ops-file-badge"><i class="fas fa-file-pdf"></i></div>
             <div class="ops-file-info">
               <div class="ops-file-title" title="${esc(t.filename)}">${esc(t.filename)}</div>
               <div class="ops-file-meta">
-                <span class="ops-phase-tag"><i class="fas fa-circle-notch fa-spin"></i> ${phaseLabel}</span>
+                <span class="ops-phase-tag">${esc(phaseLabel)}</span>
                 <span class="ops-time-ago">${formatTimeAgo(t.last_update)}</span>
               </div>
             </div>
             <div class="ops-card-pct">%${pct}</div>
           </div>
           <div class="ops-stepper">
-            <div class="ops-step ${getOpsStepClass(step, 1)}">
+            <div class="ops-step ${getOpsStepClass(step, 1)}" data-step-target="1">
               <span class="step-num">${getOpsStepNum(step, 1)}</span>
               <span class="step-lbl">Okuma</span>
             </div>
-            <div class="ops-step-line ${step > 1 ? 'done' : ''}"></div>
-            <div class="ops-step ${getOpsStepClass(step, 2)}">
+            <div class="ops-step-line ${step > 1 ? 'done' : ''}" data-line-after="1"></div>
+            <div class="ops-step ${getOpsStepClass(step, 2)}" data-step-target="2">
               <span class="step-num">${getOpsStepNum(step, 2)}</span>
-              <span class="step-lbl">Gemini AI</span>
+              <span class="step-lbl">AI Analizi</span>
             </div>
-            <div class="ops-step-line ${step > 2 ? 'done' : ''}"></div>
-            <div class="ops-step ${getOpsStepClass(step, 3)}">
+            <div class="ops-step-line ${step > 2 ? 'done' : ''}" data-line-after="2"></div>
+            <div class="ops-step ${getOpsStepClass(step, 3)}" data-step-target="3">
               <span class="step-num">${getOpsStepNum(step, 3)}</span>
               <span class="step-lbl">Kapak</span>
             </div>
-            <div class="ops-step-line ${step > 3 ? 'done' : ''}"></div>
-            <div class="ops-step ${getOpsStepClass(step, 4)}">
+            <div class="ops-step-line ${step > 3 ? 'done' : ''}" data-line-after="3"></div>
+            <div class="ops-step ${getOpsStepClass(step, 4)}" data-step-target="4">
               <span class="step-num">${getOpsStepNum(step, 4)}</span>
               <span class="step-lbl">Kayıt</span>
             </div>
           </div>
           <div class="ops-progress-track">
-            <div class="ops-progress-bar animated" style="width: ${pct}%"></div>
+            <div class="ops-progress-bar animated" style="--progress:${scaleRatio}; transform:scaleX(${scaleRatio});"></div>
           </div>
           <div class="ops-status-line">
-            <span class="ops-pulse-dot"></span>
+            <span class="ops-pulse-dot" aria-hidden="true"></span>
             <span class="ops-status-text" title="${esc(t.log_message)}">${esc(t.log_message || 'İşlem yürütülüyor...')}</span>
           </div>
           ${logDetailsHtml}
@@ -514,9 +570,9 @@
     }
 
     function renderOpsSuccessCard(t, title, author, category, bookHash) {
-      const clickAttr = bookHash ? `onclick="openBookFromOps('${bookHash}')"` : '';
+      const clickAttr = bookHash ? `onclick="openBookFromOps('${esc(bookHash)}')"` : '';
       return `
-        <div class="ops-task-card is-success ${bookHash ? 'is-clickable' : ''}" id="task-${t.id}" ${clickAttr}>
+        <div class="ops-task-card is-success ${bookHash ? 'is-clickable' : ''}" id="task-${esc(t.id)}" data-task-id="${esc(t.id)}" data-task-status="success" data-book-hash="${esc(bookHash)}" ${clickAttr}>
           <div class="ops-card-header">
             <div class="ops-file-badge success"><i class="fas fa-book"></i></div>
             <div class="ops-file-info">
@@ -531,7 +587,7 @@
           <div class="ops-result-row">
             <span class="ops-result-filename" title="${esc(t.filename)}"><i class="fas fa-file-alt"></i> ${esc(t.filename)}</span>
             ${bookHash ? `
-              <button type="button" class="ops-btn-action" onclick="event.stopPropagation(); openBookFromOps('${bookHash}')">
+              <button type="button" class="ops-btn-action" onclick="event.stopPropagation(); openBookFromOps('${esc(bookHash)}')">
                 <i class="fas fa-eye"></i> Kitabı Aç
               </button>
             ` : ''}
@@ -542,7 +598,7 @@
 
     function renderOpsErrorCard(t) {
       return `
-        <div class="ops-task-card is-error" id="task-${t.id}">
+        <div class="ops-task-card is-error" id="task-${esc(t.id)}" data-task-id="${esc(t.id)}" data-task-status="error">
           <div class="ops-card-header">
             <div class="ops-file-badge error"><i class="fas fa-exclamation-triangle"></i></div>
             <div class="ops-file-info">
@@ -577,6 +633,10 @@
         `;
       }
       const totalCount = (window.allBooks?.length || 0);
+      const wsState = window._wsConnectionState || 'online';
+      const wsLabel = wsState === 'online'
+        ? 'Canlı'
+        : (wsState === 'reconnecting' ? 'Yeniden bağlanıyor…' : 'Çevrimdışı');
       return `
         <div class="ops-empty-state ops-editorial-empty">
           <div class="ops-empty-folio" aria-hidden="true">
@@ -589,10 +649,10 @@
           </div>
           <div class="ops-empty-title">Etkinlik Merkezi Hazır</div>
           <div class="ops-empty-desc">
-            Yeni bir eser eklediğinizde veya arka plan eşitlemesi başladığında işlem adımları burada zarifçe görünür.
+            Yeni bir eser eklediğinizde veya arka plan eşitlemesi başladığında işlem adımları burada görünür.
           </div>
           <div class="ops-empty-specs ops-editorial-meta">
-            <div class="spec-item"><span class="ops-meta-dot is-ok"></span> Canlı Bağlantı: <strong>Aktif</strong></div>
+            <div class="spec-item"><span class="ops-meta-dot is-ok"></span> Bağlantı: <strong id="ops-empty-ws-status">${wsLabel}</strong></div>
             <div class="spec-item"><span class="ops-meta-dot is-accent"></span> Koleksiyon: <strong>${totalCount} Eser</strong></div>
           </div>
           <div class="ops-empty-actions">
@@ -657,7 +717,7 @@
         floatingBadge.style.display = 'inline-flex';
       }
       if (pillLabel) {
-        pillLabel.textContent = activeCount === 1 ? 'Eser İşleniyor' : `${activeCount} İşlem Aktif`;
+        pillLabel.textContent = activeCount === 1 ? 'İşleniyor' : `${activeCount} İşlem`;
       }
       if (pillSublabel) {
         pillSublabel.textContent = primarySummary || `%${avgPct}`;
@@ -679,12 +739,19 @@
       const floatingBadge = document.getElementById('ops-badge');
       const pillLabel = document.getElementById('ops-pill-label');
       const pillSublabel = document.getElementById('ops-pill-sublabel');
+      const wsState = window._wsConnectionState || 'online';
+      const wsOfflineNote = wsState === 'online'
+        ? ''
+        : (wsState === 'reconnecting' ? 'Bağlanıyor…' : 'Çevrimdışı');
 
       if (activePill) {
         activePill.textContent = 'Hazır';
         activePill.className = 'ops-count-pill';
       }
-      if (livePulse) livePulse.className = 'ops-live-pulse ops-header-indicator pulse-idle';
+      if (livePulse) {
+        const pulseCls = wsState === 'online' ? 'idle' : (wsState === 'reconnecting' ? 'reconnecting' : 'offline');
+        livePulse.className = `ops-live-pulse ops-header-indicator pulse-${pulseCls}`;
+      }
       if (liveTag) liveTag.style.display = 'none';
       if (floatingBadge) floatingBadge.style.display = 'none';
 
@@ -697,9 +764,9 @@
       if (justCompleted) {
         if (window._opsCompleteTimer) clearTimeout(window._opsCompleteTimer);
         if (toggleBtn) toggleBtn.classList.add('is-recently-done');
-        if (pillLabel) pillLabel.textContent = '✓ İşlem tamamlandı';
+        if (pillLabel) pillLabel.textContent = 'Tamamlandı';
         if (pillSublabel) pillSublabel.textContent = 'Kütüphaneye eklendi';
-        if (toggleBtn) toggleBtn.title = 'Etkinlik tamamlandı';
+        if (toggleBtn) toggleBtn.title = 'İşlem tamamlandı';
         window._opsCompleteTimer = setTimeout(() => {
           window._opsCompleteTimer = null;
           _setOpsRingProgress(0);
@@ -708,11 +775,11 @@
             toggleBtn.title = 'Etkinlik Merkezi';
           }
           if (pillLabel) pillLabel.textContent = 'Etkinlik Merkezi';
-          if (pillSublabel) pillSublabel.textContent = '';
-        }, 3600);
+          if (pillSublabel) pillSublabel.textContent = wsOfflineNote;
+        }, 3200);
       } else if (!window._opsCompleteTimer) {
         if (pillLabel) pillLabel.textContent = 'Etkinlik Merkezi';
-        if (pillSublabel) pillSublabel.textContent = '';
+        if (pillSublabel) pillSublabel.textContent = wsOfflineNote;
         if (toggleBtn) toggleBtn.title = 'Etkinlik Merkezi';
       }
     }
@@ -731,6 +798,8 @@
         queueLabel.textContent = activeCount > 0 ? `${activeCount} Sırada` : 'Boşta';
       }
 
+      refreshOpsSystemStrip();
+
       const prevCount = window._opsPrevActiveCount || 0;
       const justCompleted = prevCount > 0 && activeCount === 0;
       window._opsPrevActiveCount = activeCount;
@@ -742,15 +811,198 @@
       }
     }
 
-    function renderOpsCardsHtml(listToRender, currentTab, activeCount, completedCount) {
-      let html = '';
+    function _ensureOpsDetailsTracking(body) {
+      if (!body || body._opsDetailsBound) return;
+      body._opsDetailsBound = true;
+      window._opsOpenDetailIds = window._opsOpenDetailIds || new Set();
+      window._opsCollapsedDetailIds = window._opsCollapsedDetailIds || new Set();
+      body.addEventListener('toggle', (ev) => {
+        const details = ev.target;
+        if (!(details instanceof HTMLDetailsElement) || !details.classList.contains('ops-log-details')) return;
+        const tid = details.dataset.taskId || details.closest('[data-task-id]')?.dataset.taskId;
+        if (!tid) return;
+        if (details.open) {
+          window._opsOpenDetailIds.add(tid);
+          window._opsCollapsedDetailIds.delete(tid);
+        } else {
+          window._opsOpenDetailIds.delete(tid);
+          window._opsCollapsedDetailIds.add(tid);
+        }
+      }, true);
+    }
+
+    function _createOpsElementFromHtml(html) {
+      const tpl = document.createElement('template');
+      tpl.innerHTML = html.trim();
+      return tpl.content.firstElementChild;
+    }
+
+    function _patchActiveOpsCard(card, t, pct, logs) {
+      const step = getTaskStep(pct, t.log_message, t.status);
+      const phaseLabel = getTaskPhaseLabel(pct, t.log_message, t.status);
+      const scaleRatio = (pct / 100).toFixed(3);
+
+      const titleEl = card.querySelector('.ops-file-title');
+      if (titleEl && titleEl.textContent !== (t.filename || '')) {
+        titleEl.textContent = t.filename || '';
+        titleEl.title = t.filename || '';
+      }
+
+      const phaseEl = card.querySelector('.ops-phase-tag');
+      if (phaseEl && phaseEl.textContent !== phaseLabel) {
+        phaseEl.textContent = phaseLabel;
+      }
+
+      const agoEl = card.querySelector('.ops-time-ago');
+      const agoText = formatTimeAgo(t.last_update);
+      if (agoEl && agoEl.textContent !== agoText) {
+        agoEl.textContent = agoText;
+      }
+
+      const pctEl = card.querySelector('.ops-card-pct');
+      const pctText = `%${pct}`;
+      if (pctEl && pctEl.textContent !== pctText) {
+        pctEl.textContent = pctText;
+      }
+
+      const barEl = card.querySelector('.ops-progress-bar');
+      if (barEl) {
+        barEl.style.setProperty('--progress', scaleRatio);
+        barEl.style.transform = `scaleX(${scaleRatio})`;
+      }
+
+      const statusTextEl = card.querySelector('.ops-status-text');
+      const msgText = t.log_message || 'İşlem yürütülüyor...';
+      if (statusTextEl && statusTextEl.textContent !== msgText) {
+        statusTextEl.textContent = msgText;
+        statusTextEl.title = msgText;
+      }
+
+      const prevStep = Number(card.dataset.step || 0);
+      if (prevStep !== step) {
+        card.dataset.step = String(step);
+        card.querySelectorAll('.ops-step[data-step-target]').forEach((stepEl) => {
+          const target = Number(stepEl.dataset.stepTarget);
+          stepEl.className = `ops-step ${getOpsStepClass(step, target)}`.trim();
+          const numEl = stepEl.querySelector('.step-num');
+          if (numEl) numEl.innerHTML = getOpsStepNum(step, target);
+        });
+        card.querySelectorAll('.ops-step-line[data-line-after]').forEach((lineEl) => {
+          const after = Number(lineEl.dataset.lineAfter);
+          lineEl.classList.toggle('done', step > after);
+        });
+      }
+
+      if (logs.length > 0) {
+        let details = card.querySelector('.ops-log-details');
+        if (!details) {
+          const isOpen = _shouldDetailsBeOpen(t.id, logs.length, null);
+          const visibleLogs = logs.slice(-24);
+          details = _createOpsElementFromHtml(`
+            <details class="ops-log-details" data-task-id="${esc(t.id)}" ${isOpen ? 'open' : ''}>
+              <summary><i class="fas fa-list-ul"></i> <span class="ops-log-summary-text">İşlem Günlüğü (${logs.length})</span></summary>
+              <div class="ops-log-stream" data-rendered-count="${logs.length}">${visibleLogs.map(_renderStreamLineHtml).join('')}</div>
+            </details>
+          `);
+          if (details) card.appendChild(details);
+        } else {
+          details.open = _shouldDetailsBeOpen(t.id, logs.length, details);
+          const sumText = details.querySelector('.ops-log-summary-text');
+          const desiredSum = `İşlem Günlüğü (${logs.length})`;
+          if (sumText && sumText.textContent !== desiredSum) sumText.textContent = desiredSum;
+
+          const stream = details.querySelector('.ops-log-stream');
+          if (stream) {
+            const prevCount = Number(stream.dataset.renderedCount || 0);
+            const wasNearBottom = (stream.scrollHeight - stream.scrollTop - stream.clientHeight) < 20;
+            const prevStreamScroll = stream.scrollTop;
+
+            if (logs.length < prevCount) {
+              stream.innerHTML = logs.slice(-24).map(_renderStreamLineHtml).join('');
+            } else if (logs.length > prevCount) {
+              const delta = logs.slice(prevCount);
+              delta.forEach((entry) => {
+                const lineEl = _createOpsElementFromHtml(_renderStreamLineHtml(entry));
+                if (lineEl) stream.appendChild(lineEl);
+              });
+              while (stream.children.length > 24) {
+                stream.firstElementChild.remove();
+              }
+            }
+            stream.dataset.renderedCount = String(logs.length);
+            if (wasNearBottom) {
+              stream.scrollTop = stream.scrollHeight;
+            } else {
+              stream.scrollTop = prevStreamScroll;
+            }
+          }
+        }
+      }
+    }
+
+    function _patchTerminalOpsCard(card, t, mode) {
+      const agoEl = card.querySelector('.ops-time-ago');
+      const agoText = formatTimeAgo(t.last_update);
+      if (agoEl && agoEl.textContent !== agoText) agoEl.textContent = agoText;
+      if (mode === 'error') {
+        const errBox = card.querySelector('.ops-error-box');
+        const msg = t.log_message || 'İşlem sırasında bir hata oluştu.';
+        if (errBox && errBox.textContent !== msg) errBox.textContent = msg;
+      }
+    }
+
+    function _buildSectionDivider(key, iconCls, text) {
+      const div = document.createElement('div');
+      div.className = key === 'completed' ? 'ops-section-divider ops-section-completed' : 'ops-section-divider';
+      div.dataset.sectionKey = key;
+      div.innerHTML = `<i class="${iconCls}"></i> <span class="ops-divider-label">${esc(text)}</span>`;
+      return div;
+    }
+
+    function reconcileOpsBody(body, listToRender, currentTab, activeCount, completedCount) {
+      _ensureOpsDetailsTracking(body);
+
+      if (listToRender.length === 0) {
+        if (body.dataset.emptyTab !== currentTab || body.querySelector('.ops-task-card')) {
+          body.innerHTML = renderOpsEmptyState(currentTab);
+          body.dataset.emptyTab = currentTab;
+        } else {
+          refreshOpsSystemStrip();
+        }
+        return;
+      }
+
+      delete body.dataset.emptyTab;
+      const prevBodyScroll = body.scrollTop;
+
+      const prevRects = new Map();
+      body.querySelectorAll('.ops-task-card[data-task-id]').forEach((el) => {
+        prevRects.set(el.dataset.taskId, el.getBoundingClientRect());
+      });
+
+      const existingDividers = new Map();
+      body.querySelectorAll('.ops-section-divider[data-section-key]').forEach((el) => {
+        existingDividers.set(el.dataset.sectionKey, el);
+      });
+
+      const existingCards = new Map();
+      body.querySelectorAll('.ops-task-card[data-task-id]').forEach((el) => {
+        existingCards.set(el.dataset.taskId, el);
+      });
+
+      // Eski boş durum öğelerini kaldır
+      body.querySelectorAll('.ops-empty-state, .ops-tab-empty').forEach((el) => el.remove());
+
+      const desiredNodes = [];
+      const newlyRevealed = [];
       let hasActiveSection = false;
       let hasCompletedSection = false;
 
-      listToRender.forEach(t => {
+      listToRender.forEach((t) => {
         const isSuccess = t.status === 'success';
         const isError = t.status === 'error';
         const isActive = !isSuccess && !isError;
+        const mode = isSuccess ? 'success' : (isError ? 'error' : 'active');
         const pct = Math.min(100, Math.max(isActive ? 5 : 0, t.percentage || 0));
         const logs = Array.isArray(t.logs) ? t.logs : [];
         const taskData = t.task_data || {};
@@ -759,31 +1011,84 @@
         const category = taskData.kategori || '';
         const bookHash = taskData.dosya_hash || '';
 
-        // Add section headers in 'all' view
         if (currentTab === 'all') {
           if (isActive && !hasActiveSection) {
-            html += `<div class="ops-section-divider"><i class="fas fa-bolt ops-section-icon is-warn"></i> Devam Eden İşlemler (${activeCount})</div>`;
+            const label = `Devam Eden İşlemler (${activeCount})`;
+            let div = existingDividers.get('active');
+            if (div) {
+              const lblEl = div.querySelector('.ops-divider-label');
+              if (lblEl && lblEl.textContent !== label) lblEl.textContent = label;
+            } else {
+              div = _buildSectionDivider('active', 'fas fa-bolt ops-section-icon is-warn', label);
+            }
+            desiredNodes.push(div);
             hasActiveSection = true;
           } else if (!isActive && !hasCompletedSection) {
-            html += `<div class="ops-section-divider ops-section-completed"><i class="fas fa-check-circle ops-section-icon is-ok"></i> Son İşlemler (${completedCount})</div>`;
+            const label = `Son İşlemler (${completedCount})`;
+            let div = existingDividers.get('completed');
+            if (div) {
+              const lblEl = div.querySelector('.ops-divider-label');
+              if (lblEl && lblEl.textContent !== label) lblEl.textContent = label;
+            } else {
+              div = _buildSectionDivider('completed', 'fas fa-check-circle ops-section-icon is-ok', label);
+            }
+            desiredNodes.push(div);
             hasCompletedSection = true;
           }
         }
 
-        if (isActive) {
-          html += renderOpsActiveCard(t, pct, logs);
-        } else if (isSuccess) {
-          html += renderOpsSuccessCard(t, title, author, category, bookHash);
-        } else if (isError) {
-          html += renderOpsErrorCard(t);
+        let card = existingCards.get(String(t.id));
+        if (card && card.dataset.taskStatus === mode) {
+          if (mode === 'active') {
+            _patchActiveOpsCard(card, t, pct, logs);
+          } else {
+            _patchTerminalOpsCard(card, t, mode);
+          }
+        } else {
+          const hadPrevPosition = Boolean(card);
+          let html = '';
+          if (mode === 'active') html = renderOpsActiveCard(t, pct, logs);
+          else if (mode === 'success') html = renderOpsSuccessCard(t, title, author, category, bookHash);
+          else html = renderOpsErrorCard(t);
+          const freshCard = _createOpsElementFromHtml(html);
+          if (card && freshCard) {
+            card.replaceWith(freshCard);
+          }
+          card = freshCard;
+          if (card && !hadPrevPosition) {
+            newlyRevealed.push(card);
+          }
+        }
+
+        if (card) desiredNodes.push(card);
+      });
+
+      const desiredSet = new Set(desiredNodes);
+      Array.from(body.children).forEach((child) => {
+        if (!desiredSet.has(child)) child.remove();
+      });
+
+      desiredNodes.forEach((node, idx) => {
+        const currentAtIdx = body.children[idx];
+        if (currentAtIdx !== node) {
+          body.insertBefore(node, currentAtIdx || null);
         }
       });
-      return html;
+
+      body.scrollTop = Math.min(prevBodyScroll, Math.max(0, body.scrollHeight - body.clientHeight));
+
+      if (window.Motion && typeof window.Motion.flip === 'function' && (prevRects.size > 0 || newlyRevealed.length > 0)) {
+        window.Motion.flip(body, prevRects, {
+          selector: '.ops-task-card[data-task-id]',
+          newlyRevealed,
+          duration: 280
+        });
+      }
     }
 
-    function updateOpsUI(activeTasks, archivedTasks = {}) {
+    function updateOpsUI(activeTasks, archivedTasks = {}, opts = {}) {
       const body = document.getElementById('ops-body');
-      if (!body) return;
+      const opsCenter = document.getElementById('ops-center');
 
       const activeEntries = Object.entries(activeTasks || {})
         .filter(([_, t]) => t && t.status !== 'success' && t.status !== 'error')
@@ -807,7 +1112,7 @@
 
       handleCompletedTaskRefreshes(completedEntries);
 
-      // Update Header Badges & Indicators
+      // Update Header Badges & Ambient Pill immediately
       const activeCount = activeEntries.length;
       const completedCount = completedEntries.length;
       const totalCount = activeCount + completedCount;
@@ -826,7 +1131,16 @@
 
       updateOpsBadges(activeCount, completedCount, totalCount, avgPct, primarySummary);
 
-      // Filter based on active tab
+      if (!body) return;
+
+      // Kapalı çekmece içinde gereksiz DOM uzlaştırmasını açılış anına ertele
+      const isDrawerOpen = Boolean(opsCenter && opsCenter.classList.contains('active'));
+      if (!isDrawerOpen && !opts.forceBody) {
+        window._opsBodyDirty = true;
+        return;
+      }
+
+      window._opsBodyDirty = false;
       const currentTab = window.opsActiveTab || 'all';
       let listToRender = [];
       if (currentTab === 'active') {
@@ -837,14 +1151,44 @@
         listToRender = [...activeEntries, ...completedEntries];
       }
 
-      // Empty State Handling
-      if (listToRender.length === 0) {
-        body.innerHTML = renderOpsEmptyState(currentTab);
-        return;
-      }
-
-      body.innerHTML = renderOpsCardsHtml(listToRender, currentTab, activeCount, completedCount);
+      reconcileOpsBody(body, listToRender, currentTab, activeCount, completedCount);
     }
+
+    let _opsRafPending = 0;
+    let _opsQueuedArgs = null;
+
+    function scheduleOpsUIUpdate(activeTasks, archivedTasks = {}) {
+      _opsQueuedArgs = { activeTasks, archivedTasks };
+      if (_opsRafPending) return;
+      _opsRafPending = requestAnimationFrame(() => {
+        _opsRafPending = 0;
+        const payload = _opsQueuedArgs;
+        _opsQueuedArgs = null;
+        if (payload) {
+          updateOpsUI(payload.activeTasks, payload.archivedTasks);
+        }
+      });
+    }
+    window.scheduleOpsUIUpdate = scheduleOpsUIUpdate;
+
+    function flushOpsBodyIfDirty() {
+      if (window._opsBodyDirty || _opsRafPending) {
+        if (_opsRafPending) {
+          cancelAnimationFrame(_opsRafPending);
+          _opsRafPending = 0;
+        }
+        const payload = _opsQueuedArgs;
+        _opsQueuedArgs = null;
+        updateOpsUI(
+          payload ? payload.activeTasks : (window.lastActiveTasks || {}),
+          payload ? payload.archivedTasks : (window.lastArchivedTasks || {}),
+          { forceBody: true }
+        );
+      } else {
+        refreshOpsSystemStrip();
+      }
+    }
+    window.flushOpsBodyIfDirty = flushOpsBodyIfDirty;
 
     function excelSafe(str) {
       const value = String(str || '');
