@@ -188,6 +188,14 @@
         updateThemeMeta(next);
       };
 
+      if (window.Motion && typeof window.Motion.transition === 'function') {
+        html.classList.add('theme-transitioning');
+        void window.Motion.transition(apply).finally(() => {
+          html.classList.remove('theme-transitioning');
+        });
+        return;
+      }
+
       if (!document.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         apply();
         return;

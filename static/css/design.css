@@ -4183,3 +4183,30 @@ button:active:not(:disabled),
 .pdf-search-results-drawer {
   transform-origin: top center;
 }
+
+/* Koyu Tema Kontrast & Yüzey Ayrımı İyileştirmeleri */
+[data-theme="dark"] #ops-center,
+[data-theme="dark"] #chat-panel.active,
+[data-theme="dark"] #chat-panel.closing {
+  background: var(--surface);
+  border-color: var(--line-strong);
+}
+
+[data-theme="dark"] #chat-panel .chat-input-area input {
+  background: var(--paper);
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+[data-theme="dark"] .book-card.uploading {
+  background: var(--surface);
+  border-color: var(--line-strong);
+}
+
+[data-theme="dark"] .uploading-stage-caption {
+  color: var(--ink-muted);
+}
+
+[data-theme="dark"] .logs-panel {
+  border-color: rgba(255, 255, 255, 0.16);
+}

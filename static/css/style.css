@@ -3943,8 +3943,8 @@
       padding: 3px 9px;
       border-radius: 999px;
       background: #1f1e1b;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: #8f8a80;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: #c2bdb2;
       letter-spacing: 0.05em;
       text-transform: uppercase;
     }
@@ -4063,7 +4063,7 @@
       font-size: 0.65rem;
       text-transform: uppercase;
       letter-spacing: 0.15em;
-      color: #6f6a60;
+      color: #aca69b;
       margin: 0.4rem 0 0.6rem 0.4rem;
       font-weight: 700;
     }
@@ -4075,7 +4075,7 @@
       border-radius: 8px;
       border: 1px solid transparent;
       background: transparent;
-      color: #8f8a80;
+      color: #c6c0b4;
       font-size: 0.74rem;
       font-family: 'Geist Mono', monospace;
       display: flex;
@@ -4095,8 +4095,8 @@
       font-size: 0.65rem;
       padding: 2px 7px;
       border-radius: 6px;
-      background: #1f1e1b;
-      color: #8f8a80;
+      background: #23211d;
+      color: #c6c0b4;
       font-weight: 600;
       min-width: 22px;
       text-align: center;

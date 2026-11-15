@@ -310,6 +310,12 @@
   animation-timing-function: var(--ease-out);
 }
 
+html.theme-transitioning::view-transition-old(root),
+html.theme-transitioning::view-transition-new(root) {
+  animation-duration: 180ms;
+  animation-timing-function: var(--ease-out);
+}
+
 ::view-transition-group(book-cover) {
   animation-duration: var(--t-morph);
   animation-timing-function: var(--ease-morph);
