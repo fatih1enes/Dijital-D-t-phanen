@@ -1,0 +1,446 @@
+/**
+ * Dijital Kütüphane — "Kâğıt ve Mürekkep" Merkezi Hareket Katmanı
+ * Tüm @keyframes, ortak hareket yardımcıları, View Transitions ve tek merkezli
+ * prefers-reduced-motion kuralları bu dosyada toplanır.
+ * Kural: Yalnızca `transform` ve `opacity` anime edilir.
+ */
+
+/* ═══════════════ 1. MERKEZİ KEYFRAME TANIMLARI (Yalnızca transform & opacity) ═══════════════ */
+@keyframes mEnter {
+  from { opacity: 0; transform: translate3d(0, 8px, 0) scale(0.985); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes mExit {
+  from { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  to   { opacity: 0; transform: translate3d(0, 6px, 0) scale(0.98); }
+}
+
+@keyframes mSettle {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes modalOverlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modalOverlayOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes modalPopIn {
+  from { opacity: 0; transform: translate3d(0, 10px, 0) scale(0.965); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes modalPopOut {
+  from { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  to   { opacity: 0; transform: translate3d(0, 6px, 0) scale(0.98); }
+}
+
+@keyframes modalContentRise {
+  from { opacity: 0; transform: translate3d(0, 8px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes dropdownIn {
+  from { opacity: 0; transform: translate3d(0, -6px, 0) scale(0.98); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes dropdownOut {
+  from { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  to   { opacity: 0; transform: translate3d(0, -4px, 0) scale(0.98); }
+}
+
+@keyframes toolsMenuFadeIn {
+  from { opacity: 0; transform: translate3d(0, -6px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes toolsMenuFadeOut {
+  from { opacity: 1; transform: translate3d(0, 0, 0); }
+  to   { opacity: 0; transform: translate3d(0, -4px, 0); }
+}
+
+@keyframes opsCenterIn {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes opsDrawerUnfold {
+  from { opacity: 0; transform: translate3d(0, 14px, 0) scale(0.93); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes opsDrawerFold {
+  from { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  to   { opacity: 0; transform: translate3d(0, 12px, 0) scale(0.95); }
+}
+
+@keyframes opsCardSlideIn {
+  from { opacity: 0; transform: translate3d(0, 8px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes opsTogglePulse {
+  0%   { opacity: 0.92; transform: scale(1); }
+  45%  { opacity: 1;    transform: scale(1.025); }
+  100% { opacity: 1;    transform: scale(1); }
+}
+
+@keyframes chatPanelExpand {
+  from { opacity: 0; transform: translate3d(0, 12px, 0) scale(0.96); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes chatPanelFold {
+  from { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  to   { opacity: 0; transform: translate3d(0, 12px, 0) scale(0.95); }
+}
+
+@keyframes viewFadeSlide {
+  from { opacity: 0; transform: translate3d(0, 12px, 0) scale(0.995); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes smoothViewReveal {
+  from { opacity: 0; transform: translate3d(0, 10px, 0) scale(0.995); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes workspaceSlideUp {
+  from { opacity: 0; transform: translate3d(0, 12px, 0) scale(0.992); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes cardJustAdded {
+  0%   { opacity: 0; transform: translate3d(0, 10px, 0) scale(0.97); }
+  55%  { opacity: 1; transform: translate3d(0, -2px, 0) scale(1.01); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes cardFilterReveal {
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes heroMaskReveal {
+  from { opacity: 0; transform: translate3d(0, 16px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes heroFadeUp {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translate3d(0, 12px, 0) scale(0.98); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translate3d(0, 14px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes fadeOutScale {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.94); }
+}
+
+@keyframes tabSlideIn {
+  from { opacity: 0; transform: translate3d(10px, 0, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes statCountBump {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+@keyframes themeIconSpin {
+  0%   { transform: rotate(-65deg) scale(0.75); opacity: 0; }
+  100% { transform: rotate(0deg) scale(1); opacity: 1; }
+}
+
+@keyframes pdfSearchSlideDown {
+  from { opacity: 0; transform: translate3d(0, -8px, 0) scale(0.98); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes searchHighlightPulse {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50%      { transform: scale(1.04); opacity: 1; }
+}
+
+@keyframes pulseBeacon {
+  0%, 100% { transform: scale(0.92); opacity: 0.72; }
+  50%      { transform: scale(1.18); opacity: 1; }
+}
+
+@keyframes opsPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.18); opacity: 0.65; }
+}
+
+@keyframes logPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.2); opacity: 0.6; }
+}
+
+@keyframes wsStatusPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.22); opacity: 0.65; }
+}
+
+@keyframes wsStatusPulseOffline {
+  0%, 100% { transform: scale(1); opacity: 0.95; }
+  50%      { transform: scale(1.14); opacity: 0.55; }
+}
+
+@keyframes copySuccessPulse {
+  0%   { transform: scale(0.96); }
+  50%  { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes wsFadeIn {
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes wsBounce {
+  0%, 80%, 100% { transform: scale(0.35); opacity: 0.4; }
+  40%           { transform: scale(1); opacity: 1; }
+}
+
+@keyframes sparkleRotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes notePulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.03); opacity: 0.88; }
+}
+
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes skeletonPulse {
+  100% { transform: translateX(100%); }
+}
+
+@keyframes calmShimmer {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 0.85; }
+}
+
+@keyframes bannerShimmer {
+  0%, 100% { opacity: 0.78; }
+  50%      { opacity: 1; }
+}
+
+@keyframes skeletonShimmerAnim {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 0.85; }
+}
+
+/* ═══════════════ 2. PAYLAŞILAN HAREKET YARDIMCI SINIFLARI ═══════════════ */
+.m-enter {
+  animation: mEnter var(--t-ui) var(--ease-out) both;
+}
+
+.m-exit {
+  animation: mExit var(--t-exit) var(--ease-out) forwards;
+  pointer-events: none !important;
+}
+
+.m-settle {
+  animation: mSettle var(--t-ui) var(--ease-out) both;
+}
+
+.m-stagger {
+  animation: mSettle var(--t-ui) var(--ease-out) calc(var(--stagger-i, 0) * var(--stagger-step)) both;
+}
+
+/* Mürekkep İlerleme Çizgisi (GPU transform: scaleX) */
+.m-ink-bar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: left center;
+  transform: scaleX(var(--progress, 0));
+  transition: transform var(--t-ui) var(--ease-out);
+  will-change: transform;
+}
+
+/* Modal Origin Desteği */
+.modal {
+  transform-origin: var(--modal-origin-x, center) var(--modal-origin-y, center);
+}
+
+/* Segmented Control Kayan Gösterge */
+.seg-glide-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  pointer-events: none;
+  transform-origin: 0 0;
+  border-radius: var(--r-xs);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+  will-change: transform;
+}
+
+/* ═══════════════ 3. VIEW TRANSITIONS API KURALLARI ═══════════════ */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--t-ui);
+  animation-timing-function: var(--ease-out);
+}
+
+::view-transition-group(book-cover) {
+  animation-duration: var(--t-morph);
+  animation-timing-function: var(--ease-morph);
+  z-index: 99999;
+}
+
+::view-transition-old(book-cover),
+::view-transition-new(book-cover) {
+  border-radius: var(--r-xs);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+/* ═══════════════ 4. TEK MERKEZ REDUCED MOTION KORUMASI ═══════════════ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t-instant: 0.01ms;
+    --t-micro: 0.01ms;
+    --t-exit: 120ms;
+    --t-ui: 120ms;
+    --t-morph: 0.01ms;
+    --t-page: 0.01ms;
+    --stagger-step: 0ms;
+    --transition-fast: 100ms ease;
+    --transition-smooth: 120ms ease;
+    --transition-spring: 120ms ease;
+  }
+
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+  }
+
+  /* Sonsuz dönen, nabız atan veya ışıltılı döngüleri durdur */
+  .fa-spin,
+  .ops-status-dot,
+  .is-processing .ops-status-dot,
+  [class*="pulse"],
+  [class*="spin"],
+  [class*="shimmer"] {
+    animation: none !important;
+  }
+
+  /* Konum/ölçek hareketlerini kapat, durum değişimi için kısa opacity geçişini koru */
+  button,
+  [class*="btn-"],
+  .book-card,
+  .card-cover,
+  .card-cover img,
+  .card-cover-placeholder,
+  .header-icon-btn,
+  .ops-toggle,
+  #chat-panel,
+  #ops-center,
+  .dropdown-menu,
+  .modal-close,
+  .shelf-item,
+  .workspace-pdf-pane,
+  .workspace-chat-pane,
+  .pdf-notes-sidebar > *,
+  .pdf-toc-sidebar > * {
+    transform: none !important;
+    transition: opacity 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease !important;
+  }
+
+  .hero-kicker,
+  .hero-title,
+  .hero-subtitle,
+  .hero-primary-actions,
+  .hero-secondary-links,
+  .book-card.stagger-in,
+  .book-card.just-added,
+  .book-card.card-revealing,
+  #table-body tr.stagger-in,
+  #ops-toggle.ops-toggle-pulse,
+  #ops-body .ops-task-card,
+  .modal.open .modal-stagger-1,
+  .modal.open .modal-stagger-2,
+  .modal.open .modal-stagger-3,
+  .modal.open .modal-stagger-4,
+  .modal.open .modal-stagger-5,
+  .modal-edit-panel.is-expanding,
+  .workspace-reader.workspace-entering,
+  .m-stagger,
+  .m-settle {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Giriş/çıkış katmanlarında yalnızca kısa opacity (120ms ease) kalır */
+  @keyframes mEnter { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes mExit { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes modalPopIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes modalPopOut { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes modalOverlayIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes modalOverlayOut { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes dropdownIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes dropdownOut { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes toolsMenuFadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes toolsMenuFadeOut { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes opsCenterIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes opsDrawerUnfold { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes opsDrawerFold { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes chatPanelExpand { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes chatPanelFold { from { opacity: 1; } to { opacity: 0; } }
+
+  .m-enter,
+  .modal-overlay.open,
+  .modal-overlay.open .modal,
+  #ops-center.active,
+  #chat-panel.active {
+    animation-duration: 120ms !important;
+    animation-timing-function: ease !important;
+  }
+
+  .m-exit,
+  .modal-overlay.closing,
+  .modal-overlay.closing .modal,
+  #ops-center.closing,
+  #chat-panel.closing {
+    animation-duration: 120ms !important;
+    animation-timing-function: ease !important;
+  }
+
+  .seg-glide-indicator {
+    display: none !important;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0.01ms !important;
+  }
+}

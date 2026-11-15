@@ -4,10 +4,12 @@
  * 1. legacy: Base and structural styles from style.css
  * 2. tokens: CSS Custom Properties design tokens from tokens.css
  * 3. design: High-level design system, typography, components, and responsive layouts from design.css
+ * 4. motion: Centralized editorial motion language, keyframes, utilities, and reduced-motion rules
  */
-@layer legacy, tokens, design;
+@layer legacy, tokens, design, motion;
 
-@import url("style.css?v=2026111503") layer(legacy);
-@import url("tokens.css?v=2026111503") layer(tokens);
-@import url("design.css?v=2026111503") layer(design);
+@import url("style.css?v=2026111504") layer(legacy);
+@import url("tokens.css?v=2026111504") layer(tokens);
+@import url("design.css?v=2026111504") layer(design);
+@import url("motion.css?v=2026111504") layer(motion);
 

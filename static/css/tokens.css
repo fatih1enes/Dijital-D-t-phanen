@@ -80,9 +80,10 @@
                         1.067 41.6%, 1.059 49.2%, 1.015 61.5%, 0.999 74%, 1);
   --t-instant: 90ms; /* Anlık dokunuş tepkisi */
   --t-micro: 150ms;  /* Hover, renk, basma */
+  --t-exit: 180ms;   /* Çıkış / kapanış geçişleri */
   --t-ui:    280ms;  /* Dropdown, panel, kart, modal */
-  --t-morph: 420ms;  /* Mekansal şekil değiştirme */
-  --t-page:  600ms;  /* Okuyucu, hero, büyük geçişler */
+  --t-morph: 400ms;  /* Mekânsal şekil değiştirme */
+  --t-page:  520ms;  /* Okuyucu, hero, büyük geçişler */
   --stagger-step: 28ms; /* Sıralı kart/satır gecikmesi */
 
   /* Aliases for System Backwards Compatibility */
@@ -108,19 +109,7 @@
   --transition-spring: var(--t-ui) var(--ease-spring);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  :root {
-    --t-instant: 0.01ms;
-    --t-page: 0.01ms;
-    --t-morph: 0.01ms;
-    --t-ui: 0.01ms;
-    --t-micro: 0.01ms;
-    --stagger-step: 0ms;
-    --transition-fast: 100ms ease;
-    --transition-smooth: 150ms ease;
-    --transition-spring: 150ms ease;
-  }
-}
+/* Reduced-motion kuralları static/css/motion.css içinde tek merkezden yönetilir. */
 
 :root {
 
@@ -295,6 +284,13 @@ body.dark-mode {
   --status-warning-text: var(--warn);
   --status-danger-bg: var(--danger-bg);
   --status-danger-text: var(--danger);
+
+  /* Diagnostics Console Dark Tokens (High Contrast) */
+  --terminal-bg: #121110;
+  --terminal-surface: #1b1916;
+  --terminal-ink: #f2ede4;
+  --terminal-muted: #a8a296;
+  --terminal-line: rgba(242, 237, 228, 0.14);
 
   /* Shadows */
   --shadow-color: rgba(0, 0, 0, 0.5);
