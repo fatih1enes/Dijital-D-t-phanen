@@ -117,9 +117,6 @@ async function openTelegramModal() {
   document.body.classList.add('modal-open');
   if (window.Motion && typeof window.Motion.enter === 'function') {
     void window.Motion.enter(modal, { className: '', addClass: 'open', cleanExitClass: 'closing' });
-    if (modalBox) {
-      void window.Motion.enter(modalBox, { className: 'm-enter', origin: null });
-    }
   } else {
     modal.classList.add('open');
   }

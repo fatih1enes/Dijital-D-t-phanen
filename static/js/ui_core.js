@@ -298,9 +298,6 @@
         document.body.classList.add('modal-open');
         if (window.Motion && typeof window.Motion.enter === 'function') {
           void window.Motion.enter(colModal, { className: '', addClass: 'open', cleanExitClass: 'closing' });
-          if (modalBox) {
-            void window.Motion.enter(modalBox, { className: 'm-enter', origin: null });
-          }
         } else {
           colModal.classList.add('open');
         }

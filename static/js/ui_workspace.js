@@ -2797,9 +2797,6 @@
       document.body.classList.add('modal-open');
       if (window.Motion && typeof window.Motion.enter === 'function') {
         void window.Motion.enter(noteModal, { className: '', addClass: 'open', cleanExitClass: 'closing' });
-        if (modalBox) {
-          void window.Motion.enter(modalBox, { className: 'm-enter', origin: 'center center', cleanExitClass: 'm-exit' });
-        }
       } else {
         noteModal.classList.add('open');
       }

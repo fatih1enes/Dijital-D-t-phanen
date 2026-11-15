@@ -317,9 +317,6 @@
           document.body.classList.add('modal-open');
           if (window.Motion && typeof window.Motion.enter === 'function') {
             void window.Motion.enter(modal, { className: '', addClass: 'open', cleanExitClass: 'closing' });
-            if (modalBox) {
-              void window.Motion.enter(modalBox, { className: 'm-enter', origin: null });
-            }
           } else {
             modal.classList.add('open');
           }
@@ -632,7 +629,7 @@
       }
       if (activePane) {
         if (window.Motion && typeof window.Motion.enter === 'function') {
-          void window.Motion.enter(activePane, { className: 'm-settle', addClass: 'active', origin: 'top center' });
+          void window.Motion.enter(activePane, { className: '', addClass: 'active', origin: 'top center' });
         } else {
           activePane.classList.add('active');
         }
