@@ -48,12 +48,14 @@ class SmartCollectionCompiler:
         if has_notes is True:
             clauses.append("dosya_hash IN (SELECT DISTINCT dosya_hash FROM kitap_notlari)")
 
-        # Keyword / search constraint
+        # Keyword / search constraint (Turkish-aware when TR_LOWER is registered, else standard LIKE)
         kw = rule_dict.get("keyword")
         if kw and str(kw).strip():
-            term = f"%{str(kw).strip()}%"
+            from app.utils import tr_lower
+
+            term = f"%{tr_lower(str(kw).strip())}%"
             clauses.append(
-                "(kitap_adi LIKE ? OR yazar LIKE ? OR anahtar_kelimeler LIKE ? OR ozet LIKE ?)"
+                "(TR_LOWER(kitap_adi) LIKE ? OR TR_LOWER(yazar) LIKE ? OR TR_LOWER(anahtar_kelimeler) LIKE ? OR TR_LOWER(ozet) LIKE ?)"
             )
             params.extend([term, term, term, term])
 

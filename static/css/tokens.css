@@ -3,6 +3,7 @@
  * Conforms to Apple Books / Linear / Tesla Editorial Minimalist Standard.
  */
 
+@layer tokens {
 :root {
   /* ═══════════════ 1. PRIMITIVES & SCALES ═══════════════ */
   --primitive-hue-warm: 35;
@@ -88,13 +89,15 @@
 
   /* Aliases for System Backwards Compatibility */
   --font-reading: var(--font-serif);
+  --font-body: var(--font-serif);
   --font-title: var(--font-display);
   --font-sans: var(--font-ui);
   --fs-lg: 1.125rem;
   --fs-2xl: 1.5rem;
-  --accent-light: rgba(192, 82, 46, 0.12);
+  --accent-light: rgba(94, 82, 63, 0.12);
   --bg-hover: var(--paper-dark);
   --text: var(--ink);
+  --ink-muted: var(--muted);
 
   --t-fast: var(--t-micro);
   --t-base: var(--t-ui);
@@ -107,6 +110,12 @@
   --transition-fast: var(--t-micro) var(--ease-out);
   --transition-smooth: var(--t-ui) var(--ease-out);
   --transition-spring: var(--t-ui) var(--ease-spring);
+}
+
+@supports not (animation-timing-function: linear(0, 1)) {
+  :root {
+    --ease-spring: cubic-bezier(0.22, 1.2, 0.36, 1);
+  }
 }
 
 /* Reduced-motion kuralları static/css/motion.css içinde tek merkezden yönetilir. */
@@ -306,4 +315,7 @@ body.dark-mode {
   --shadow-modal: var(--shadow-xl);
   --elev-1: var(--shadow-sm);
   --elev-2: var(--shadow-lg);
+  --accent-light: rgba(196, 181, 155, 0.14);
+  --ink-muted: var(--muted);
+}
 }

@@ -93,6 +93,12 @@ class SaveProgressRequest(BaseModel):
         le=100000,
         description="Okunulan son sayfa numarası. 1 ile 100.000 arasında geçerli bir tam sayı olmalıdır.",
     )
+    total_pages: int | None = Field(
+        None,
+        ge=1,
+        le=100000,
+        description="Kitabın toplam sayfa sayısı (opsiyonel, ilerleme yüzdesi senkronu için).",
+    )
 
 
 class BookOrderRequest(BaseModel):

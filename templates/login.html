@@ -28,7 +28,11 @@
     href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uo0qcPxh4Plq7G5tGm0rU+1SPhVotteLpBERwTkw==" crossorigin="anonymous" referrerpolicy="no-referrer">
-  <link rel="stylesheet" href="{{ url_for('static', path='/css/app.css') }}?v=2026111504">
+  <style>@layer a11y, legacy, tokens, design, motion;</style>
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}?v=2026111801">
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/tokens.css') }}?v=2026111801">
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/design.css') }}?v=2026111801">
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/motion.css') }}?v=2026111801">
   <style>
     @keyframes loginReveal {
       from {
@@ -316,7 +320,12 @@
       const current = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
       const next = current === 'dark' ? 'light' : 'dark';
       const apply = () => {
-        localStorage.setItem('kutuphane-theme', next);
+        try {
+          localStorage.setItem('kutuphane-theme', next);
+          localStorage.setItem('theme', next);
+        } catch (_e) {
+          /* Storage unavailable */
+        }
         applyTheme(next);
       };
       if (!document.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -326,12 +335,23 @@
       document.startViewTransition(apply);
     }
 
-    // Başlangıç teması
+    // Başlangıç teması & BFCache geri dönüş onarımı
     (function () {
-      const savedTheme = localStorage.getItem('kutuphane-theme') ||
-        (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      let savedTheme = document.documentElement.dataset.theme;
+      try {
+        savedTheme = localStorage.getItem('kutuphane-theme') || localStorage.getItem('theme') || savedTheme;
+      } catch (_e) {
+        /* Storage unavailable */
+      }
+      if (!savedTheme) {
+        savedTheme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+      }
       applyTheme(savedTheme);
     })();
+
+    window.addEventListener('pageshow', () => {
+      document.body.style.opacity = '1';
+    });
 
     // Şifre Göster / Gizle
     function togglePasswordVisibility() {
@@ -394,8 +414,7 @@
           if (data.authenticated) {
             window.location.href = '/';
           } else if (data.locked) {
-            showMessage('Bu cihazdan çok fazla hatalı giriş yapıldı. Lütfen bir süre bekleyin.', 'warning');
-            document.getElementById('submit-btn').disabled = true;
+            startCountdown(Number(data.remaining_seconds) > 0 ? Number(data.remaining_seconds) : 60);
           }
         }
       } catch (e) {

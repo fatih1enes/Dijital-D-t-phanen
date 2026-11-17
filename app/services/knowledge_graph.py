@@ -186,7 +186,7 @@ class KnowledgeGraphService:
         if not entity_id:
             return {"nodes": [], "edges": []}
 
-        # Recursive CTE exploring neighbors
+        # Recursive CTE exploring neighbors with exact delimiter boundary checks
         cte_sql = """
             WITH RECURSIVE neighborhood(node_id, depth, visited_path) AS (
                 SELECT ?, 0, ?
@@ -194,11 +194,11 @@ class KnowledgeGraphService:
                 SELECT
                     CASE WHEN r.source_id = n.node_id THEN r.target_id ELSE r.source_id END,
                     n.depth + 1,
-                    n.visited_path || ',' || CASE WHEN r.source_id = n.node_id THEN r.target_id ELSE r.source_id END
+                    n.visited_path || CASE WHEN r.source_id = n.node_id THEN r.target_id ELSE r.source_id END || ','
                 FROM neighborhood n
                 JOIN kg_relations r ON (r.source_id = n.node_id OR r.target_id = n.node_id)
                 WHERE n.depth < ?
-                  AND instr(n.visited_path, ',' || CASE WHEN r.source_id = n.node_id THEN r.target_id ELSE r.source_id END) = 0
+                  AND instr(n.visited_path, ',' || (CASE WHEN r.source_id = n.node_id THEN r.target_id ELSE r.source_id END) || ',') = 0
             )
             SELECT DISTINCT node_id, min(depth) as min_depth
             FROM neighborhood
@@ -206,7 +206,7 @@ class KnowledgeGraphService:
             ORDER BY min_depth ASC
             LIMIT ?
         """
-        init_path = f",{entity_id}"
+        init_path = f",{entity_id},"
         cursor = await db.conn.execute(cte_sql, (entity_id, init_path, max_depth, limit))
         discovered_rows = await cursor.fetchall()
         if not discovered_rows:
@@ -288,7 +288,7 @@ class KnowledgeGraphService:
                 FROM path_search p
                 JOIN kg_relations r ON (r.source_id = p.current_id OR r.target_id = p.current_id)
                 WHERE p.depth < ?
-                  AND instr(p.path_str, CASE WHEN r.source_id = p.current_id THEN r.target_id ELSE r.source_id END) = 0
+                  AND instr('->' || p.path_str || '->', '->' || (CASE WHEN r.source_id = p.current_id THEN r.target_id ELSE r.source_id END) || '->') = 0
             )
             SELECT depth, path_str, relations_str
             FROM path_search

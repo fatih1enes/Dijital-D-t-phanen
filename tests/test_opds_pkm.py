@@ -115,7 +115,9 @@ class TestPKMExporterUnit:
         bib = PKMExporter.export_bibtex(book)
         assert "@book{" in bib
         assert "hofstadter_1979_godel" in bib
-        assert 'title = {G\\"odel, Escher, Bach}' or "title = {Gödel, Escher, Bach}" in bib
+        assert ('title = {G\\"odel, Escher, Bach}' in bib) or (
+            "title = {Gödel, Escher, Bach}" in bib
+        )
         assert "author = {Douglas Hofstadter}" in bib
         assert "publisher = {Dijital Kütüphane}" in bib
 
@@ -170,7 +172,9 @@ class TestExportAndOPDSAPI:
         assert res_obs.status_code == 200
         assert "text/markdown" in res_obs.headers["content-type"]
         assert "Düşünüyorum, öyleyse varım." in res_obs.text
-        assert "[[Descartes cogito ilkesi]]" or "Descartes cogito ilkesi" in res_obs.text
+        assert ("[[Descartes cogito ilkesi]]" in res_obs.text) or (
+            "Descartes cogito ilkesi" in res_obs.text
+        )
 
         # 2. Anki Export
         res_anki = await async_client.get(f"/api/books/{self.test_hash}/export/anki")

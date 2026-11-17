@@ -1,15 +1,12 @@
 /**
- * 📚 Dijital Kütüphane - Unified Application Stylesheet
- * CSS Cascade Layers:
- * 1. legacy: Base and structural styles from style.css
- * 2. tokens: CSS Custom Properties design tokens from tokens.css
- * 3. design: High-level design system, typography, components, and responsive layouts from design.css
- * 4. motion: Centralized editorial motion language, keyframes, utilities, and reduced-motion rules
+ * Dijital Kütüphane — Tek Giriş Noktalı CSS Katman Mimarisi
+ * Katman önceliği (düşükten yükseğe): a11y -> legacy -> tokens -> design -> motion
+ * Not: !important önceliği ters olduğu için `a11y` (prefers-reduced-motion) tüm katmanlardaki !important kurallarını ezer.
  */
-@layer legacy, tokens, design, motion;
 
-@import url("style.css?v=2026111506") layer(legacy);
-@import url("tokens.css?v=2026111506") layer(tokens);
-@import url("design.css?v=2026111506") layer(design);
-@import url("motion.css?v=2026111506") layer(motion);
+@layer a11y, legacy, tokens, design, motion;
 
+@import url("./style.css?v=2026111801");
+@import url("./tokens.css?v=2026111801");
+@import url("./design.css?v=2026111801");
+@import url("./motion.css?v=2026111801");

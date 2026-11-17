@@ -135,6 +135,6 @@ pythonpath = ["."]
 filterwarnings = ["ignore::DeprecationWarning"]
 addopts = "-v --tb=short"
 
-[tool.setuptools]
-packages = ["app"]
+[tool.setuptools.packages.find]
+include = ["app*"]
 

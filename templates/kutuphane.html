@@ -29,7 +29,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/static/sw.js').catch(function(err) {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function(err) {
           console.debug('PWA ServiceWorker note:', err);
         });
       });
@@ -40,8 +40,13 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap"
     rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uo0qcPxh4Plq7G5tGm0rU+1SPhVotteLpBERwTkw==" crossorigin="anonymous" referrerpolicy="no-referrer">
+  <style>@layer a11y, legacy, tokens, design, motion;</style>
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}?v=2026111801">
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/tokens.css') }}?v=2026111801">
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/design.css') }}?v=2026111801">
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/motion.css') }}?v=2026111801">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha512-q+4liFwdPC/bNdhUpZx6aXDx/h77yEQtn4I1slHydcbZK34nLaR3cAeYSJshoxIOq3mjEf7xJE8YWIUHMn+oCQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js" integrity="sha512-tjg8I2d6Fi0OBGz1csmr7RfI4uupYaCfL/RqhVRTS42RMGwfBsjwBGmhzhI+e2dPmyew8cFkoxnVkGvADDLvbg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js" integrity="sha512-9+ilAOeXY8qy2bw/h51MmliNNHvdyhTpLIlqDmVpD26z8VjVJsUJtk5rhbDIUvYiD+EpGoAu0xTa7MhZohFQjA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -50,7 +55,6 @@
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     }
   </script>
-  <link rel="stylesheet" href="{{ url_for('static', path='/css/app.css') }}?v=2026111506">
 </head>
 
 <body>
@@ -665,7 +669,9 @@
             <button type="button" class="hl-color-btn green" onclick="applyHighlight('#d3dfc3', 'green')" title="Yeşil" aria-label="Yeşil Vurgu"></button>
             <button type="button" class="hl-color-btn blue" onclick="applyHighlight('#d8d1c3', 'blue')" title="Mavi" aria-label="Mavi Vurgu"></button>
             <button type="button" class="hl-color-btn pink" onclick="applyHighlight('#e4d6cd', 'pink')" title="Pembe" aria-label="Pembe Vurgu"></button>
-            <button class="hl-action-btn" onclick="openNoteModalForSelection()"><i class="fas fa-sticky-note"></i> Not Ekle</button>
+            <button type="button" class="hl-action-btn" onclick="openNoteModalForSelection()"><i class="fas fa-sticky-note"></i> Not Ekle</button>
+            <button type="button" class="hl-action-btn" onclick="askAIAboutSelection()" title="Seçili pasajı AI Asistanına sor"><i class="fas fa-wand-magic-sparkles"></i> AI'a Sor</button>
+            <button type="button" class="hl-action-btn" onclick="copySelectedReaderText()" title="Seçili metni kopyala"><i class="fas fa-copy"></i></button>
             <button type="button" class="hl-action-btn close" onclick="clearSelection()" aria-label="Vurgu Seçimini Temizle" title="Kapat"><i class="fas fa-times"></i></button>
           </div>
         </div>
@@ -1555,7 +1561,7 @@
         <div style="padding:3rem 1rem; color:var(--muted);"><i class="fas fa-spinner fa-spin"></i> QR Kod Üretiliyor...</div>
       </div>
       <div id="handoff-url-text" style="font-size:0.75rem; color:var(--muted); word-break:break-all; margin-bottom:0.8rem;"></div>
-      <div style="font-size:0.75rem; color:var(--accent); font-weight:600;" id="handoff-timer">Kod süresi: 120 sn</div>
+      <div style="font-size:0.75rem; color:var(--accent); font-weight:600;" id="handoff-timer">Geçerlilik: 30 gün</div>
     </div>
   </div>
 
@@ -1566,7 +1572,7 @@
         <h3 id="duplicates-modal-title" style="font-family:'Instrument Serif',serif; font-size:1.35rem; color:var(--ink); margin:0; display:flex; align-items:center; gap:0.6rem;">
           <i class="fas fa-copy" style="color:var(--accent);"></i> Mükerrer / Çift Kitap Avcısı
         </h3>
-        <button type="button" class="btn-close" onclick="closeDuplicatesModal()" aria-label="Kapat" style="background:transparent; border:none; font-size:1.4rem; cursor:pointer; color:var(--muted);">&times;</button>
+        <button type="button" class="modal-close" onclick="closeDuplicatesModal()" aria-label="Kapat" style="position:static; background:transparent; border:none; font-size:1.4rem; cursor:pointer; color:var(--muted);">&times;</button>
       </div>
       <p style="font-size:0.82rem; color:var(--muted); margin-bottom:1rem; line-height:1.4;">
         Aynı ada, yazara veya dosya boyutuna sahip mükerrer kopyalar tespit edilir. İstediğiniz kopyayı tek tıkla kütüphaneden silebilirsiniz.
@@ -1577,16 +1583,16 @@
     </div>
   </div>
 
-  <script src="{{ url_for('static', path='/js/state.js') }}?v=2026111506"></script>
-  <script src="{{ url_for('static', path='/js/motion.js') }}?v=2026111506"></script>
-  <script src="{{ url_for('static', path='/js/api.js') }}?v=2026111506"></script>
-  <script src="{{ url_for('static', path='/js/ui_core.js') }}?v=2026111506"></script>
-  <script src="{{ url_for('static', path='/js/ui_logs.js') }}?v=2026111506"></script>
-  <script src="{{ url_for('static', path='/js/ui_chat_settings.js') }}?v=2026111506"></script>
-  <script src="{{ url_for('static', path='/js/ui_telegram.js') }}?v=2026111506"></script>
-  <script src="{{ url_for('static', path='/js/ui_workspace.js') }}?v=2026111506"></script>
-  <script src="{{ url_for('static', path='/js/websocket.js') }}?v=2026111506"></script>
-  <script src="{{ url_for('static', path='/js/app.js') }}?v=2026111506"></script>
+  <script src="{{ url_for('static', path='/js/state.js') }}?v=2026111801"></script>
+  <script src="{{ url_for('static', path='/js/motion.js') }}?v=2026111801"></script>
+  <script src="{{ url_for('static', path='/js/api.js') }}?v=2026111801"></script>
+  <script src="{{ url_for('static', path='/js/ui_core.js') }}?v=2026111801"></script>
+  <script src="{{ url_for('static', path='/js/ui_logs.js') }}?v=2026111801"></script>
+  <script src="{{ url_for('static', path='/js/ui_chat_settings.js') }}?v=2026111801"></script>
+  <script src="{{ url_for('static', path='/js/ui_telegram.js') }}?v=2026111801"></script>
+  <script src="{{ url_for('static', path='/js/ui_workspace.js') }}?v=2026111801"></script>
+  <script src="{{ url_for('static', path='/js/websocket.js') }}?v=2026111801"></script>
+  <script src="{{ url_for('static', path='/js/app.js') }}?v=2026111801"></script>
 </body>
 
 </html>

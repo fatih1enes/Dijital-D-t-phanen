@@ -32,12 +32,15 @@ class ConnectionManager:
             logging.debug("WebSocket connection already removed: %s", e)
 
     async def broadcast(self, message: dict) -> None:
-        """Broadcast message to all connections concurrently."""
+        """Broadcast message to all connections concurrently with per-socket timeout protection."""
         connections = list(self.active_connections)
         if not connections:
             return
 
-        tasks = [conn.send_json(message) for conn in connections]
+        tasks = [
+            asyncio.wait_for(conn.send_json(message), timeout=3.0)
+            for conn in connections
+        ]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         for conn, result in zip(connections, results, strict=True):

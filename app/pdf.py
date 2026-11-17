@@ -40,10 +40,23 @@ def extract_cover(file_path: str, file_hash: str) -> bool:
         with PDFIUM_LOCK:
             doc = pypdfium2.PdfDocument(file_path)
             try:
-                img = doc[0].render(scale=2).to_pil()
-                img.thumbnail((400, 560), Image.Resampling.LANCZOS)
-                img.save(cover_path, "JPEG", quality=88)
-                return True
+                page = doc[0]
+                bitmap = page.render(scale=2)
+                try:
+                    img = bitmap.to_pil()
+                finally:
+                    bitmap.close()
+                    page.close()
+                try:
+                    if img.mode != "RGB":
+                        converted = img.convert("RGB")
+                        img.close()
+                        img = converted
+                    img.thumbnail((400, 560), Image.Resampling.LANCZOS)
+                    img.save(cover_path, "JPEG", quality=88)
+                    return True
+                finally:
+                    img.close()
             finally:
                 doc.close()
     except Exception as fast_err:
@@ -58,9 +71,24 @@ def extract_cover(file_path: str, file_hash: str) -> bool:
 
         if images:
             img = images[0]
-            img.thumbnail((400, 560), Image.Resampling.LANCZOS)
-            img.save(cover_path, "JPEG", quality=88)
-            return True
+            try:
+                if img.mode != "RGB":
+                    converted = img.convert("RGB")
+                    img.close()
+                    img = converted
+                img.thumbnail((400, 560), Image.Resampling.LANCZOS)
+                img.save(cover_path, "JPEG", quality=88)
+                return True
+            finally:
+                for im in images:
+                    try:
+                        im.close()
+                    except Exception as close_err:
+                        log_event("pdf", "DEBUG", f"Cover image close note: {close_err}")
+                try:
+                    img.close()
+                except Exception as close_err:
+                    log_event("pdf", "DEBUG", f"Cover work image close note: {close_err}")
     except OSError as e:
         log_event(
             "pdf_processing",
@@ -101,7 +129,13 @@ def _extract_via_pypdfium2(file_path: str, max_p: int) -> str:
 
                 extracted = []
                 for i in indices:
-                    p_text = doc[i].get_textpage().get_text_range()
+                    page = doc[i]
+                    tp = page.get_textpage()
+                    try:
+                        p_text = tp.get_text_range()
+                    finally:
+                        tp.close()
+                        page.close()
                     if p_text and p_text.strip():
                         extracted.append(p_text)
                 if extracted:
@@ -111,6 +145,29 @@ def _extract_via_pypdfium2(file_path: str, max_p: int) -> str:
     except Exception as e:
         log_event("pdf", "DEBUG", f"pypdfium2 text extraction fallback: {e}")
     return ""
+
+
+def get_pdf_page_count(file_path: str) -> int:
+    """Return exact page count of a PDF file using pypdfium2 with pdfplumber fallback."""
+    if not file_path or not os.path.exists(file_path):
+        return 0
+    try:
+        import pypdfium2
+
+        with PDFIUM_LOCK:
+            doc = pypdfium2.PdfDocument(file_path)
+            try:
+                return int(len(doc))
+            finally:
+                doc.close()
+    except Exception as fast_err:
+        log_event("pdf", "DEBUG", f"pypdfium2 page count fallback: {fast_err}")
+    try:
+        with pdfplumber.open(file_path) as pdf:
+            return int(len(pdf.pages))
+    except Exception as fb_err:
+        log_event("pdf", "DEBUG", f"pdfplumber page count fallback: {fb_err}")
+        return 0
 
 
 def _extract_via_ocr_stream(
@@ -261,8 +318,13 @@ def prepare_cover_image(content: bytes, max_image_pixels: int = 178956970, **kwa
     limit = kwargs.get("MAX_IMAGE_PIXELS", max_image_pixels)
     try:
         with Image.open(io.BytesIO(content)) as probe:
+            if probe.width * probe.height > limit:
+                raise ValueError("Image resolution too large")
             probe.verify()
         img = Image.open(io.BytesIO(content))
+        if img.width * img.height > limit:
+            img.close()
+            raise ValueError("Image resolution too large")
         img.load()
     except Image.DecompressionBombError:
         log_event(
@@ -271,13 +333,11 @@ def prepare_cover_image(content: bytes, max_image_pixels: int = 178956970, **kwa
             "Görsel boyutu aşırı büyük (DecompressionBombError)",
         )
         raise ValueError("Image too large") from None
+    except ValueError:
+        raise
     except (OSError, SyntaxError) as e:
         log_event("pdf_processing", "WARNING", f"Geçersiz veya bozuk görsel dosyası: {e}")
         raise ValueError("Invalid image file") from None
-
-    if img.width * img.height > limit:
-        img.close()
-        raise ValueError("Image resolution too large")
 
     if img.mode != "RGB":
         converted = img.convert("RGB")
@@ -301,26 +361,40 @@ def _calculate_vision_page_indices(
 
 
 def _render_pages_pdfium(file_path: str, max_pages: int, max_dim: int) -> list[Image.Image]:
-    """Render PDF pages using high-speed pypdfium2 C++ engine."""
+    """Render PDF pages using high-speed pypdfium2 C++ engine under global PDFIUM_LOCK."""
     import pypdfium2
 
     images: list[Image.Image] = []
-    doc = pypdfium2.PdfDocument(file_path)
-    try:
-        total = len(doc)
-        page_indices = _calculate_vision_page_indices(total, max_pages, one_based=False)
+    with PDFIUM_LOCK:
+        doc = pypdfium2.PdfDocument(file_path)
+        try:
+            total = len(doc)
+            page_indices = _calculate_vision_page_indices(total, max_pages, one_based=False)
 
-        for idx in page_indices:
-            if 0 <= idx < total:
-                pil_img = doc[idx].render(scale=1.5).to_pil()
-                pil_img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
-                if pil_img.mode != "RGB":
-                    converted = pil_img.convert("RGB")
-                    pil_img.close()
-                    pil_img = converted
-                images.append(pil_img)
-    finally:
-        doc.close()
+            for idx in page_indices:
+                if 0 <= idx < total:
+                    page = doc[idx]
+                    bitmap = page.render(scale=1.5)
+                    try:
+                        pil_img = bitmap.to_pil()
+                    finally:
+                        bitmap.close()
+                        page.close()
+                    pil_img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
+                    if pil_img.mode != "RGB":
+                        converted = pil_img.convert("RGB")
+                        pil_img.close()
+                        pil_img = converted
+                    images.append(pil_img)
+        except Exception:
+            for im in images:
+                try:
+                    im.close()
+                except Exception as close_err:
+                    log_event("pdf", "DEBUG", f"Vision image cleanup note: {close_err}")
+            raise
+        finally:
+            doc.close()
 
     return images
 

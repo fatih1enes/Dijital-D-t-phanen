@@ -296,7 +296,7 @@ function initWebSocket() {
 
 window.addEventListener('online', () => {
   window.wsReconnectDelay = 1500;
-  if (window.ws?.readyState !== WebSocket.OPEN) {
+  if (window.ws?.readyState !== WebSocket.OPEN && window.ws?.readyState !== WebSocket.CONNECTING) {
     initWebSocket();
   }
 });

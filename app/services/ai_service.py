@@ -228,7 +228,9 @@ class AIService:
         default_url = (
             "http://localhost:11434/v1" if provider == "ollama" else "http://localhost:1234/v1"
         )
-        url = base_url or default_url
+        url = (base_url or default_url).strip()
+        if not url.startswith(("http://", "https://")) or "169.254.169.254" in url:
+            return "Error: Invalid or blocked AI base URL."
         default_model = "gemma2" if provider == "ollama" else "model-identifier"
         model_name = model or default_model
         display_name = "Ollama" if provider == "ollama" else "LM Studio"
@@ -248,7 +250,12 @@ class AIService:
 
         client = OpenAI(base_url=url, api_key="local", timeout=60.0)
         response = client.chat.completions.create(model=model_name, messages=messages, timeout=60.0)
-        txt = response.choices[0].message.content.strip()
+        if not response or not getattr(response, "choices", None):
+            return f"Error: {display_name} returned an empty choices list."
+        raw_content = getattr(response.choices[0].message, "content", None)
+        if not raw_content:
+            return f"Error: {display_name} returned empty message content."
+        txt = str(raw_content).strip()
         _safe_log(
             "ai_raw",
             "INFO",

@@ -166,7 +166,7 @@ async def _shutdown_lifespan_resources(app: FastAPI, worker_task: asyncio.Task) 
     try:
         from app.services.session_manager import book_session_manager
 
-        book_session_manager.close_all()
+        await asyncio.to_thread(book_session_manager.close_all)
     except Exception as e:
         log_event("ai", "DEBUG", f"Session manager close_all error: {e}")
 
@@ -216,67 +216,116 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 # FastAPICache initialization
 FastAPICache.init(InMemoryBackend(), prefix="fastapi-cache")
 
-# Session and CORS Middleware (CORSMiddleware added last to be the outermost middleware)
+
+class SecurityHeadersASGIMiddleware:
+    """Pure-ASGI security headers middleware (zero response body buffering for Range streaming)."""
+
+    def __init__(self, app: Any) -> None:
+        self.app = app
+
+    async def __call__(self, scope: dict, receive: Callable, send: Callable) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        async def send_with_headers(message: dict) -> None:
+            if message["type"] == "http.response.start":
+                raw_headers = list(message.get("headers") or [])
+                existing = {k.lower() for k, _ in raw_headers}
+                if b"x-content-type-options" not in existing:
+                    raw_headers.append((b"x-content-type-options", b"nosniff"))
+                if b"x-frame-options" not in existing:
+                    raw_headers.append((b"x-frame-options", b"SAMEORIGIN"))
+                if b"referrer-policy" not in existing:
+                    raw_headers.append((b"referrer-policy", b"strict-origin-when-cross-origin"))
+                message = {**message, "headers": raw_headers}
+            await send(message)
+
+        await self.app(scope, receive, send_with_headers)
+
+
+class PasswordGateASGIMiddleware:
+    """Pure-ASGI authentication gate preserving zero-copy streaming for authorized requests."""
+
+    _PUBLIC_EXACT = frozenset({"/login", "/health", "/ready", "/sw.js", "/favicon.ico"})
+    _PUBLIC_PREFIXES = ("/static", "/api/auth", "/opds", "/handoff")
+
+    def __init__(self, app: Any) -> None:
+        self.app = app
+
+    async def __call__(self, scope: dict, receive: Callable, send: Callable) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        path = scope.get("path") or ""
+        if path in self._PUBLIC_EXACT or path.startswith(self._PUBLIC_PREFIXES):
+            await self.app(scope, receive, send)
+            return
+
+        from app.auth import _is_access_allowed
+
+        request = Request(scope, receive=receive)
+        if not _is_access_allowed(request):
+            accept = request.headers.get("accept", "")
+            if "text/html" in accept:
+                resp: Response = RedirectResponse(url="/login", status_code=303)
+            else:
+                resp = JSONResponse(status_code=401, content={"detail": "Authentication required"})
+            await resp(scope, receive, send)
+            return
+
+        await self.app(scope, receive, send)
+
+
+# Middleware registration (innermost -> outermost):
+# CORSMiddleware -> SecurityHeaders -> SessionMiddleware -> PasswordGate -> Router
+app.add_middleware(PasswordGateASGIMiddleware)
 app.add_middleware(
     SessionMiddleware,
     secret_key=SESSION_SECRET,
     same_site="lax",
     https_only=COOKIE_SECURE,
 )
-
+app.add_middleware(SecurityHeadersASGIMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=[
+        "Accept-Ranges",
+        "Content-Range",
+        "Content-Length",
+        "ETag",
+        "Content-Disposition",
+    ],
 )
-
-
-@app.middleware("http")
-async def security_headers_middleware(
-    request: Request, call_next: Callable[[Request], Any]
-) -> Response:
-    """Inject standard defensive security headers."""
-    response = await call_next(request)
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-Frame-Options"] = "SAMEORIGIN"
-    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    return response
-
-
-@app.middleware("http")
-async def password_gate_middleware(
-    request: Request, call_next: Callable[[Request], Any]
-) -> Response:
-    """Enforce authentication on all routes for remote clients."""
-    path = request.url.path
-    if (
-        path == "/login"
-        or path == "/health"
-        or path == "/ready"
-        or path.startswith("/static")
-        or path.startswith("/api/auth")
-        or path.startswith("/opds")
-        or path.startswith("/handoff")
-    ):
-        return await call_next(request)
-
-    from app.auth import _is_access_allowed
-
-    if not _is_access_allowed(request):
-        accept = request.headers.get("accept", "")
-        if "text/html" in accept:
-            return RedirectResponse(url="/login", status_code=303)
-        return JSONResponse(status_code=401, content={"detail": "Authentication required"})
-
-    return await call_next(request)
 
 
 # Static files and Templates
 app.mount("/thumbnails", StaticFiles(directory=THUMBNAILS_DIR), name="thumbnails")
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
+
+
+@app.get("/sw.js", include_in_schema=False)
+async def service_worker_root() -> Response:
+    """Serve PWA Service Worker from root scope so it can control '/' and offline shell."""
+    from fastapi.responses import FileResponse
+
+    sw_path = os.path.join(STATIC_DIR, "sw.js")
+    if not os.path.isfile(sw_path):
+        raise HTTPException(status_code=404, detail="Service worker not found")
+    return FileResponse(
+        sw_path,
+        media_type="application/javascript; charset=utf-8",
+        headers={
+            "Service-Worker-Allowed": "/",
+            "Cache-Control": "no-cache, must-revalidate",
+        },
+    )
 
 
 # HTML Page Routes
@@ -306,7 +355,7 @@ async def workspace_page(request: Request, file_hash: str) -> RedirectResponse:
 
 @app.get("/handoff/{token}")
 async def redeem_handoff(request: Request, token: str) -> Response:
-    """Redeem a handoff token, issue session credentials, and redirect to book workspace."""
+    """Redeem a valid handoff token, issue session credentials, and redirect to book workspace."""
     import secrets
 
     from app.auth import AUTH_STATE, _auth_lock, _cleanup_expired_tokens
@@ -314,16 +363,16 @@ async def redeem_handoff(request: Request, token: str) -> Response:
     from app.services.handoff_service import consume_handoff_token
 
     data = consume_handoff_token(token)
+    if not data:
+        log_event("security", "WARNING", "Invalid or expired handoff token redemption attempt")
+        return RedirectResponse(url="/", status_code=302)
+
     auth_token = secrets.token_hex(32)
     _cleanup_expired_tokens()
     with _auth_lock:
         AUTH_STATE["valid_tokens"][auth_token] = time.time() + (60 * 60 * 24 * 30)
 
-    if data:
-        target_url = f"/?open_book={data['file_hash']}&page={data['page_number']}"
-    else:
-        target_url = "/"
-
+    target_url = f"/?open_book={data['file_hash']}&page={data['page_number']}"
     resp = RedirectResponse(url=target_url, status_code=302)
     resp.set_cookie(
         key=AUTH_COOKIE_NAME,
@@ -372,12 +421,32 @@ async def readiness_check() -> dict:
 
 def _is_valid_remote_token(ws_cookie: str) -> bool:
     """Validate remote auth token against active token registry."""
-    if not ws_cookie or ws_cookie not in AUTH_STATE["valid_tokens"]:
+    from app.auth import _auth_lock
+
+    if not ws_cookie:
         return False
-    if time.time() <= AUTH_STATE["valid_tokens"][ws_cookie]:
-        return True
-    AUTH_STATE["valid_tokens"].pop(ws_cookie, None)
-    return False
+    with _auth_lock:
+        exp = AUTH_STATE["valid_tokens"].get(ws_cookie)
+        if exp is None:
+            return False
+        if time.time() <= exp:
+            return True
+        AUTH_STATE["valid_tokens"].pop(ws_cookie, None)
+        return False
+
+
+def _is_local_websocket(websocket: WebSocket) -> bool:
+    """Check if WebSocket physically originates from localhost, honoring TRUST_PROXY."""
+    ws_host = websocket.client.host if websocket.client else ""
+    if not _is_local_host(ws_host):
+        return False
+    trust_proxy = os.environ.get("TRUST_PROXY", "0").strip().lower() in ("1", "true", "yes")
+    if trust_proxy:
+        forwarded = websocket.headers.get("x-forwarded-for")
+        if forwarded:
+            first_hop = forwarded.split(",")[0].strip()
+            return _is_local_host(first_hop)
+    return True
 
 
 async def _check_remote_websocket_auth(websocket: WebSocket, ws_host: str) -> bool:
@@ -424,7 +493,7 @@ async def _authenticate_websocket(websocket: WebSocket) -> bool:
         await websocket.close(code=1008)
         return False
 
-    if not _is_local_host(ws_host):
+    if not _is_local_websocket(websocket):
         return await _check_remote_websocket_auth(websocket, ws_host)
     return True
 
@@ -450,6 +519,10 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
             except (json.JSONDecodeError, UnicodeDecodeError) as parse_err:
                 log_event("websocket", "DEBUG", f"Ignored non-json ws frame: {parse_err}")
     except WebSocketDisconnect:
+        log_event("websocket", "DEBUG", "WebSocket client disconnected")
+    except Exception as ws_err:
+        log_event("websocket", "DEBUG", f"WebSocket closed with error: {ws_err}")
+    finally:
         ws_manager.disconnect(websocket)
 
 

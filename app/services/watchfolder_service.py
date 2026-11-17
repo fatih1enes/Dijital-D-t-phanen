@@ -11,7 +11,7 @@ from typing import Any
 from app.config import load_config, resolve_ai_credentials
 from app.database import get_db_context
 from app.logger import log_event, notify_ws
-from app.tasks import active_tasks
+from app.tasks import register_task
 from app.utils import get_file_hash_from_path
 
 
@@ -172,6 +172,14 @@ class WatchfolderService:
         enqueued_count = 0
         try:
             candidates = _get_scan_candidates(watch_dir)
+            candidate_set = set(candidates)
+            # Prune deleted/moved files from stability cache to keep memory bounded
+            if len(self._file_stability_cache) > 500:
+                self._file_stability_cache = {
+                    p: v for p, v in self._file_stability_cache.items() if p in candidate_set
+                }
+            if len(self._processed_hashes) > 5000:
+                self._processed_hashes.clear()
             for file_path in candidates:
                 if await self._process_single_candidate(file_path):
                     enqueued_count += 1
@@ -221,7 +229,7 @@ class WatchfolderService:
                 }
             ],
         }
-        active_tasks[task_id] = task_entry
+        register_task(task_id, task_entry)
 
         cfg = load_config()
         provider, api_key, model_name, base_url = resolve_ai_credentials()

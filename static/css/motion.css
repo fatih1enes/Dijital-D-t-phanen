@@ -2,23 +2,24 @@
  * Dijital Kütüphane — "Kâğıt ve Mürekkep" Merkezi Hareket Katmanı
  * Tüm @keyframes, ortak hareket yardımcıları, View Transitions ve tek merkezli
  * prefers-reduced-motion kuralları bu dosyada toplanır.
- * Kural: Yalnızca `transform` ve `opacity` anime edilir.
+ * Kural: Yalnızca `transform` ve `opacity` anime edilir; kalıcı katman biriktirilmez (`to { transform: none }`).
  */
 
+@layer motion {
 /* ═══════════════ 1. MERKEZİ KEYFRAME TANIMLARI (Yalnızca transform & opacity) ═══════════════ */
 @keyframes mEnter {
   from { opacity: 0; transform: translate3d(0, 8px, 0) scale(0.985); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  to   { opacity: 1; transform: none; }
 }
 
 @keyframes mExit {
-  from { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  from { opacity: 1; transform: none; }
   to   { opacity: 0; transform: translate3d(0, 6px, 0) scale(0.98); }
 }
 
 @keyframes mSettle {
   from { opacity: 0; transform: translate3d(0, 10px, 0); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+  to   { opacity: 1; transform: none; }
 }
 
 @keyframes modalOverlayIn {
@@ -33,119 +34,119 @@
 
 @keyframes modalPopIn {
   from { opacity: 0; transform: translate3d(0, 10px, 0) scale(0.965); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  to   { opacity: 1; transform: none; }
 }
 
 @keyframes modalPopOut {
-  from { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  from { opacity: 1; transform: none; }
   to   { opacity: 0; transform: translate3d(0, 6px, 0) scale(0.98); }
 }
 
 @keyframes modalContentRise {
   from { opacity: 0; transform: translate3d(0, 8px, 0); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+  to   { opacity: 1; transform: none; }
 }
 
 @keyframes dropdownIn {
   from { opacity: 0; transform: translate3d(0, -6px, 0) scale(0.98); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  to   { opacity: 1; transform: none; }
 }
 
 @keyframes dropdownOut {
-  from { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  from { opacity: 1; transform: none; }
   to   { opacity: 0; transform: translate3d(0, -4px, 0) scale(0.98); }
 }
 
 @keyframes toolsMenuFadeIn {
   from { opacity: 0; transform: translate3d(0, -6px, 0); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+  to   { opacity: 1; transform: none; }
 }
 
 @keyframes toolsMenuFadeOut {
-  from { opacity: 1; transform: translate3d(0, 0, 0); }
+  from { opacity: 1; transform: none; }
   to   { opacity: 0; transform: translate3d(0, -4px, 0); }
 }
 
 @keyframes opsCenterIn {
   from { opacity: 0; transform: translate3d(0, 10px, 0); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+  to   { opacity: 1; transform: none; }
 }
 
 @keyframes opsDrawerUnfold {
   from { opacity: 0; transform: translate3d(0, 14px, 0) scale(0.93); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  to   { opacity: 1; transform: none; }
 }
 
 @keyframes opsDrawerFold {
-  from { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  from { opacity: 1; transform: none; }
   to   { opacity: 0; transform: translate3d(0, 12px, 0) scale(0.95); }
 }
 
 @keyframes opsCardSlideIn {
   from { opacity: 0; transform: translate3d(0, 8px, 0); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+  to   { opacity: 1; transform: none; }
 }
 
 @keyframes opsTogglePulse {
   0%   { opacity: 0.92; transform: scale(1); }
   45%  { opacity: 1;    transform: scale(1.025); }
-  100% { opacity: 1;    transform: scale(1); }
+  100% { opacity: 1;    transform: none; }
 }
 
 @keyframes chatPanelExpand {
   from { opacity: 0; transform: translate3d(0, 12px, 0) scale(0.96); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  to   { opacity: 1; transform: none; }
 }
 
 @keyframes chatPanelFold {
-  from { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  from { opacity: 1; transform: none; }
   to   { opacity: 0; transform: translate3d(0, 12px, 0) scale(0.95); }
 }
 
 @keyframes viewFadeSlide {
   from { opacity: 0; transform: translate3d(0, 12px, 0) scale(0.995); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  to   { opacity: 1; transform: none; }
 }
 
 @keyframes smoothViewReveal {
   from { opacity: 0; transform: translate3d(0, 10px, 0) scale(0.995); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  to   { opacity: 1; transform: none; }
 }
 
 @keyframes workspaceSlideUp {
   from { opacity: 0; transform: translate3d(0, 12px, 0) scale(0.992); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  to   { opacity: 1; transform: none; }
 }
 
 @keyframes cardJustAdded {
   0%   { opacity: 0; transform: translate3d(0, 10px, 0) scale(0.97); }
   55%  { opacity: 1; transform: translate3d(0, -2px, 0) scale(1.01); }
-  100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  100% { opacity: 1; transform: none; }
 }
 
 @keyframes cardFilterReveal {
   from { opacity: 0; transform: translate3d(0, 6px, 0); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+  to   { opacity: 1; transform: none; }
 }
 
 @keyframes heroMaskReveal {
   from { opacity: 0; transform: translate3d(0, 16px, 0); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+  to   { opacity: 1; transform: none; }
 }
 
 @keyframes heroFadeUp {
   from { opacity: 0; transform: translate3d(0, 12px, 0); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+  to   { opacity: 1; transform: none; }
 }
 
 @keyframes fadeSlideUp {
   from { opacity: 0; transform: translate3d(0, 12px, 0) scale(0.98); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  to   { opacity: 1; transform: none; }
 }
 
 @keyframes fadeUp {
   from { opacity: 0; transform: translate3d(0, 14px, 0); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+  to   { opacity: 1; transform: none; }
 }
 
 @keyframes fadeOutScale {
@@ -155,38 +156,28 @@
 
 @keyframes tabSlideIn {
   from { opacity: 0; transform: translate3d(10px, 0, 0); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+  to   { opacity: 1; transform: none; }
 }
 
 @keyframes statCountBump {
   0%   { transform: scale(1); }
   45%  { transform: scale(1.12); }
-  100% { transform: scale(1); }
+  100% { transform: none; }
 }
 
 @keyframes themeIconSpin {
   0%   { transform: rotate(-65deg) scale(0.75); opacity: 0; }
-  100% { transform: rotate(0deg) scale(1); opacity: 1; }
+  100% { transform: none; opacity: 1; }
 }
 
 @keyframes pdfSearchSlideDown {
   from { opacity: 0; transform: translate3d(0, -8px, 0) scale(0.98); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  to   { opacity: 1; transform: none; }
 }
 
 @keyframes searchHighlightPulse {
   0%, 100% { transform: scale(1); opacity: 0.9; }
   50%      { transform: scale(1.04); opacity: 1; }
-}
-
-@keyframes pulseBeacon {
-  0%, 100% { transform: scale(0.92); opacity: 0.72; }
-  50%      { transform: scale(1.18); opacity: 1; }
-}
-
-@keyframes opsPulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50%      { transform: scale(1.18); opacity: 0.65; }
 }
 
 @keyframes logPulse {
@@ -207,12 +198,12 @@
 @keyframes copySuccessPulse {
   0%   { transform: scale(0.96); }
   50%  { transform: scale(1.05); }
-  100% { transform: scale(1); }
+  100% { transform: none; }
 }
 
 @keyframes wsFadeIn {
   from { opacity: 0; transform: translate3d(0, 6px, 0); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+  to   { opacity: 1; transform: none; }
 }
 
 @keyframes wsBounce {
@@ -236,6 +227,7 @@
 }
 
 @keyframes skeletonPulse {
+  0%   { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
 }
 
@@ -269,7 +261,7 @@
 }
 
 .m-stagger {
-  animation: mSettle var(--t-ui) var(--ease-out) calc(var(--stagger-i, 0) * var(--stagger-step)) both;
+  animation: mSettle var(--t-ui) var(--ease-out) calc(var(--stagger-i, var(--card-index, 0)) * var(--stagger-step)) both;
 }
 
 /* Mürekkep İlerleme Çizgisi (GPU transform: scaleX) */
@@ -280,10 +272,9 @@
   transform-origin: left center;
   transform: scaleX(var(--progress, 0));
   transition: transform var(--t-ui) var(--ease-out);
-  will-change: transform;
 }
 
-/* Modal Origin Desteği */
+/* Modal Origin Desteği (modal kendi sol-üst köşesine göre koordinat alır) */
 .modal {
   transform-origin: var(--modal-origin-x, center) var(--modal-origin-y, center);
 }
@@ -300,7 +291,6 @@
   background: var(--surface);
   border: 1px solid var(--line);
   box-shadow: var(--shadow-sm);
-  will-change: transform;
 }
 
 /* ═══════════════ 3. VIEW TRANSITIONS API KURALLARI ═══════════════ */
@@ -328,8 +318,10 @@ html.theme-transitioning::view-transition-new(root) {
   overflow: hidden;
   box-shadow: var(--shadow-lg);
 }
+}
 
-/* ═══════════════ 4. TEK MERKEZ REDUCED MOTION KORUMASI ═══════════════ */
+/* ═══════════════ 4. TEK MERKEZ REDUCED MOTION KORUMASI (@layer a11y — En Yüksek !important Önceliği) ═══════════════ */
+@layer a11y {
 @media (prefers-reduced-motion: reduce) {
   :root {
     --t-instant: 0.01ms;
@@ -358,9 +350,7 @@ html.theme-transitioning::view-transition-new(root) {
     animation: none !important;
   }
 
-  /* Konum/ölçek hareketlerini kapat, durum değişimi için kısa opacity geçişini koru */
-  button,
-  [class*="btn-"],
+  /* Kart, kapak, çekmece ve panel ölçek/kayma hareketlerini kapat; konumlandırma transformlarını koru */
   .book-card,
   .card-cover,
   .card-cover img,
@@ -373,11 +363,20 @@ html.theme-transitioning::view-transition-new(root) {
   .modal-close,
   .shelf-item,
   .workspace-pdf-pane,
-  .workspace-chat-pane,
   .pdf-notes-sidebar > *,
   .pdf-toc-sidebar > * {
     transform: none !important;
     transition: opacity 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease !important;
+  }
+
+  .mobile-reader-top-bar,
+  .mobile-reader-bottom-bar,
+  .mobile-chat-backdrop,
+  .workspace-chat-pane,
+  .mobile-appearance-sheet,
+  .pdf-notes-sidebar,
+  .pdf-toc-sidebar {
+    transition: opacity 120ms ease !important;
   }
 
   .hero-kicker,
@@ -405,32 +404,11 @@ html.theme-transitioning::view-transition-new(root) {
     transform: none !important;
   }
 
-  /* Giriş/çıkış katmanlarında yalnızca kısa opacity (120ms ease) kalır */
-  @keyframes mEnter { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes mExit { from { opacity: 1; } to { opacity: 0; } }
-  @keyframes modalPopIn { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes modalPopOut { from { opacity: 1; } to { opacity: 0; } }
-  @keyframes modalOverlayIn { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes modalOverlayOut { from { opacity: 1; } to { opacity: 0; } }
-  @keyframes dropdownIn { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes dropdownOut { from { opacity: 1; } to { opacity: 0; } }
-  @keyframes toolsMenuFadeIn { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes toolsMenuFadeOut { from { opacity: 1; } to { opacity: 0; } }
-  @keyframes opsCenterIn { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes opsDrawerUnfold { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes opsDrawerFold { from { opacity: 1; } to { opacity: 0; } }
-  @keyframes chatPanelExpand { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes chatPanelFold { from { opacity: 1; } to { opacity: 0; } }
-
   .m-enter,
   .modal-overlay.open,
   .modal-overlay.open .modal,
   #ops-center.active,
-  #chat-panel.active {
-    animation-duration: 120ms !important;
-    animation-timing-function: ease !important;
-  }
-
+  #chat-panel.active,
   .m-exit,
   .modal-overlay.closing,
   .modal-overlay.closing .modal,
@@ -446,9 +424,19 @@ html.theme-transitioning::view-transition-new(root) {
     display: none !important;
   }
 
+  /* Glide göstergesi gizlendiğinde aktif sekme yüzeyini görünür tut */
+  .view-toggle > button.is-gliding-target,
+  .ops-tabs > button.is-gliding-target,
+  .settings-tabs > button.is-gliding-target {
+    background: var(--surface) !important;
+    box-shadow: var(--shadow-xs) !important;
+    border-color: var(--line) !important;
+  }
+
   ::view-transition-group(*),
   ::view-transition-old(*),
   ::view-transition-new(*) {
     animation-duration: 0.01ms !important;
   }
+}
 }

@@ -397,9 +397,19 @@ async def _load_book_text_or_pdf(
 
     full_text = _get_cached_full_text(k_yolu)
     if not full_text:
-        from app.pdf import extract_text_from_pdf
+        lower_p = k_yolu.lower()
+        if lower_p.endswith(".epub"):
+            from app.epub import extract_text_from_epub
 
-        full_text = await asyncio.to_thread(extract_text_from_pdf, k_yolu, max_pages=0)
+            full_text = await asyncio.to_thread(extract_text_from_epub, k_yolu, max_chars=250000)
+        elif lower_p.endswith(".txt"):
+            from app.epub import extract_text_from_txt
+
+            full_text = await asyncio.to_thread(extract_text_from_txt, k_yolu, max_chars=250000)
+        else:
+            from app.pdf import extract_text_from_pdf
+
+            full_text = await asyncio.to_thread(extract_text_from_pdf, k_yolu, max_pages=0)
         for sfx in (EXT_FULL_TXT, EXT_TXT):
             try:
                 await asyncio.to_thread(_write_text_file, k_yolu + sfx, full_text)
@@ -446,23 +456,30 @@ async def _build_target_book_context(
         if not book_details:
             return book_meta, rag_context, pdf_to_upload
 
-        k_adi, k_yazar, k_ozet, k_yolu = book_details
+        k_adi, k_yazar, k_ozet, raw_yolu = book_details
+        from app.constants import LIBRARY_ROOT
+        from app.utils import resolve_portable_book_path
+
+        k_yolu = resolve_portable_book_path(raw_yolu, LIBRARY_ROOT)
         book_meta = {
             "title": k_adi or "",
             "author": k_yazar or "",
             "summary": k_ozet or "",
             "path": k_yolu or "",
+            "supplemental_context": "",
         }
         rag_context += f"SİSTEM BİLGİSİ: Kullanıcı şu anda '{k_adi}' (Yazar: {k_yazar}) kitabını okuyor/inceliyor.\nKitap Özeti: {k_ozet}\n\n"
 
         # Hybrid RAG Semantic Retrieval for targeted query
-        rag_context += await _get_hybrid_passages(db, target_book_hash, user_query)
+        hybrid_passages = await _get_hybrid_passages(db, target_book_hash, user_query)
+        rag_context += hybrid_passages
 
         text_ctx, pdf_path = await _load_book_text_or_pdf(k_yolu, target_book_hash, provider, k_adi)
         rag_context += text_ctx
         if pdf_path:
             pdf_to_upload = pdf_path
 
+        user_notes_context = ""
         try:
             user_notes_context = await db.get_book_notes_for_ai(target_book_hash)
             if user_notes_context:
@@ -479,6 +496,10 @@ async def _build_target_book_context(
                 "WARNING",
                 f"Kullanıcı notları bağlama eklenirken hata: {notes_err}",
             )
+
+        supplemental_parts = [p for p in (hybrid_passages.strip(), user_notes_context.strip()) if p]
+        if supplemental_parts:
+            book_meta["supplemental_context"] = "\n\n".join(supplemental_parts)
 
     except Exception as book_err:
         log_event(LOG_CAT_AI_CHAT, "WARNING", f"Workspace kitap metni yüklenirken hata: {book_err}")
@@ -547,7 +568,12 @@ async def _execute_chat_llm(
                 or f"Sen '{k_adi or 'Kitap'}' kitabını derinlemesine bilen uzman bir asistansın.",
                 api_key=api_key,
             )
-            response_text = await asyncio.to_thread(book_session.send_user_message, request.message)
+            supplemental_ctx = str(book_meta.get("supplemental_context") or "")
+            response_text = await asyncio.to_thread(
+                book_session.send_user_message,
+                request.message,
+                supplemental_ctx,
+            )
     else:
         from app.ai_router import generate_ai_response
 

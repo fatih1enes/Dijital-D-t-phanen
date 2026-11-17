@@ -35,14 +35,17 @@ async def auth_status(request: Request) -> dict:
     if is_local or auth_mod._is_access_allowed(request):
         authenticated = True
 
+    now_ts = time.time()
     client_host = auth_mod._get_client_host(request)
-    locked = auth_mod._is_login_locked(client_host, time.time())
+    locked = auth_mod._is_login_locked(client_host, now_ts)
+    remaining_seconds = auth_mod._remaining_lock_seconds(client_host, now_ts) if locked else 0
     return {
         "required": required,
         "is_local": is_local,
         "authenticated": authenticated,
         "has_password": has_pwd,
         "locked": locked,
+        "remaining_seconds": remaining_seconds,
     }
 
 
@@ -56,6 +59,7 @@ async def auth_status(request: Request) -> dict:
 )
 async def login(request: Request, payload: LoginRequest | None = None) -> JSONResponse:
     """Authenticate with password."""
+    auth_mod._ensure_safe_request_origin(request)
     fn_local, fn_pwd, fn_unprot = _get_auth_helpers()
     is_local = fn_local(request)
     configured_pwd = fn_pwd()
@@ -80,11 +84,14 @@ async def login(request: Request, payload: LoginRequest | None = None) -> JSONRe
     else:
         try:
             data = await request.json()
-            password = data.get("password", "")
+            password = data.get("password", "") if isinstance(data, dict) else ""
         except Exception:
             password = ""
 
-    if configured_pwd and not secrets.compare_digest(password, configured_pwd):
+    if configured_pwd and not secrets.compare_digest(
+        str(password or "").encode("utf-8"),
+        str(configured_pwd).encode("utf-8"),
+    ):
         auth_mod._register_login_failure(client_host, now)
         raise HTTPException(status_code=401, detail="Hatalı şifre.")
 
@@ -97,9 +104,11 @@ async def login(request: Request, payload: LoginRequest | None = None) -> JSONRe
 @router.post("/logout")
 async def logout(request: Request) -> JSONResponse:
     """Logout endpoint."""
+    auth_mod._ensure_safe_request_origin(request)
     token = request.cookies.get(AUTH_COOKIE_NAME)
     if token:
-        auth_mod.AUTH_STATE["valid_tokens"].pop(token, None)
+        with auth_mod._auth_lock:
+            auth_mod.AUTH_STATE["valid_tokens"].pop(token, None)
     try:
         request.session.clear()
     except Exception as e:

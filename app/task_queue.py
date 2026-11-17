@@ -726,22 +726,47 @@ async def _save_book_and_index_chunks(
         task_data=data,
     )
 
-    book_entry = {
-        **data,
-        "dosya_adi": task_data["filename"],
-        "dosya_hash": task_data["file_hash"],
-        "dosya_yolu": final_path,
-    }
-    await bg_db.add_book(book_entry)
-
     chunks = result.get("chunks")
     if chunks is None:
         try:
             from app.services.chunking_service import DocumentChunker
 
-            chunks = DocumentChunker.chunk_document(final_path, task_data["file_hash"])
-        except Exception:
+            chunks = await asyncio.to_thread(
+                DocumentChunker.chunk_document, final_path, task_data["file_hash"]
+            )
+        except Exception as chunk_gen_err:
+            log_event(
+                LOG_CATEGORY_DATABASE,
+                "DEBUG",
+                f"Chunk üretimi atlandı ({task_data['filename']}): {chunk_gen_err}",
+            )
             chunks = []
+
+    file_size = 0
+    if final_path and os.path.exists(final_path):
+        try:
+            file_size = os.path.getsize(final_path)
+        except OSError as sz_err:
+            log_event(LOG_CATEGORY_DATABASE, "DEBUG", f"Dosya boyutu okunamadı: {sz_err}")
+
+    page_count = int(data.get("sayfa_sayisi") or 0)
+    if page_count <= 0 and final_path:
+        if final_path.lower().endswith(".pdf"):
+            from app.pdf import get_pdf_page_count
+
+            page_count = await asyncio.to_thread(get_pdf_page_count, final_path)
+        elif chunks and isinstance(chunks, list):
+            page_count = max((int(c.get("sayfa_no") or 0) for c in chunks), default=0)
+
+    book_entry = {
+        **data,
+        "dosya_adi": task_data["filename"],
+        "dosya_hash": task_data["file_hash"],
+        "dosya_yolu": final_path,
+        "sayfa_sayisi": page_count,
+        "dosya_boyutu": file_size,
+    }
+    await bg_db.add_book(book_entry)
 
     if chunks and isinstance(chunks, list):
         try:
@@ -749,16 +774,21 @@ async def _save_book_and_index_chunks(
                 task_id,
                 STATUS_PROCESSING,
                 95,
-                "Kitap pasajları ve FTS5 tam metin arama dizini oluşturuluyor...",
+                "Kitap pasajları, vektör gömmeleri ve FTS5 arama dizini oluşturuluyor...",
                 log_state="INFO",
             )
             from app.services.chunking_service import index_document_chunks
+            from app.services.embedding_service import embedding_service
 
-            indexed_count = await index_document_chunks(bg_db, chunks, embeddings=None)
+            chunk_texts = [str(c.get("metin", "")) for c in chunks]
+            embeddings = await asyncio.to_thread(
+                embedding_service.generate_embeddings_batch, chunk_texts
+            )
+            indexed_count = await index_document_chunks(bg_db, chunks, embeddings=embeddings)
             log_event(
                 LOG_CATEGORY_DATABASE,
                 "INFO",
-                f"FTS5 tam metin pasaj indeksi tamamlandı ({indexed_count} pasaj): {task_data['filename']}",
+                f"FTS5 + Vektör pasaj indeksi tamamlandı ({indexed_count} pasaj): {task_data['filename']}",
                 task_id=task_id,
                 chunk_count=indexed_count,
             )

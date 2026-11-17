@@ -87,8 +87,8 @@ def _filter_secret_keys(filtered: dict) -> None:
                 filtered.pop(secret_key, None)
 
 
-def _process_access_password_update(filtered: dict) -> None:
-    """Handle access_password update or removal."""
+def _process_access_password_update(filtered: dict, request: Request | None = None) -> None:
+    """Handle access_password update or removal and rotate remote session tokens."""
     if CONF_ACCESS_PASSWORD not in filtered:
         return
     raw_pwd = str(filtered[CONF_ACCESS_PASSWORD] or "").strip()
@@ -99,13 +99,55 @@ def _process_access_password_update(filtered: dict) -> None:
         os.environ["ACCESS_PASSWORD"] = ""
         auth_mod.ACCESS_PASSWORD = ""
         _sync_password_to_env("")
+        auth_mod._rotate_auth_boot_id()
     elif raw_pwd and not raw_pwd.startswith("••") and raw_pwd != MASKED_KEY:
         filtered[CONF_ACCESS_PASSWORD] = raw_pwd
         os.environ["ACCESS_PASSWORD"] = raw_pwd
         auth_mod.ACCESS_PASSWORD = raw_pwd
         _sync_password_to_env(raw_pwd)
+        auth_mod._rotate_auth_boot_id()
+        if request is not None:
+            auth_mod._set_session_authenticated(request, True)
     else:
         filtered.pop(CONF_ACCESS_PASSWORD, None)
+
+
+def _validate_host_path_settings(filtered: dict, current: dict, request: Request) -> None:
+    """Guard tesseract_cmd and watchfolder_path against RCE, UNC SSRF, and remote host path tampering."""
+    from app.auth import _is_local_request
+    from app.config import is_safe_tesseract_executable
+
+    is_local = _is_local_request(request)
+
+    if "tesseract_cmd" in filtered:
+        tess_val = str(filtered.get("tesseract_cmd") or "").strip()
+        if tess_val != str(current.get("tesseract_cmd") or "").strip():
+            if not is_local:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Tesseract yürütülebilir dosya yolu yalnızca yerel (localhost) oturumdan değiştirilebilir.",
+                )
+            if tess_val and not is_safe_tesseract_executable(tess_val):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Geçersiz Tesseract yolu: Yalnızca yerel 'tesseract' veya 'tesseract.exe' kabul edilir.",
+                )
+        filtered["tesseract_cmd"] = tess_val
+
+    if "watchfolder_path" in filtered:
+        wf_val = str(filtered.get("watchfolder_path") or "").strip()
+        if wf_val != str(current.get("watchfolder_path") or "").strip():
+            if not is_local:
+                raise HTTPException(
+                    status_code=403,
+                    detail="İzleme klasörü (watchfolder) yolu yalnızca yerel oturumdan değiştirilebilir.",
+                )
+            if wf_val and (wf_val.startswith("\\\\") or "\x00" in wf_val):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Güvenlik nedeniyle ağ (UNC) yolları izleme klasörü olarak kullanılamaz.",
+                )
+        filtered["watchfolder_path"] = wf_val
 
 
 @router.get("/settings")
@@ -166,10 +208,11 @@ async def update_settings(request: Request, payload: SettingsUpdateRequest | Non
     filtered = {key: value for key, value in settings.items() if key in allowed}
 
     _filter_secret_keys(filtered)
-    _process_access_password_update(filtered)
+    _validate_host_path_settings(filtered, current, request)
+    _process_access_password_update(filtered, request)
 
     current.update(filtered)
-    save_cfg(current)
+    await asyncio.to_thread(save_cfg, current)
 
     if "gemini_cascade_models" in filtered:
         cascade_models = current.get("gemini_cascade_models") or []
@@ -245,7 +288,7 @@ def _add_library_files_to_zip(zf: zipfile.ZipFile, library_root: str) -> None:
 
 
 def _add_db_and_config_to_zip(zf: zipfile.ZipFile, backup_db_path: str, config_file: str) -> None:
-    """Add database backup and config to archive."""
+    """Add database backup and sanitized config (secrets redacted) to archive."""
     if os.path.exists(backup_db_path):
         zf.write(backup_db_path, arcname="kutuphane.db")
         try:
@@ -253,6 +296,17 @@ def _add_db_and_config_to_zip(zf: zipfile.ZipFile, backup_db_path: str, config_f
         except OSError as rm_err:
             log_event("system", "DEBUG", f"Backup db cleanup notice: {rm_err}")
     if os.path.exists(config_file):
+        try:
+            with open(config_file, encoding="utf-8-sig") as f:
+                cfg_data = json.load(f)
+            if isinstance(cfg_data, dict):
+                for secret_field in (CONF_AI_API_KEY, CONF_TELEGRAM_HASH, CONF_ACCESS_PASSWORD):
+                    if cfg_data.get(secret_field):
+                        cfg_data[secret_field] = ""
+                zf.writestr("config.json", json.dumps(cfg_data, ensure_ascii=False, indent=2))
+                return
+        except Exception as cfg_err:
+            log_event("system", "DEBUG", f"Config sanitize fallback in zip: {cfg_err}")
         zf.write(config_file, arcname="config.json")
 
 

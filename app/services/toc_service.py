@@ -27,9 +27,9 @@ def _clean_toc_title(title: str) -> str:
     t = re.sub(r"^[ıi]x\.\s*", "IX. ", t, flags=re.I)
     t = re.sub(r"^x\.\s*", "X. ", t, flags=re.I)
 
-    # Fix digit '1' embedded within words as 'i' or 'I' (e.g., NED1R -> NEDİR, KlAS1K -> KLASİK)
-    t = re.sub(r"([A-Za-zğüşöçıİĞÜŞÖÇ])1([A-Za-zğüşöçıİĞÜŞÖÇ])", r"\g<1>i\g<2>", t)
-    t = re.sub(r"1([A-Za-zğüşöçıİĞÜŞÖÇ])", r"İ\1", t)
+    # Fix digit '1' embedded within uppercase OCR words (e.g., NED1R -> NEDİR) without corrupting numeric prefixes like '1. Bölüm'
+    t = re.sub(r"(?<=[A-ZĞÜŞÖÇİ])1(?=[A-ZĞÜŞÖÇİ])", "İ", t)
+    t = re.sub(r"(?<=[a-zğüşöçı])1(?=[a-zğüşöçı])", "i", t)
 
     # Fix common Turkish Tasavvuf OCR glitches: 'TASAWUF' -> 'TASAVVUF'
     t = re.sub(r"TASAW[Uu]F", "TASAVVUF", t)
@@ -82,7 +82,21 @@ class TOCService:
             return []
 
         file_path = path_info[0]
-        if not os.path.exists(file_path) or not file_path.lower().endswith(".pdf"):
+        if not os.path.exists(file_path):
+            return []
+
+        lower_path = file_path.lower()
+        if lower_path.endswith((".epub", ".txt")):
+            from app.epub import extract_structured_reader_pages
+
+            structured = await asyncio.to_thread(extract_structured_reader_pages, file_path)
+            doc_toc = structured.get("toc") or []
+            if doc_toc:
+                await cls._save_toc_items(db, file_hash, doc_toc)
+                return doc_toc
+            return []
+
+        if not lower_path.endswith(".pdf"):
             return []
 
         # 3. Try native outline via pypdfium2
@@ -137,9 +151,10 @@ class TOCService:
         return items
 
     @classmethod
-    def _synthesize_toc_from_text(cls, file_path: str) -> list[dict[str, Any]]:
-        """Scan front matter pages for TOC tables, extract entries and calculate page offset with voting."""
-        items: list[dict[str, Any]] = []
+    def _extract_pages_text_for_toc(cls, file_path: str, max_scan: int = 80) -> tuple[int, dict[int, str]]:
+        """Extract front-matter page texts via pypdfium2 with pdfplumber fallback."""
+        page_texts: dict[int, str] = {}
+        total_pages = 0
         doc = None
         try:
             import pypdfium2 as pdfium
@@ -147,120 +162,19 @@ class TOCService:
             with PDFIUM_LOCK:
                 doc = pdfium.PdfDocument(file_path)
                 total_pages = len(doc)
-                scan_pages = min(30, total_pages)
-
-                toc_header_regex = re.compile(
-                    r"(?:içindekiler|contents|table\s+of\s+contents|fihrist)",
-                    re.IGNORECASE | re.UNICODE,
-                )
-                dotted_line_regex = re.compile(
-                    r"^(.{2,90}?)\s*[\.\s\-_–—…]{2,}\s*(\d{1,4})$",
-                    re.UNICODE,
-                )
-                simple_toc_regex = re.compile(
-                    r"^((?:bölüm|chapter|part|\d+\.|\b[ivxlcdm]+\.)\s*.{2,80}?)\s+(\d{1,4})$",
-                    re.IGNORECASE | re.UNICODE,
-                )
-
-                detected_entries: list[
-                    tuple[str, int, int]
-                ] = []  # (title, stated_page, found_on_pdf_page)
-                in_toc_section = False
-
-                for p_idx in range(scan_pages):
+                limit = min(max_scan, total_pages)
+                for p_idx in range(limit):
                     page = doc.get_page(p_idx)
-                    textpage = page.get_textpage()
-                    raw_text = textpage.get_text_range()
-                    if not raw_text:
-                        continue
-
-                    lines = [line.strip() for line in raw_text.splitlines() if line.strip()]
-
-                    for line in lines:
-                        if toc_header_regex.search(line):
-                            in_toc_section = True
-                            continue
-
-                        if in_toc_section:
-                            # Check dotted pattern: e.g. "Giriş ................... 12"
-                            m1 = dotted_line_regex.match(line)
-                            if m1:
-                                t = _clean_toc_title(m1.group(1).strip())
-                                p = int(m1.group(2))
-                                if t and 0 < p < total_pages * 2:
-                                    detected_entries.append((t, p, p_idx + 1))
-                                continue
-
-                            # Check simple pattern: e.g. "Bölüm 1 Temel Kavramlar 15"
-                            m2 = simple_toc_regex.match(line)
-                            if m2:
-                                t = _clean_toc_title(m2.group(1).strip())
-                                p = int(m2.group(2))
-                                if t and 0 < p < total_pages * 2:
-                                    detected_entries.append((t, p, p_idx + 1))
-                                continue
-
-                if not detected_entries:
-                    return []
-
-                # 4. Multi-candidate offset voting solver:
-                # Tests multiple chapter titles against actual page text around stated page numbers
-                offset_votes: Counter = Counter()
-
-                for entry in detected_entries:
-                    raw_title, stated_page, _ = entry
-                    # Skip illustrations, tables, or very short front matter
-                    if stated_page <= 0:
-                        continue
-                    clean_t = re.sub(r"^(?:[IVXLCDM]+|\d+)[\.\-\:\s]\s*", "", raw_title, flags=re.IGNORECASE)
-                    kw_tokens = [w for w in re.split(r"\W+", clean_t) if len(w) >= 4]
-                    if not kw_tokens:
-                        continue
-
-                    # Search within stated_page - 4 to stated_page + 30
-                    search_start = max(0, stated_page - 4)
-                    search_end = min(total_pages, stated_page + 30)
-                    kw_normalized = [
-                        k.lower().replace("1", "i").replace("w", "v") for k in kw_tokens[:2]
-                    ]
-
-                    for check_idx in range(search_start, search_end):
-                        p = doc.get_page(check_idx)
-                        tp = p.get_textpage()
-                        try:
-                            p_text = (tp.get_text_range() or "").lower()
-                            p_text = p_text.replace("1", "i").replace("w", "v")
-                            if all(tok in p_text for tok in kw_normalized):
-                                actual_pdf_page = check_idx + 1
-                                cand_offset = actual_pdf_page - stated_page
-                                offset_votes[cand_offset] += 1
-                                break
-                        finally:
-                            tp.close()
-                            p.close()
-
-                # Pick offset with highest consensus, defaulting to 0
-                offset = 0
-                if offset_votes:
-                    most_common_offset, count = offset_votes.most_common(1)[0]
-                    if count >= 1:
-                        offset = most_common_offset
-
-                # Build final items
-                for title, stated_page, _ in detected_entries:
-                    target_page = max(1, min(total_pages, stated_page + offset))
-                    items.append(
-                        {
-                            "title": title,
-                            "page_number": stated_page,
-                            "target_page": target_page,
-                            "level": 1,
-                            "source": "auto_detected",
-                        }
-                    )
-
+                    tp = page.get_textpage()
+                    try:
+                        page_texts[p_idx] = tp.get_text_range() or ""
+                    finally:
+                        tp.close()
+                        page.close()
+            if total_pages > 0:
+                return total_pages, page_texts
         except Exception as e:
-            log_event("pdf", "WARNING", f"TOC sentezleme uyarısı: {e}")
+            log_event("pdf", "DEBUG", f"TOC pypdfium2 okuma uyarısı, pdfplumber deneniyor: {e}")
         finally:
             if doc is not None:
                 try:
@@ -268,6 +182,131 @@ class TOCService:
                         doc.close()
                 except Exception as close_err:
                     log_event("pdf", "DEBUG", f"TOC doc close error: {close_err}")
+
+        try:
+            import pdfplumber
+
+            with pdfplumber.open(file_path) as pl_pdf:
+                total_pages = len(pl_pdf.pages)
+                limit = min(max_scan, total_pages)
+                for p_idx in range(limit):
+                    page_texts[p_idx] = pl_pdf.pages[p_idx].extract_text() or ""
+        except Exception as fb_err:
+            log_event("pdf", "WARNING", f"TOC pdfplumber fallback uyarısı: {fb_err}")
+
+        return total_pages, page_texts
+
+    @classmethod
+    def _synthesize_toc_from_text(cls, file_path: str) -> list[dict[str, Any]]:
+        """Scan front matter pages for TOC tables, extract entries and calculate page offset with voting."""
+        items: list[dict[str, Any]] = []
+        try:
+            total_pages, page_texts = cls._extract_pages_text_for_toc(file_path, max_scan=90)
+            if total_pages <= 0:
+                return []
+
+            scan_pages = min(30, total_pages)
+            toc_header_regex = re.compile(
+                r"(?:içindekiler|contents|table\s+of\s+contents|fihrist)",
+                re.IGNORECASE | re.UNICODE,
+            )
+            dotted_line_regex = re.compile(
+                r"^(.{2,90}?)\s*[\.\s\-_–—…]{2,}\s*(\d{1,4})$",
+                re.UNICODE,
+            )
+            simple_toc_regex = re.compile(
+                r"^((?:bölüm|chapter|part|\d+\.|\b[ivxlcdm]+\.)\s*.{2,80}?)\s+(\d{1,4})$",
+                re.IGNORECASE | re.UNICODE,
+            )
+
+            detected_entries: list[
+                tuple[str, int, int]
+            ] = []  # (title, stated_page, found_on_pdf_page_1based)
+            in_toc_section = False
+
+            for p_idx in range(scan_pages):
+                raw_text = page_texts.get(p_idx, "")
+                if not raw_text:
+                    continue
+
+                lines = [line.strip() for line in raw_text.splitlines() if line.strip()]
+                for line in lines:
+                    if toc_header_regex.search(line):
+                        in_toc_section = True
+                        continue
+
+                    if in_toc_section:
+                        m1 = dotted_line_regex.match(line)
+                        if m1:
+                            t = _clean_toc_title(m1.group(1).strip())
+                            p = int(m1.group(2))
+                            if t and 0 < p < total_pages * 2:
+                                detected_entries.append((t, p, p_idx + 1))
+                            continue
+
+                        m2 = simple_toc_regex.match(line)
+                        if m2:
+                            t = _clean_toc_title(m2.group(1).strip())
+                            p = int(m2.group(2))
+                            if t and 0 < p < total_pages * 2:
+                                detected_entries.append((t, p, p_idx + 1))
+                            continue
+
+            if not detected_entries:
+                return []
+
+            # Multi-candidate offset voting solver (strictly AFTER the TOC page so TOC never matches itself!)
+            offset_votes: Counter = Counter()
+
+            for raw_title, stated_page, found_pdf_page in detected_entries[:16]:
+                if stated_page <= 0:
+                    continue
+                clean_t = re.sub(
+                    r"^(?:[IVXLCDM]+|\d+)[\.\-\:\s]\s*", "", raw_title, flags=re.IGNORECASE
+                )
+                kw_tokens = [w for w in re.split(r"\W+", clean_t) if len(w) >= 4]
+                if not kw_tokens:
+                    continue
+
+                # Start strictly after found_pdf_page (0-based index == found_pdf_page)
+                search_start = max(found_pdf_page, stated_page - 4)
+                search_end = min(total_pages, max(search_start, stated_page + 30))
+                kw_normalized = [
+                    k.lower().replace("1", "i").replace("w", "v") for k in kw_tokens[:2]
+                ]
+
+                for check_idx in range(search_start, search_end):
+                    p_text = page_texts.get(check_idx)
+                    if p_text is None:
+                        _, extra = cls._extract_pages_text_for_toc(file_path, max_scan=check_idx + 5)
+                        page_texts.update(extra)
+                        p_text = page_texts.get(check_idx, "")
+                    norm_page = p_text.lower().replace("1", "i").replace("w", "v")
+                    if all(tok in norm_page for tok in kw_normalized):
+                        actual_pdf_page = check_idx + 1
+                        cand_offset = actual_pdf_page - stated_page
+                        offset_votes[cand_offset] += 1
+                        break
+
+            offset = 0
+            if offset_votes:
+                most_common_offset, count = offset_votes.most_common(1)[0]
+                if count >= 1:
+                    offset = most_common_offset
+
+            for title, stated_page, _ in detected_entries:
+                target_page = max(1, min(total_pages, stated_page + offset))
+                items.append(
+                    {
+                        "title": title,
+                        "page_number": stated_page,
+                        "target_page": target_page,
+                        "level": 1,
+                        "source": "auto_detected",
+                    }
+                )
+        except Exception as e:
+            log_event("pdf", "WARNING", f"TOC sentezleme uyarısı: {e}")
 
         return items
 

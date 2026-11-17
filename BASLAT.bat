@@ -67,7 +67,7 @@ call "%VENV_DIR%\Scripts\activate.bat"
 if errorlevel 1 goto ACTIVATEERROR
 
 :: Tum kritik kutuphanelerin varligini dogrula (Eksik veya yeni eklenen paket kontrolu)
-"%VENV_DIR%\Scripts\python.exe" -c "import fastapi, uvicorn, telethon, cryptg, aiosqlite, google.genai, pdfplumber, pydantic, PIL" >nul 2>&1
+"%VENV_DIR%\Scripts\python.exe" -c "import fastapi, uvicorn, telethon, cryptg, aiosqlite, google.genai, pdfplumber, pydantic, PIL, pypdfium2, defusedxml, numpy, fastapi_cache" >nul 2>&1
 if errorlevel 1 (
     echo [GUNCELLEME] Eksik veya yeni eklenen kutuphaneler tespit edildi!
     echo Paketler kontrol ediliyor ve yukleniyor...

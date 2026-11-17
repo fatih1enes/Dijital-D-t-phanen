@@ -3,6 +3,7 @@
 import hashlib
 import os
 import re
+import unicodedata
 import uuid
 from pathlib import Path
 
@@ -12,6 +13,25 @@ DEFAULT_CATEGORY = "Genel"
 DOC_EXT_PDF = ".pdf"
 MASKED_LITERAL = "AIzaSy[MASKED]"
 MASKED_PARAM_REPLACEMENT = r"\1[MASKED]"
+
+_WINDOWS_RESERVED_NAMES = frozenset(
+    {
+        "CON",
+        "PRN",
+        "AUX",
+        "NUL",
+        *(f"COM{i}" for i in range(1, 10)),
+        *(f"LPT{i}" for i in range(1, 10)),
+    }
+)
+
+
+def tr_lower(text: str | None) -> str:
+    """Locale-accurate Turkish lowercase conversion (NFC normalized)."""
+    if not text:
+        return ""
+    norm = unicodedata.normalize("NFC", str(text))
+    return norm.replace("İ", "i").replace("I", "ı").lower()
 
 
 def get_file_hash(file_bytes: bytes) -> str:
@@ -32,14 +52,31 @@ def sanitize_dirname(name: str | None) -> str:
     """Convert category strings into safe folder names for Windows."""
     if not name:
         return DEFAULT_CATEGORY
-    clean = re.sub(r'[\\/:*?"<>|]+', " - ", str(name))
+    norm = unicodedata.normalize("NFC", str(name))
+    clean = re.sub(r'[\\/:*?"<>|\x00-\x1f]+', " - ", norm)
     clean = re.sub(r"\s+", " ", clean).strip(" .")
-    return clean or DEFAULT_CATEGORY
+    if not clean or clean.upper().split(".")[0] in _WINDOWS_RESERVED_NAMES:
+        return DEFAULT_CATEGORY
+    return clean
+
+
+def _clean_stem(raw_stem: str, max_len: int = 170, fallback_prefix: str = "dosya") -> str:
+    """Normalize and sanitize a filename stem while preserving Unicode/Turkish letters."""
+    norm = unicodedata.normalize("NFC", raw_stem or "")
+    norm = norm.replace("—", "-").replace("–", "-")
+    safe = re.sub(r"[^\w.\-\s()]+", "_", norm, flags=re.UNICODE)
+    safe = re.sub(r"\.{2,}", "_", safe)
+    safe = re.sub(r"\s+", " ", safe).strip(" ._")
+    if safe.upper().split(".")[0] in _WINDOWS_RESERVED_NAMES:
+        safe = f"_{safe}"
+    if not safe:
+        safe = f"{fallback_prefix}_{uuid.uuid4().hex[:12]}"
+    return safe[:max_len].rstrip(" .")
 
 
 def sanitize_filename(filename: str) -> str:
-    """Sanitize filename for safe storage preserving supported extensions."""
-    normalized = (filename or "").replace("\\", "/")
+    """Sanitize filename for safe storage preserving Unicode letters and supported extensions."""
+    normalized = unicodedata.normalize("NFC", filename or "").replace("\\", "/")
     raw = os.path.basename(normalized)
     if not raw:
         return f"dosya_{uuid.uuid4().hex}{DOC_EXT_PDF}"
@@ -47,11 +84,18 @@ def sanitize_filename(filename: str) -> str:
     ext_lower = ext.lower()
     if ext_lower not in (DOC_EXT_PDF, ".epub", ".txt"):
         ext_lower = DOC_EXT_PDF
-    safe_name = re.sub(r"[^A-Za-z0-9._\-\s()]+", "_", name)
-    safe_name = re.sub(r"\.{2,}", "_", safe_name).strip(" ._")
-    if not safe_name:
-        safe_name = f"dosya_{uuid.uuid4().hex}"
-    return f"{safe_name[:170]}{ext_lower}"
+    safe_name = _clean_stem(name, max_len=170, fallback_prefix="dosya")
+    return f"{safe_name}{ext_lower}"
+
+
+def sanitize_export_stem(name: str | None, default: str = "kitap") -> str:
+    """Produce a clean filename stem without document extension for export downloads (.md, .bib, .json)."""
+    raw = unicodedata.normalize("NFC", str(name or "")).replace("\\", "/")
+    base = os.path.basename(raw).strip()
+    stem, ext = os.path.splitext(base)
+    if ext.lower() in (DOC_EXT_PDF, ".epub", ".txt", ".md", ".json", ".bib", ".tsv"):
+        base = stem
+    return _clean_stem(base or default, max_len=150, fallback_prefix=default)
 
 
 def validate_file_hash(file_hash: str) -> str:
@@ -68,19 +112,31 @@ def looks_like_pdf(content: bytes) -> bool:
 
 
 def looks_like_epub(content: bytes) -> bool:
-    """Check if content looks like an EPUB (PK zip archive)."""
-    return len(content) > 4 and content[:2] == b"PK"
+    """Check if content looks like an EPUB archive (PK zip signature, rejecting OOXML Office docs)."""
+    if len(content) <= 4 or content[:4] != b"PK\x03\x04":
+        return False
+    probe = content[:512]
+    if b"[Content_Types].xml" in probe:
+        return False
+    return True
+
+
+def looks_like_txt(content: bytes) -> bool:
+    """Check if content looks like plain text (non-empty and free of binary null bytes)."""
+    if not content:
+        return False
+    return b"\x00" not in content[:2048]
 
 
 def looks_like_supported_document(content: bytes, filename: str) -> tuple[bool, str]:
     """Check if document is supported (PDF, EPUB, TXT) and return (is_valid, doc_type)."""
-    lower = filename.lower()
+    lower = (filename or "").lower()
     if lower.endswith(".pdf") or looks_like_pdf(content):
         return looks_like_pdf(content), "pdf"
     if lower.endswith(".epub") or looks_like_epub(content):
         return looks_like_epub(content), "epub"
     if lower.endswith(".txt"):
-        return True, "txt"
+        return looks_like_txt(content), "txt"
     return False, "unknown"
 
 
@@ -95,6 +151,28 @@ def is_path_within(base_dir: str | os.PathLike[str], candidate_path: str | os.Pa
         return candidate.is_relative_to(base)
     except (ValueError, OSError, RuntimeError):
         return False
+
+
+def resolve_portable_book_path(stored_path: str | None, library_root: str) -> str:
+    """Re-anchor a stored Dijital_Kutuphane path onto the active LIBRARY_ROOT if the project folder was moved/copied."""
+    raw = str(stored_path or "").strip()
+    if not raw:
+        return ""
+    norm_slashes = raw.replace("\\", "/")
+    if ".." in norm_slashes.split("/"):
+        return ""
+    if is_path_within(library_root, raw) and os.path.exists(raw):
+        return raw
+
+    marker = "/Dijital_Kutuphane/"
+    idx = norm_slashes.rfind(marker)
+    if idx != -1:
+        rel_part = norm_slashes[idx + len(marker) :].lstrip("/")
+        if rel_part and ".." not in rel_part.split("/"):
+            candidate = os.path.join(library_root, *rel_part.split("/"))
+            if is_path_within(library_root, candidate) and os.path.exists(candidate):
+                return candidate
+    return raw
 
 
 def mask_sensitive_data(text: str | None) -> str:

@@ -1,8 +1,10 @@
 """Database management and infrastructure orchestration for Dijital Kütüphane."""
 
+import asyncio
 import os
 import re
 import shutil
+import time
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -17,7 +19,7 @@ from app.constants import (
     THUMBNAILS_DIR,
 )
 from app.repositories.document_repository import DocumentRepository
-from app.utils import is_path_within
+from app.utils import is_path_within, resolve_portable_book_path
 
 DB_PATH = os.path.join(DATA_DIR, "kutuphane.db")
 
@@ -101,7 +103,7 @@ class DatabaseManager(DocumentRepository):
                     f"Boş klasör temizlenirken OS/Dosya sistemi hatası: {e}",
                 )
 
-    def _archive_physical_file(self, file_path: str) -> None:
+    def _archive_physical_file(self, file_path: str, raise_on_lock: bool = False) -> None:
         """Archive book physical file into silinenler folder and cleanup empty dirs."""
         from app.logger import log_event
 
@@ -119,6 +121,9 @@ class DatabaseManager(DocumentRepository):
             rel = os.path.relpath(abs_file_path, LIBRARY_ROOT)
             archive_path = os.path.join(ARCHIVE_DIR, "silinenler", rel)
             os.makedirs(os.path.dirname(archive_path), exist_ok=True)
+            if os.path.exists(archive_path):
+                stem, ext = os.path.splitext(archive_path)
+                archive_path = f"{stem}_{int(time.time())}{ext}"
             shutil.move(abs_file_path, archive_path)
 
             log_event(
@@ -132,42 +137,66 @@ class DatabaseManager(DocumentRepository):
         except FileNotFoundError as e:
             log_event(
                 "filesystem",
-                "ERROR",
+                "DEBUG",
                 f"Arşivlenecek fiziksel dosya bulunamadı: {e}",
             )
+        except PermissionError as e:
+            log_event(
+                "filesystem",
+                "ERROR",
+                f"Dosya kullanımda olduğu için arşive taşınamadı: {e}",
+            )
+            if raise_on_lock:
+                raise
         except OSError as e:
             log_event(
                 "filesystem",
                 "ERROR",
                 f"Dosya arşive taşınırken OS/Erişim hatası: {e}",
             )
+            if raise_on_lock and getattr(e, "winerror", None) == 32:
+                raise PermissionError(str(e)) from e
         except Exception as e:
             log_event("filesystem", "ERROR", f"Dosya arşivlenirken beklenmedik hata: {e}")
 
-    async def delete_book(self, file_hash: str) -> None:
-        """Delete a book from database and filesystem with thorough cleanup (Orchestration)."""
-        # 1. Delete thumbnail (.jpg and legacy .webp)
-        self._delete_thumbnails(file_hash)
+    async def get_book_path(self, file_hash: str) -> tuple[str, str] | None:
+        """Get portable resolved file path and name for a book by its hash."""
+        row = await super().get_book_path(file_hash)
+        if not row:
+            return None
+        resolved_path = resolve_portable_book_path(row[0], LIBRARY_ROOT)
+        return (resolved_path, row[1])
 
-        # 2. Get file path
+    async def get_book_by_hash(self, file_hash: str) -> dict | None:
+        """Get complete book metadata record by hash with portable path resolution."""
+        book = await super().get_book_by_hash(file_hash)
+        if not book:
+            return None
+        if book.get("dosya_yolu"):
+            book["dosya_yolu"] = resolve_portable_book_path(book["dosya_yolu"], LIBRARY_ROOT)
+        return book
+
+    async def delete_book(self, file_hash: str) -> None:
+        """Delete a book safely: archive physical file FIRST (preventing DB/disk desync on lock), then remove DB records & artifacts."""
         file_path = None
         cursor = await self.conn.execute(
             "SELECT dosya_yolu FROM kitaplar WHERE dosya_hash = ?", (file_hash,)
         )
         row = await cursor.fetchone()
-        if row:
-            file_path = row[0]
+        if row and row[0]:
+            file_path = resolve_portable_book_path(row[0], LIBRARY_ROOT)
 
-        # 3. Call base repository for pure SQLite deletion
+        # 1. Move physical file first so a Windows file lock aborts cleanly before deleting notes/metadata
+        if file_path and os.path.exists(file_path):
+            await asyncio.to_thread(self._archive_physical_file, file_path, True)
+
+        # 2. Delete SQLite rows and indices
         await super().delete_book(file_hash)
 
-        # 4. Clean cached full-text files
+        # 3. Delete thumbnails & cached full-text files off the event loop
+        await asyncio.to_thread(self._delete_thumbnails, file_hash)
         if file_path:
-            self._delete_cached_text(file_path)
-
-        # 5. Archive physical file and clean empty folders
-        if file_path and os.path.exists(file_path):
-            self._archive_physical_file(file_path)
+            await asyncio.to_thread(self._delete_cached_text, file_path)
 
     # ------------------------------------------------------------------
     # Category normalization (Business rules)
@@ -272,6 +301,8 @@ async def _create_schema_tables(conn: aiosqlite.Connection) -> None:
             okunulan_sayfa INTEGER DEFAULT 1,
             sira_numarasi INTEGER DEFAULT 999999,
             has_cover BOOLEAN DEFAULT 0,
+            sayfa_sayisi INTEGER DEFAULT 0,
+            dosya_boyutu INTEGER DEFAULT 0,
             ekleme_tarihi TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
@@ -446,6 +477,25 @@ async def _run_migrations(conn: aiosqlite.Connection) -> None:
             await conn.execute("ALTER TABLE koleksiyonlar ADD COLUMN rule_json TEXT DEFAULT NULL")
         await conn.execute(
             "INSERT OR IGNORE INTO schema_migrations (version, name) VALUES (6, 'toc_and_dynamic_collections')"
+        )
+
+    if 7 not in applied_versions:
+        cur = await conn.execute("PRAGMA table_info(kitaplar)")
+        book_cols = {row[1] for row in await cur.fetchall()}
+        if "sayfa_sayisi" not in book_cols:
+            await conn.execute("ALTER TABLE kitaplar ADD COLUMN sayfa_sayisi INTEGER DEFAULT 0")
+        if "dosya_boyutu" not in book_cols:
+            await conn.execute("ALTER TABLE kitaplar ADD COLUMN dosya_boyutu INTEGER DEFAULT 0")
+        await conn.execute("""
+            UPDATE kitaplar
+            SET sayfa_sayisi = COALESCE(
+                (SELECT MAX(sayfa_no) FROM kitap_chunks WHERE kitap_chunks.dosya_hash = kitaplar.dosya_hash),
+                0
+            )
+            WHERE COALESCE(sayfa_sayisi, 0) = 0
+        """)
+        await conn.execute(
+            "INSERT OR IGNORE INTO schema_migrations (version, name) VALUES (7, 'add_page_count_and_file_size')"
         )
 
 

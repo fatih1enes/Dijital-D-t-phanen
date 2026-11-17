@@ -33,7 +33,7 @@ MIME_PDF = "application/pdf"
 
 
 def _check_opds_basic_auth(auth_header: str, active_password: str) -> bool:
-    """Validate HTTP Basic Authentication header for OPDS."""
+    """Validate HTTP Basic Authentication header for OPDS (UTF-8 safe)."""
     if not auth_header.startswith("Basic "):
         return False
     try:
@@ -43,7 +43,10 @@ def _check_opds_basic_auth(auth_header: str, active_password: str) -> bool:
             _, provided_pwd = decoded.split(":", 1)
         else:
             provided_pwd = decoded
-        return secrets.compare_digest(provided_pwd, active_password)
+        return secrets.compare_digest(
+            provided_pwd.encode("utf-8"),
+            active_password.encode("utf-8"),
+        )
     except Exception as e:
         log_event("security", "DEBUG", f"OPDS Basic Auth decode error: {e}")
         return False
@@ -51,15 +54,22 @@ def _check_opds_basic_auth(auth_header: str, active_password: str) -> bool:
 
 def _check_opds_token(token: str) -> bool:
     """Validate token against active auth tokens."""
-    if not token or token not in auth_mod.AUTH_STATE.get("valid_tokens", {}):
+    if not token:
         return False
     import time
 
-    return time.time() <= auth_mod.AUTH_STATE["valid_tokens"][token]
+    with auth_mod._auth_lock:
+        exp = auth_mod.AUTH_STATE.get("valid_tokens", {}).get(token)
+        if exp is None:
+            return False
+        if time.time() > exp:
+            auth_mod.AUTH_STATE["valid_tokens"].pop(token, None)
+            return False
+        return True
 
 
 def _ensure_opds_auth(request: Request) -> None:
-    """Ensure OPDS request is authorized. Supports Localhost, Session Cookie, and HTTP Basic Auth."""
+    """Ensure OPDS request is authorized. Supports Localhost, Session Cookie, and HTTP Basic Auth with rate limiting."""
     if auth_mod._is_local_request(request):
         return
 
@@ -82,10 +92,26 @@ def _ensure_opds_auth(request: Request) -> None:
     if _check_opds_token(token):
         return
 
-    # 3. Check HTTP Basic Authentication Header
+    # 3. Check brute-force lock before Basic Auth
+    import time
+
+    now_ts = time.time()
+    client_host = auth_mod._get_client_host(request)
+    if auth_mod._is_login_locked(client_host, now_ts):
+        remaining = auth_mod._remaining_lock_seconds(client_host, now_ts)
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many failed OPDS login attempts. Retry in {remaining}s.",
+            headers={"Retry-After": str(remaining)},
+        )
+
+    # 4. Check HTTP Basic Authentication Header
     auth_header = request.headers.get("Authorization", "").strip()
-    if _check_opds_basic_auth(auth_header, active_password):
-        return
+    if auth_header:
+        if _check_opds_basic_auth(auth_header, active_password):
+            auth_mod._clear_login_attempts(client_host)
+            return
+        auth_mod._register_login_failure(client_host, now_ts)
 
     # Not authorized: Send 401 with WWW-Authenticate header
     raise HTTPException(

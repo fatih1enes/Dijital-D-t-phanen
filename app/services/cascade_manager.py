@@ -9,6 +9,7 @@ Coordinates hierarchical model execution across Gemini Flash variants:
 """
 
 import logging
+import threading
 import time
 from collections.abc import Callable
 from datetime import datetime, timezone
@@ -172,6 +173,7 @@ class GeminiCascadeManager:
     """Manages the fallback priority chain across multiple Gemini models."""
 
     def __init__(self, profiles: list[dict[str, Any]] | None = None):
+        self._lock = threading.RLock()
         defs = profiles or DEFAULT_CASCADE_PROFILES
         self.profiles: dict[str, CascadeModelProfile] = {
             p["model"]: CascadeModelProfile(
@@ -186,15 +188,17 @@ class GeminiCascadeManager:
         self.order: list[str] = [p["model"] for p in defs]
 
     def get_order(self) -> list[str]:
-        return list(self.order)
+        with self._lock:
+            return list(self.order)
 
     def set_order(self, new_order: list[str]) -> None:
         """Update model priority ordering."""
-        valid = [m for m in new_order if m in self.profiles]
-        for m in self.profiles:
-            if m not in valid:
-                valid.append(m)
-        self.order = valid
+        with self._lock:
+            valid = [m for m in new_order if m in self.profiles]
+            for m in self.profiles:
+                if m not in valid:
+                    valid.append(m)
+            self.order = valid
 
     def _create_profile_for_model(self, m: str) -> CascadeModelProfile:
         is_lite = "flash-lite" in m.lower() or "lite" in m.lower()
@@ -211,15 +215,19 @@ class GeminiCascadeManager:
 
     def configure_chain(self, model_names: list[str] | None) -> None:
         """Configure active chain from user-defined model names list."""
-        valid = self._sanitize_model_chain_input(model_names)
-        for m in valid:
-            if m not in self.profiles:
-                self.profiles[m] = self._create_profile_for_model(m)
-        self.order = valid
+        with self._lock:
+            valid = self._sanitize_model_chain_input(model_names)
+            for m in valid:
+                if m not in self.profiles:
+                    self.profiles[m] = self._create_profile_for_model(m)
+            self.order = valid
 
     def get_status_summary(self) -> list[dict[str, Any]]:
         """Return status for all models in order for UI/API."""
-        return [self.profiles[m].to_dict() for m in self.order]
+        with self._lock:
+            order_snap = list(self.order)
+            profs = [self.profiles[m] for m in order_snap if m in self.profiles]
+        return [p.to_dict() for p in profs]
 
     def _prepare_model_attempt(
         self,
@@ -378,10 +386,12 @@ class GeminiCascadeManager:
         """Execute an AI invocation through the cascade chain."""
         _log = self._create_cascade_logger(log_callback)
         errors = []
-        total_models = len(self.order)
+        with self._lock:
+            order_snap = list(self.order)
+            profiles_snap = [(m, self.profiles[m]) for m in order_snap if m in self.profiles]
+        total_models = len(profiles_snap)
 
-        for idx, model_name in enumerate(self.order):
-            profile = self.profiles[model_name]
+        for idx, (model_name, profile) in enumerate(profiles_snap):
             should_run = self._prepare_model_attempt(
                 idx, total_models, model_name, profile, estimated_tokens, task_id, _log
             )

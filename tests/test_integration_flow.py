@@ -111,10 +111,9 @@ async def test_integration_flow(test_data_dir, sample_pdf_bytes):
         task_queue.shutdown()
 
         # 3. Assertions
-        # run_in_executor is called twice: once for the ProcessPoolExecutor
-        # worker and once for asyncio.to_thread (embedding). Both are expected.
-        # RAG embedding was removed from upload pipeline as planned
-        assert mock_executor.call_count == 1  # Embedding was triggered
+        # run_in_executor is called for the ProcessPoolExecutor worker plus
+        # non-blocking asyncio.to_thread offloading (page count, chunking, embeddings).
+        assert mock_executor.call_count >= 2
 
         # 4. Database Validation
         async with get_db_context() as db:

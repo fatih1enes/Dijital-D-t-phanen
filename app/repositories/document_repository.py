@@ -14,6 +14,8 @@ ALLOWED_UPDATE_COLUMNS: frozenset[str] = frozenset(
         "ozet",
         "anahtar_kelimeler",
         "dosya_yolu",
+        "sayfa_sayisi",
+        "dosya_boyutu",
     }
 )
 
@@ -29,23 +31,28 @@ class DocumentRepository:
         if getattr(self.conn, "row_factory", None) is None:
             self.conn.row_factory = aiosqlite.Row
 
+    async def _ensure_tr_lower(self) -> None:
+        """Lazily register locale-accurate TR_LOWER SQLite scalar function on the connection."""
+        if getattr(self.conn, "_tr_lower_registered", False):
+            return
+        from app.utils import tr_lower
+
+        await self.conn.create_function("TR_LOWER", 1, tr_lower)
+        self.conn._tr_lower_registered = True  # type: ignore[attr-defined]
+
+    async def _has_page_size_columns(self) -> bool:
+        """Check and cache whether kitaplar table includes sayfa_sayisi and dosya_boyutu columns."""
+        cached = getattr(self.conn, "_has_page_size_cols", None)
+        if cached is not None:
+            return bool(cached)
+        cur = await self.conn.execute("PRAGMA table_info(kitaplar)")
+        col_names = {row[1] for row in await cur.fetchall()}
+        has_cols = "sayfa_sayisi" in col_names and "dosya_boyutu" in col_names
+        self.conn._has_page_size_cols = has_cols  # type: ignore[attr-defined]
+        return has_cols
+
     async def add_book(self, data: dict) -> None:
         """Add or update a book in the database."""
-        query = """
-            INSERT INTO kitaplar
-            (kitap_adi, yazar, kategori, alt_kategori, ozet, anahtar_kelimeler, dosya_adi, dosya_hash, dosya_yolu, has_cover)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(dosya_hash) DO UPDATE SET
-                kitap_adi=excluded.kitap_adi,
-                yazar=excluded.yazar,
-                kategori=excluded.kategori,
-                alt_kategori=excluded.alt_kategori,
-                ozet=excluded.ozet,
-                anahtar_kelimeler=excluded.anahtar_kelimeler,
-                dosya_adi=excluded.dosya_adi,
-                dosya_yolu=excluded.dosya_yolu,
-                has_cover=excluded.has_cover
-        """
 
         def safe_str(val: object) -> str:
             if val is None:
@@ -54,18 +61,72 @@ class DocumentRepository:
                 return ", ".join(map(str, val))
             return str(val)
 
-        params = (
-            safe_str(data.get("kitap_adi")),
-            safe_str(data.get("yazar")),
-            safe_str(data.get("kategori")),
-            safe_str(data.get("alt_kategori")),
-            safe_str(data.get("ozet")),
-            safe_str(data.get("anahtar_kelimeler")),
-            safe_str(data.get("dosya_adi")),
-            safe_str(data.get("dosya_hash")),
-            safe_str(data.get("dosya_yolu")),
-            1 if data.get("has_cover") else 0,
-        )
+        def safe_int(val: object) -> int:
+            try:
+                return max(0, int(val))  # type: ignore[arg-type]
+            except (TypeError, ValueError):
+                return 0
+
+        if await self._has_page_size_columns():
+            query = """
+                INSERT INTO kitaplar
+                (kitap_adi, yazar, kategori, alt_kategori, ozet, anahtar_kelimeler, dosya_adi, dosya_hash, dosya_yolu, has_cover, sayfa_sayisi, dosya_boyutu)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(dosya_hash) DO UPDATE SET
+                    kitap_adi=excluded.kitap_adi,
+                    yazar=excluded.yazar,
+                    kategori=excluded.kategori,
+                    alt_kategori=excluded.alt_kategori,
+                    ozet=excluded.ozet,
+                    anahtar_kelimeler=excluded.anahtar_kelimeler,
+                    dosya_adi=excluded.dosya_adi,
+                    dosya_yolu=excluded.dosya_yolu,
+                    has_cover=excluded.has_cover,
+                    sayfa_sayisi=CASE WHEN excluded.sayfa_sayisi > 0 THEN excluded.sayfa_sayisi ELSE kitaplar.sayfa_sayisi END,
+                    dosya_boyutu=CASE WHEN excluded.dosya_boyutu > 0 THEN excluded.dosya_boyutu ELSE kitaplar.dosya_boyutu END
+            """
+            params: tuple[Any, ...] = (
+                safe_str(data.get("kitap_adi")),
+                safe_str(data.get("yazar")),
+                safe_str(data.get("kategori")),
+                safe_str(data.get("alt_kategori")),
+                safe_str(data.get("ozet")),
+                safe_str(data.get("anahtar_kelimeler")),
+                safe_str(data.get("dosya_adi")),
+                safe_str(data.get("dosya_hash")),
+                safe_str(data.get("dosya_yolu")),
+                1 if data.get("has_cover") else 0,
+                safe_int(data.get("sayfa_sayisi")),
+                safe_int(data.get("dosya_boyutu")),
+            )
+        else:
+            query = """
+                INSERT INTO kitaplar
+                (kitap_adi, yazar, kategori, alt_kategori, ozet, anahtar_kelimeler, dosya_adi, dosya_hash, dosya_yolu, has_cover)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(dosya_hash) DO UPDATE SET
+                    kitap_adi=excluded.kitap_adi,
+                    yazar=excluded.yazar,
+                    kategori=excluded.kategori,
+                    alt_kategori=excluded.alt_kategori,
+                    ozet=excluded.ozet,
+                    anahtar_kelimeler=excluded.anahtar_kelimeler,
+                    dosya_adi=excluded.dosya_adi,
+                    dosya_yolu=excluded.dosya_yolu,
+                    has_cover=excluded.has_cover
+            """
+            params = (
+                safe_str(data.get("kitap_adi")),
+                safe_str(data.get("yazar")),
+                safe_str(data.get("kategori")),
+                safe_str(data.get("alt_kategori")),
+                safe_str(data.get("ozet")),
+                safe_str(data.get("anahtar_kelimeler")),
+                safe_str(data.get("dosya_adi")),
+                safe_str(data.get("dosya_hash")),
+                safe_str(data.get("dosya_yolu")),
+                1 if data.get("has_cover") else 0,
+            )
         await self.conn.execute(query, params)
         await self.conn.commit()
 
@@ -126,6 +187,8 @@ class DocumentRepository:
         sort: str | None = None,
     ) -> dict:
         """Get books with pagination and optional category, search, favorite, collection, and sort filters."""
+        await self._ensure_tr_lower()
+        has_extra = await self._has_page_size_columns()
         cols = [
             "id",
             "kitap_adi",
@@ -142,11 +205,14 @@ class DocumentRepository:
             "sira_numarasi",
             "has_cover",
         ]
+        if has_extra:
+            cols.extend(["sayfa_sayisi", "dosya_boyutu"])
+
         count_query = "SELECT COUNT(*) FROM kitaplar"
         select_query = f"SELECT {', '.join(cols)} FROM kitaplar"
 
         filters = []
-        params = []
+        params: list[Any] = []
         if category and category != "all":
             filters.append("kategori = ?")
             params.append(category)
@@ -161,11 +227,13 @@ class DocumentRepository:
             params.extend(col_params)
 
         if search and search.strip():
-            term = f"%{search.strip()}%"
+            from app.utils import tr_lower
+
+            term = f"%{tr_lower(search.strip())}%"
             filters.append(
-                "(kitap_adi LIKE ? OR yazar LIKE ? OR anahtar_kelimeler LIKE ? OR ozet LIKE ? OR kategori LIKE ?)"
+                "(TR_LOWER(kitap_adi) LIKE ? OR TR_LOWER(yazar) LIKE ? OR TR_LOWER(anahtar_kelimeler) LIKE ? OR TR_LOWER(ozet) LIKE ? OR TR_LOWER(kategori) LIKE ? OR TR_LOWER(dosya_adi) LIKE ?)"
             )
-            params.extend([term, term, term, term, term])
+            params.extend([term, term, term, term, term, term])
 
         if filters:
             where_clause = " WHERE " + " AND ".join(filters)
@@ -176,13 +244,13 @@ class DocumentRepository:
             "sira_asc": "sira_numarasi ASC, ekleme_tarihi DESC",
             "date_desc": "ekleme_tarihi DESC",
             "date_asc": "ekleme_tarihi ASC",
-            "title_asc": "kitap_adi COLLATE NOCASE ASC",
-            "title_desc": "kitap_adi COLLATE NOCASE DESC",
-            "author_asc": "yazar COLLATE NOCASE ASC",
-            "author_desc": "yazar COLLATE NOCASE DESC",
+            "title_asc": "TR_LOWER(kitap_adi) ASC",
+            "title_desc": "TR_LOWER(kitap_adi) DESC",
+            "author_asc": "TR_LOWER(yazar) ASC",
+            "author_desc": "TR_LOWER(yazar) DESC",
             "pages_desc": "okunulan_sayfa DESC",
         }
-        order_clause = allowed_sorts.get(sort, "sira_numarasi ASC, ekleme_tarihi DESC")
+        order_clause = allowed_sorts.get(sort or "", "sira_numarasi ASC, ekleme_tarihi DESC")
         select_query += f" ORDER BY {order_clause} LIMIT ? OFFSET ?"
 
         cursor = await self.conn.execute(count_query, params)
@@ -199,6 +267,8 @@ class DocumentRepository:
                 d = dict(zip(cols, row, strict=False))
             d["has_cover"] = bool(d.get("has_cover", 0))
             d["is_favorite"] = bool(d.get("is_favorite", 0))
+            d["sayfa_sayisi"] = int(d.get("sayfa_sayisi") or 0)
+            d["dosya_boyutu"] = int(d.get("dosya_boyutu") or 0)
             books.append(d)
 
         await self._populate_book_collections(books)
@@ -253,32 +323,38 @@ class DocumentRepository:
         await self.conn.commit()
 
     async def get_collection_books(self, col_id: int) -> list[dict]:
-        """Get all books within a collection."""
+        """Get all books within a static or dynamic smart collection."""
         try:
             target_id = int(col_id)
         except (TypeError, ValueError):
-            target_id = col_id
+            target_id = col_id  # type: ignore[assignment]
 
-        hashes_cur = await self.conn.execute(
-            "SELECT kitap_hash FROM koleksiyon_kitap WHERE koleksiyon_id = ?",
-            (target_id,),
-        )
-        hashes = [r[0] for r in await hashes_cur.fetchall()]
-
-        if not hashes:
+        clauses, params = await self._build_collection_filter(target_id)
+        if not clauses:
             return []
 
-        placeholders = ",".join("?" * len(hashes))
-        query = f"SELECT kitap_adi, yazar, dosya_hash, kategori FROM kitaplar WHERE dosya_hash IN ({placeholders})"
-        cur = await self.conn.execute(query, hashes)
+        where_sql = " AND ".join(clauses)
+        query = (
+            "SELECT kitap_adi, yazar, dosya_hash, dosya_adi, kategori, ozet, ekleme_tarihi, has_cover "
+            f"FROM kitaplar WHERE {where_sql} ORDER BY sira_numarasi ASC, ekleme_tarihi DESC"
+        )
+        cur = await self.conn.execute(query, params)
         return [dict(row) for row in await cur.fetchall()]
 
-    async def update_reading_progress(self, file_hash: str, page: int) -> None:
-        """Update reading progress for a book."""
-        await self.conn.execute(
-            "UPDATE kitaplar SET okunulan_sayfa = ? WHERE dosya_hash = ?",
-            (page, file_hash),
-        )
+    async def update_reading_progress(
+        self, file_hash: str, page: int, total_pages: int | None = None
+    ) -> None:
+        """Update reading progress (and optionally total page count) for a book."""
+        if total_pages and total_pages > 0 and await self._has_page_size_columns():
+            await self.conn.execute(
+                "UPDATE kitaplar SET okunulan_sayfa = ?, sayfa_sayisi = ? WHERE dosya_hash = ?",
+                (page, int(total_pages), file_hash),
+            )
+        else:
+            await self.conn.execute(
+                "UPDATE kitaplar SET okunulan_sayfa = ? WHERE dosya_hash = ?",
+                (page, file_hash),
+            )
         await self.conn.commit()
 
     async def book_exists(self, file_hash: str) -> bool:
@@ -502,23 +578,26 @@ class DocumentRepository:
         if row:
             return row
 
-        # 2. Match sanitized filename variant (e.g. Turkish characters replaced by _)
+        # 2. Match sanitized or ASCII-folded filename variants
         from app.utils import sanitize_filename
 
         sanitized = sanitize_filename(clean_fn)
-        if sanitized and sanitized != clean_fn:
-            cursor = await self.conn.execute(
-                "SELECT dosya_hash, dosya_yolu, dosya_adi FROM kitaplar WHERE dosya_adi = ? COLLATE NOCASE LIMIT 1",
-                (sanitized,),
-            )
-            row = await cursor.fetchone()
-            if row:
-                return row
+        tr_ascii_map = str.maketrans("ğüşöçıİĞÜŞÖÇâîûÂÎÛ", "gusociIGUSOCaiuAIU")
+        ascii_folded = clean_fn.translate(tr_ascii_map)
+        for cand in (sanitized, ascii_folded):
+            if cand and cand != clean_fn:
+                cursor = await self.conn.execute(
+                    "SELECT dosya_hash, dosya_yolu, dosya_adi FROM kitaplar WHERE dosya_adi = ? COLLATE NOCASE LIMIT 1",
+                    (cand,),
+                )
+                row = await cursor.fetchone()
+                if row:
+                    return row
 
         # 3. Match against end of dosya_yolu on disk
         cursor = await self.conn.execute(
-            "SELECT dosya_hash, dosya_yolu, dosya_adi FROM kitaplar WHERE dosya_yolu LIKE ? OR dosya_yolu LIKE ? LIMIT 1",
-            (f"%{clean_fn}", f"%{sanitized}"),
+            "SELECT dosya_hash, dosya_yolu, dosya_adi FROM kitaplar WHERE dosya_yolu LIKE ? OR dosya_yolu LIKE ? OR dosya_yolu LIKE ? LIMIT 1",
+            (f"%{clean_fn}", f"%{sanitized}", f"%{ascii_folded}"),
         )
         return await cursor.fetchone()
 

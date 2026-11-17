@@ -50,8 +50,20 @@
         html = esc(text).replaceAll('\n', '<br>');
       }
 
+      // Protect <pre>, <code>, and <a> blocks from regex citation/filename mutation
+      const protectedBlocks = [];
+      html = html.replace(/<(pre|code|a)\b[^>]*>[\s\S]*?<\/\1>/gi, (m) => {
+        const token = `\x00MDPROT_${protectedBlocks.length}\x00`;
+        protectedBlocks.push(m);
+        return token;
+      });
+
       html = highlightDocReferences(html);
       html = convertPageCitations(html);
+
+      if (protectedBlocks.length > 0) {
+        html = html.replace(/\x00MDPROT_(\d+)\x00/g, (_m, idx) => protectedBlocks[Number(idx)] || '');
+      }
 
       if (window.DOMPurify && typeof window.DOMPurify.sanitize === 'function') {
         return window.DOMPurify.sanitize(html, { ADD_ATTR: ['data-jump-page'] });
@@ -61,22 +73,38 @@
     }
     window.parseMarkdown = parseMarkdown;
 
+    function _safeLsGet(key) {
+      try {
+        return localStorage.getItem(key) || '';
+      } catch (_e) {
+        return '';
+      }
+    }
+
+    function _safeLsSet(key, val) {
+      try {
+        localStorage.setItem(key, val);
+      } catch (_e) {
+        /* Ignore storage error */
+      }
+    }
+
     // --- API & AI HELPERS ---
     function getAISettings() {
       const settings = window.appSettings || {};
-      const provider = settings.ai_provider || localStorage.getItem('ai_provider') || 'gemini';
+      const provider = settings.ai_provider || _safeLsGet('ai_provider') || 'gemini';
       let model = '';
-      if (provider === 'gemini') model = settings.gemini_model || localStorage.getItem('gemini_model') || 'gemini-3.5-flash-lite';
-      else if (provider === 'ollama') model = settings.ollama_model || localStorage.getItem('ollama_model') || '';
-      else if (provider === 'lmstudio') model = settings.lmstudio_model || localStorage.getItem('lmstudio_model') || '';
+      if (provider === 'gemini') model = settings.gemini_model || _safeLsGet('gemini_model') || 'gemini-3.5-flash-lite';
+      else if (provider === 'ollama') model = settings.ollama_model || _safeLsGet('ollama_model') || '';
+      else if (provider === 'lmstudio') model = settings.lmstudio_model || _safeLsGet('lmstudio_model') || '';
 
-      const rawKey = settings.ai_api_key || localStorage.getItem('ai_api_key') || '';
+      const rawKey = settings.ai_api_key || _safeLsGet('ai_api_key') || '';
       const cleanKey = (rawKey.includes('•') || rawKey.startsWith('••') || rawKey === '••••••••') ? '' : rawKey.trim();
 
       return {
         provider: provider,
         apiKey: cleanKey,
-        baseUrl: settings.ai_base_url || localStorage.getItem('ai_base_url') || '',
+        baseUrl: settings.ai_base_url || _safeLsGet('ai_base_url') || '',
         modelName: model
       };
     }
@@ -112,7 +140,8 @@
       if (!signal && options.timeout !== 0) {
         controller = new AbortController();
         signal = controller.signal;
-        const timeoutMs = options.timeout || 35000;
+        const isHeavyEndpoint = /\/api\/(upload|chat|books\/sync|telegram\/|database\/|books\/[^/]+\/(reanalyze|compress|prepare-chat))/.test(String(url));
+        const timeoutMs = options.timeout || (isHeavyEndpoint ? 180000 : 35000);
         timer = setTimeout(() => controller.abort(), timeoutMs);
       }
 
@@ -156,22 +185,22 @@
     function getPreferredModelName(provider) {
       const settings = window.appSettings || {};
       if (provider === 'gemini') {
-        let gm = localStorage.getItem('gemini_model') || settings.gemini_model || 'gemini-3.5-flash-lite';
+        let gm = _safeLsGet('gemini_model') || settings.gemini_model || 'gemini-3.5-flash-lite';
         if (!gm || gm === 'gemini-3.1-flash-lite-preview' || gm === 'gemini-1.5-flash-lite') {
           gm = 'gemini-3.5-flash-lite';
-          localStorage.setItem('gemini_model', gm);
+          _safeLsSet('gemini_model', gm);
         }
         return { value: gm, placeholder: 'gemini-3.5-flash-lite' };
       }
       if (provider === 'ollama') {
         return {
-          value: localStorage.getItem('ollama_model') || settings.ollama_model || '',
+          value: _safeLsGet('ollama_model') || settings.ollama_model || '',
           placeholder: 'Örn: llama3'
         };
       }
       if (provider === 'lmstudio') {
         return {
-          value: localStorage.getItem('lmstudio_model') || settings.lmstudio_model || '',
+          value: _safeLsGet('lmstudio_model') || settings.lmstudio_model || '',
           placeholder: 'Örn: local-model'
         };
       }
@@ -264,7 +293,9 @@
         has_cover: !!row['has_cover'],
         is_favorite: !!row['is_favorite'],
         collections: row['koleksiyonlar'] || [],
-        okunulan_sayfa: Number.parseInt(row['okunulan_sayfa'] || 1, 10)
+        okunulan_sayfa: Number.parseInt(row['okunulan_sayfa'] || 1, 10),
+        sayfa_sayisi: Number.parseInt(row['sayfa_sayisi'] || 0, 10),
+        dosya_boyutu: Number.parseInt(row['dosya_boyutu'] || 0, 10)
       };
     }
 
@@ -370,9 +401,26 @@
       try {
         const response = await apiFetch('/api/upload', {
           method: 'POST',
-          body: formData
+          body: formData,
+          timeout: 180000
         });
-        const result = await response.json();
+        if (!response) {
+          removeUploadingCard(tempId, false);
+          return;
+        }
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          const errMsg = result?.detail || result?.error || `Yükleme reddedildi (${response.status})`;
+          if (typeof showToast === 'function') showToast(errMsg, 'error', 5500);
+          const holder = uploadingCards.get(tempId);
+          if (holder?.card) {
+            holder.card.classList.remove('uploading');
+            holder.card.classList.add('is-upload-error');
+            if (holder.label) holder.label.textContent = errMsg;
+          }
+          setTimeout(() => removeUploadingCard(tempId, false), 3200);
+          return;
+        }
         if (result?.status === 'exists') {
           handleExistingUploadedBook(result.file_hash, tempId);
           return;
@@ -382,21 +430,20 @@
           const placeholderCard = uploadingCards.get(tempId);
           if (placeholderCard) placeholderCard.label.textContent = 'Analiz kuyruğuna girdi...';
 
-          // Sync with any early WebSocket messages
           if (lastActiveTasks[result.task_id] || lastArchivedTasks[result.task_id]) {
             updateUploadCards({ ...lastActiveTasks, ...lastArchivedTasks });
           }
         }
       } catch (error) {
         console.error("Yükleme hatası:", error);
-        addChatMessage('ai', "Sunucuya bağlanılamadı.");
+        if (typeof showToast === 'function') showToast("Dosya yüklenirken sunucu bağlantısı kesildi.", "error");
         const holder = uploadingCards.get(tempId);
         if (holder?.card) {
           holder.card.classList.remove('uploading');
           holder.card.classList.add('is-upload-error');
           if (holder.label) holder.label.textContent = 'Sunucuya bağlanılamadı';
         }
-        removeUploadingCard(tempId, true);
+        setTimeout(() => removeUploadingCard(tempId, false), 3200);
       }
     }
 
@@ -717,8 +764,8 @@
       if (Array.isArray(window.allBooks) && task.filename) {
         const taskFn = task.filename.trim().toLowerCase();
         const alreadyInLibrary = window.allBooks.some(b => {
-          const bDosya = (b.dosya_adi || '').trim().toLowerCase();
-          const bTitle = (b.baslik || '').trim().toLowerCase();
+          const bDosya = (b.file || b.dosya_adi || '').trim().toLowerCase();
+          const bTitle = (b.title || b.baslik || '').trim().toLowerCase();
           return (bDosya && (bDosya === taskFn || taskFn.includes(bDosya))) || (bTitle && bTitle === taskFn);
         });
         if (alreadyInLibrary) return;
@@ -852,8 +899,8 @@
         }
       }
       if (showOnlyFav && !isFav) {
-        card.classList.add('fadeOut');
-        setTimeout(() => card.remove(), 400);
+        card.classList.remove('fadeOut');
+        if (typeof render === 'function') render();
       }
     }
 
@@ -893,6 +940,7 @@
     async function copyCollectionMarkdown(colId, colName) {
       try {
         const res = await apiFetch(`/api/share-collection/${colId}`);
+        if (!res?.ok) throw new Error('Koleksiyon verisi alınamadı');
         const data = await res.json();
         const books = data.kitaplar || [];
         
@@ -928,7 +976,8 @@
             method: 'POST',
             body: formData
           });
-          const result = await res.json();
+          if (!res) return;
+          const result = await res.json().catch(() => ({}));
           if (res.ok) {
             showToast(`Koleksiyon başarıyla içe aktarıldı! (${result.added_books} kitap eşleşti)`, 'success');
             if (typeof loadCollectionsFromAPI === 'function') await loadCollectionsFromAPI();
@@ -1108,7 +1157,7 @@
       if (icon) icon.classList.add('fa-spin');
       try {
         const res = await apiFetch('/api/tasks');
-        if (!res.ok) return;
+        if (!res?.ok) return;
         const data = await res.json();
         window.lastActiveTasks = data.active || {};
         window.lastArchivedTasks = data.archived || {};

@@ -8,14 +8,20 @@
   "display": "standalone",
   "orientation": "any",
   "background_color": "#f4f1eb",
-  "theme_color": "#b8862f",
+  "theme_color": "#5e523f",
   "categories": ["books", "productivity", "utilities"],
   "icons": [
     {
       "src": "/static/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/static/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ]
 }

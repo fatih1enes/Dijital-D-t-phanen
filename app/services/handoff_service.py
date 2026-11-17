@@ -124,7 +124,8 @@ class MiniQR:
             matrix[i][6] = val
             reserved[i][6] = True
 
-        align_pos = 22 if version == 3 else 26
+        align_centers = {3: 22, 4: 26, 5: 30, 6: 34}
+        align_pos = align_centers.get(version, 26)
         self._add_alignment_pattern(matrix, reserved, align_pos - 2, align_pos - 2)
 
         for i in range(9):
@@ -191,13 +192,21 @@ class MiniQR:
         matrix[4 * version + 9][8] = True
 
     def _generate_matrix(self) -> list[list[bool]]:
-        """Construct a valid 29x29 or 33x33 QR matrix with finder patterns and data stream."""
+        """Construct a valid QR matrix (Versions 3-6, ECC Level L) supporting URLs up to 134 bytes."""
         raw_bytes = self.data.encode("utf-8")
-        if len(raw_bytes) > 78:
+        n_bytes = len(raw_bytes)
+        if n_bytes > 134:
             raise ValueError(
-                f"URL/Data too long for MiniQR ({len(raw_bytes)} bytes > max 78 bytes for QR-4L)"
+                f"URL/Data too long for MiniQR ({n_bytes} bytes > max 134 bytes for QR-6L)"
             )
-        version = 3 if len(raw_bytes) <= 53 else 4
+        if n_bytes <= 53:
+            version = 3
+        elif n_bytes <= 78:
+            version = 4
+        elif n_bytes <= 106:
+            version = 5
+        else:
+            version = 6
         matrix_size = 17 + 4 * version
 
         matrix = [[False] * matrix_size for _ in range(matrix_size)]
@@ -262,10 +271,15 @@ class MiniQR:
                         matrix[nr][nc] = is_black
 
     def _encode_bitstream(self, data: bytes, version: int) -> list[bool]:
-        """Encode byte data into QR bitstream with Reed-Solomon parity codewords."""
-        total_codewords = 70 if version == 3 else 100
-        data_codewords_count = 55 if version == 3 else 80
-        ec_codewords_count = total_codewords - data_codewords_count
+        """Encode byte data into QR bitstream with Reed-Solomon parity codewords (Versions 3-6L)."""
+        specs = {
+            3: (70, 55, 1),
+            4: (100, 80, 1),
+            5: (134, 108, 1),
+            6: (172, 136, 2),
+        }
+        total_codewords, data_codewords_count, num_blocks = specs[version]
+        ec_per_block = (total_codewords - data_codewords_count) // num_blocks
 
         # Mode indicator: 0100 for Byte mode (4 bits)
         bits_str = "0100"
@@ -290,9 +304,22 @@ class MiniQR:
             data_bytes.append(0xEC if pad_toggle else 0x11)
             pad_toggle = not pad_toggle
 
-        # Reed-Solomon Error Correction computation
-        ec_bytes = self._calculate_reed_solomon(data_bytes, ec_codewords_count)
-        all_bytes = data_bytes + ec_bytes
+        if num_blocks == 1:
+            ec_bytes = self._calculate_reed_solomon(data_bytes, ec_per_block)
+            all_bytes = data_bytes + ec_bytes
+        else:
+            block_len = data_codewords_count // num_blocks
+            data_blocks = [
+                data_bytes[i * block_len : (i + 1) * block_len] for i in range(num_blocks)
+            ]
+            ec_blocks = [self._calculate_reed_solomon(blk, ec_per_block) for blk in data_blocks]
+            all_bytes = bytearray()
+            for col in range(block_len):
+                for b_idx in range(num_blocks):
+                    all_bytes.append(data_blocks[b_idx][col])
+            for col in range(ec_per_block):
+                for b_idx in range(num_blocks):
+                    all_bytes.append(ec_blocks[b_idx][col])
 
         # Convert back to boolean bits
         out_bits: list[bool] = []

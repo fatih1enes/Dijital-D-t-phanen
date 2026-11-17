@@ -1,4 +1,4 @@
-
+@layer legacy {
     /* Tooltip Styling */
     .tooltip-wrap {
       position: relative;
@@ -36,7 +36,7 @@
       pointer-events: none;
       opacity: 0;
       visibility: hidden;
-      transition: color var(--t-ui) var(--ease-out), background-color var(--t-ui) var(--ease-out), border-color var(--t-ui) var(--ease-out), opacity var(--t-ui) var(--ease-out), transform var(--t-ui) var(--ease-out);
+      transition: opacity var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out), visibility 0s linear var(--t-micro);
       box-shadow: 0 10px 30px rgba(0,0,0,0.4);
       z-index: 9999;
       font-family: 'Geist', sans-serif;
@@ -503,7 +503,6 @@
     }
 
     html {
-      scroll-behavior: smooth;
       overflow-x: hidden;
     }
 
@@ -694,25 +693,30 @@
 
     .bulk-bar {
       position: fixed;
-      bottom: -100px;
+      bottom: max(1.5rem, calc(1rem + env(safe-area-inset-bottom, 0px)));
       left: 50%;
-      transform: translateX(-50%);
-      background: var(--modal-bg);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translate3d(-50%, calc(100% + 2.5rem), 0);
+      background: var(--surface);
       border: 1px solid var(--accent);
-      border-radius: 6px;
+      border-radius: 8px;
       padding: 0.8rem 1.5rem;
       display: flex;
       align-items: center;
       gap: 1.5rem;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
       z-index: 2500;
-      transition: color var(--t-ui) var(--ease-spring), background-color var(--t-ui) var(--ease-spring), border-color var(--t-ui) var(--ease-spring), opacity var(--t-ui) var(--ease-spring), transform var(--t-ui) var(--ease-spring);
-      backdrop-filter: blur(16px);
+      transition: opacity var(--t-ui) var(--ease-out), transform var(--t-ui) var(--ease-spring), visibility 0s linear var(--t-ui);
     }
 
     .bulk-bar.active {
-      bottom: 2rem;
-      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translate3d(-50%, 0, 0);
+      transition: opacity var(--t-ui) var(--ease-out), transform var(--t-ui) var(--ease-spring), visibility 0s linear 0s;
     }
 
     #bulk-count {
@@ -805,7 +809,6 @@
     #table-body tr.stagger-in {
       animation: fadeSlideUp var(--t-page) var(--ease-out);
       animation-delay: calc(var(--card-index, 0) * 30ms);
-      will-change: transform, opacity;
     }
 
     .book-card::before {
@@ -820,7 +823,6 @@
     }
 
     .book-card:hover {
-      will-change: transform;
       transform: translateY(-6px) scale(1.008);
       box-shadow: 0 16px 36px -6px var(--shadow-color), 0 0 0 1px var(--accent-glow);
       border-color: rgba(110,97,76, 0.35);
@@ -869,7 +871,7 @@
 
     .book-card.selected .selection-indicator::after {
       content: '\f00c';
-      font-family: 'Font Awesome 5 Free', sans-serif;
+      font-family: 'Font Awesome 6 Free', 'Font Awesome 5 Free', sans-serif;
       font-weight: 900;
       color: #fff;
       font-size: 0.7rem;
@@ -5328,7 +5330,7 @@
     }
 
     .chat-ai .chat-msg-avatar i {
-      animation: sparkleRotate 6s linear infinite;
+      animation: none;
     }
 
     .chat-user .chat-msg-avatar {
@@ -5796,7 +5798,7 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      transition: color var(--t-ui) var(--ease-out), background-color var(--t-ui) var(--ease-out), border-color var(--t-ui) var(--ease-out), opacity var(--t-ui) var(--ease-out), transform var(--t-ui) var(--ease-out);
+      transition: width var(--t-ui) var(--ease-out), border-color var(--t-ui) var(--ease-out);
       flex-shrink: 0;
       z-index: 5;
     }
@@ -5814,7 +5816,7 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      transition: color var(--t-ui) var(--ease-out), background-color var(--t-ui) var(--ease-out), border-color var(--t-ui) var(--ease-out), opacity var(--t-ui) var(--ease-out), transform var(--t-ui) var(--ease-out);
+      transition: width var(--t-ui) var(--ease-out), border-color var(--t-ui) var(--ease-out);
       flex-shrink: 0;
       z-index: 5;
     }
@@ -6016,15 +6018,16 @@
       padding: 2rem 1.5rem;
       display: flex;
       flex-direction: column;
-      align-items: center;
       position: relative;
-      scroll-behavior: smooth;
       gap: 24px;
+      overscroll-behavior: contain;
     }
 
     .pdf-page-wrapper {
       position: relative;
       flex-shrink: 0;
+      margin: 0 auto;
+      box-sizing: content-box;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
       background: #fff;
       border-radius: 4px;
@@ -6267,7 +6270,6 @@
       box-shadow: 0 4px 10px var(--accent-glow);
       z-index: 10;
       transition: color var(--t-micro) var(--ease-out), background-color var(--t-micro) var(--ease-out), border-color var(--t-micro) var(--ease-out), opacity var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out);
-      animation: notePulse 2s infinite;
     }
 
     .sticky-note-marker:hover {
@@ -6516,7 +6518,7 @@
       background-color: rgba(184,134,47, 0.85);
       border: 1.5px solid #b8862f;
       box-shadow: 0 0 10px rgba(184,134,47, 0.6);
-      animation: searchHighlightPulse 1.2s infinite;
+      animation: searchHighlightPulse 0.9s var(--ease-out) 2;
       z-index: 6;
     }
 
@@ -6831,7 +6833,7 @@
       color: #fff;
     }
 
-    /* ── Desktop Workspace Header Overflow Prevention (Screens 860px - 1150px) ── */
+    /* ── Desktop Workspace Header Overflow Prevention (Screens 861px - 1150px) ── */
     @media (max-width: 1150px) {
       .workspace-header {
         padding: 0 0.8rem;
@@ -6846,14 +6848,11 @@
         text-overflow: ellipsis;
         font-size: 0.95rem;
       }
-      #workspace-book-banner .banner-content {
-        display: none !important;
-      }
       #workspace-status-badge #workspace-status-text {
-        display: none !important;
+        display: none;
       }
       .btn-workspace-action span {
-        display: none !important;
+        display: none;
       }
     }
 
@@ -6866,353 +6865,337 @@
     }
 
     /* ═════════════════════════════════════════════════════════════
-       DEDICATED PURE MOBILE E-READER EXPERIENCE
-       (Full-Screen Immersive Canvas + Floating Top/Bottom Bars + Sheets)
+       DEDICATED PURE MOBILE E-READER EXPERIENCE (<= 860px)
+       Zero `!important` cascade inversions so inline touch-drag & a11y work!
        ═════════════════════════════════════════════════════════════ */
     @media (max-width: 860px) {
-      /* Hide desktop top header and desktop toolbar entirely */
-      .workspace-reader .workspace-header {
-        display: none !important;
-      }
-      .workspace-reader .pdf-toolbar {
-        display: none !important;
-      }
+      .workspace-reader .workspace-header,
+      .workspace-reader .pdf-toolbar,
       .workspace-reader .workspace-resize-handle {
-        display: none !important;
+        display: none;
       }
 
-      /* Fixed fullscreen container */
       .workspace-reader {
-        position: fixed !important;
-        inset: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        height: 100dvh !important;
-        overflow: hidden !important;
-        background: var(--paper) !important;
-        z-index: 5000 !important;
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh;
+        overflow: hidden;
+        background: var(--paper);
+        z-index: 5000;
       }
 
       .workspace-content {
-        position: absolute !important;
-        inset: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        overflow: hidden !important;
-        display: block !important;
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        display: block;
       }
 
+      /* Release container-type containment on mobile so fixed sidebars stack above top/bottom bars */
       .workspace-pdf-pane {
-        position: absolute !important;
-        inset: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        min-width: 100% !important;
-        max-width: 100% !important;
-        flex: none !important;
-        overflow: hidden !important;
-        background: var(--paper) !important;
+        container-type: normal;
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        min-width: 100%;
+        max-width: 100%;
+        flex: none;
+        overflow: hidden;
+        background: var(--paper);
       }
 
-      .custom-pdf-viewer {
-        position: absolute !important;
-        inset: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        overflow: hidden !important;
-        display: block !important;
-      }
-
+      .custom-pdf-viewer,
       .pdf-viewer-body {
-        position: absolute !important;
-        inset: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        overflow: hidden !important;
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        display: block;
       }
 
-      /* PDF Canvas Container: clean full-screen scroll with safe padding */
+      /* PDF Canvas Container: supports horizontal panning when zoomed in while preserving textLayer sync */
       .pdf-canvas-container {
-        position: absolute !important;
-        inset: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-        padding: 58px 6px 96px 6px !important;
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        -webkit-overflow-scrolling: touch !important;
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        overflow-x: auto;
+        padding: 58px 6px 96px 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        -webkit-overflow-scrolling: touch;
       }
 
       .pdf-page-wrapper {
-        margin: 0 auto 16px auto !important;
-        max-width: 100% !important;
-        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08) !important;
-        border-radius: 4px !important;
+        margin: 0 auto;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+        border-radius: 4px;
       }
 
       .pdf-page-wrapper canvas {
-        max-width: 100% !important;
-        height: auto !important;
-        display: block !important;
+        display: block;
       }
 
       /* ── FLOATING MOBILE TOP APP BAR ── */
       .mobile-reader-top-bar {
-        display: flex !important;
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        height: 48px !important;
-        padding: 0 10px !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        gap: 8px !important;
-        background: color-mix(in srgb, var(--paper) 90%, transparent) !important;
-        backdrop-filter: blur(20px) saturate(180%) !important;
-        -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-        border-bottom: 1px solid var(--line) !important;
-        z-index: 5020 !important;
-        transition: transform 0.28s var(--ease-out), opacity 0.25s ease !important;
-        transform: translateY(0) !important;
+        display: flex;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 48px;
+        padding: 0 10px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        background: color-mix(in srgb, var(--paper) 92%, transparent);
+        backdrop-filter: blur(16px) saturate(160%);
+        -webkit-backdrop-filter: blur(16px) saturate(160%);
+        border-bottom: 1px solid var(--line);
+        z-index: 5020;
+        transition: transform 0.26s var(--ease-out), opacity 0.22s ease;
+        transform: translateY(0);
       }
 
       .mobile-bar-btn {
-        width: 36px !important;
-        height: 36px !important;
-        min-width: 36px !important;
-        border-radius: 50% !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        border: 1px solid var(--line) !important;
-        background: var(--paper-dark) !important;
-        color: var(--ink) !important;
-        cursor: pointer !important;
-        font-size: 0.9rem !important;
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--line);
+        background: var(--paper-dark);
+        color: var(--ink);
+        cursor: pointer;
+        font-size: 0.9rem;
       }
 
       .mobile-reader-title-wrap {
-        flex: 1 1 auto !important;
-        min-width: 0 !important;
-        text-align: center !important;
+        flex: 1 1 auto;
+        min-width: 0;
+        text-align: center;
       }
 
       .mobile-reader-book-title {
-        font-family: 'Instrument Serif', Georgia, serif !important;
-        font-size: 1rem !important;
-        font-weight: 600 !important;
-        color: var(--ink) !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        margin: 0 !important;
+        font-family: 'Instrument Serif', Georgia, serif;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--ink);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin: 0;
       }
 
       .mobile-reader-top-actions {
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 6px !important;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
       }
 
       .mobile-ai-pill {
-        border-radius: 999px !important;
-        width: auto !important;
-        padding: 0 10px !important;
-        gap: 4px !important;
-        font-size: 0.78rem !important;
-        font-weight: 700 !important;
-        background: var(--accent-light) !important;
-        color: var(--accent) !important;
-        border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent) !important;
+        border-radius: 999px;
+        width: auto;
+        padding: 0 10px;
+        gap: 4px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        background: var(--accent-light);
+        color: var(--accent);
+        border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
       }
 
       /* ── FLOATING MOBILE BOTTOM BAR ── */
       .mobile-reader-bottom-bar {
-        display: flex !important;
-        position: fixed !important;
-        bottom: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        padding: 6px 12px calc(6px + env(safe-area-inset-bottom, 0px)) 12px !important;
-        flex-direction: column !important;
-        gap: 4px !important;
-        background: color-mix(in srgb, var(--paper) 92%, transparent) !important;
-        backdrop-filter: blur(20px) saturate(180%) !important;
-        -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-        border-top: 1px solid var(--line) !important;
-        box-shadow: 0 -6px 25px rgba(0, 0, 0, 0.08) !important;
-        z-index: 5020 !important;
-        transition: transform 0.28s var(--ease-out), opacity 0.25s ease !important;
-        transform: translateY(0) !important;
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 6px 12px calc(6px + env(safe-area-inset-bottom, 0px)) 12px;
+        flex-direction: column;
+        gap: 4px;
+        background: color-mix(in srgb, var(--paper) 94%, transparent);
+        backdrop-filter: blur(16px) saturate(160%);
+        -webkit-backdrop-filter: blur(16px) saturate(160%);
+        border-top: 1px solid var(--line);
+        box-shadow: 0 -6px 25px rgba(0, 0, 0, 0.08);
+        z-index: 5020;
+        transition: transform 0.26s var(--ease-out), opacity 0.22s ease;
+        transform: translateY(0);
       }
 
-      /* Scrubber Stepper Row */
       .mobile-scrubber-row {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        padding: 0 4px !important;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 4px;
       }
 
       .mobile-scrub-btn {
-        width: 38px !important;
-        height: 32px !important;
-        border-radius: 8px !important;
-        border: 1px solid var(--line) !important;
-        background: var(--paper-dark) !important;
-        color: var(--ink) !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        cursor: pointer !important;
+        width: 38px;
+        height: 32px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: var(--paper-dark);
+        color: var(--ink);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
       }
 
       .mobile-scrub-indicator {
-        font-family: 'Geist Mono', monospace !important;
-        font-size: 0.85rem !important;
-        font-weight: 600 !important;
-        color: var(--ink) !important;
-        cursor: pointer !important;
-        padding: 4px 14px !important;
-        border-radius: 999px !important;
-        background: var(--paper-dark) !important;
-        border: 1px solid var(--line) !important;
+        font-family: 'Geist Mono', monospace;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--ink);
+        cursor: pointer;
+        padding: 4px 14px;
+        border-radius: 999px;
+        background: var(--paper-dark);
+        border: 1px solid var(--line);
       }
 
-      /* Navigation Tabs Row */
       .mobile-nav-tabs {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: space-around !important;
-        padding-top: 2px !important;
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        padding-top: 2px;
       }
 
       .mobile-tab-btn {
-        flex: 1 1 0px !important;
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        gap: 3px !important;
-        border: none !important;
-        background: transparent !important;
-        color: var(--ink) !important;
-        font-size: 0.68rem !important;
-        font-weight: 500 !important;
-        padding: 4px 0 !important;
-        cursor: pointer !important;
+        flex: 1 1 0px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        border: none;
+        background: transparent;
+        color: var(--ink);
+        font-size: 0.68rem;
+        font-weight: 500;
+        padding: 4px 0;
+        cursor: pointer;
       }
 
       .mobile-tab-btn i {
-        font-size: 1.1rem !important;
-        color: var(--accent) !important;
+        font-size: 1.1rem;
+        color: var(--accent);
       }
 
       /* ── IMMERSIVE FULL-SCREEN MODE (Controls Hidden on Tap) ── */
       .workspace-reader.controls-hidden .mobile-reader-top-bar {
-        transform: translateY(-110%) !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
+        transform: translateY(-110%);
+        opacity: 0;
+        pointer-events: none;
       }
 
       .workspace-reader.controls-hidden .mobile-reader-bottom-bar {
-        transform: translateY(115%) !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
+        transform: translateY(115%);
+        opacity: 0;
+        pointer-events: none;
       }
 
       /* ── BACKDROP & SHEETS ── */
       .mobile-chat-backdrop {
-        display: block !important;
-        position: fixed !important;
-        inset: 0 !important;
-        background: rgba(0, 0, 0, 0.45) !important;
-        backdrop-filter: blur(2px) !important;
-        -webkit-backdrop-filter: blur(2px) !important;
-        z-index: 999990 !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-        transition: opacity 0.28s var(--ease-out) !important;
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.48);
+        z-index: 5040;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s var(--ease-out);
       }
 
       .mobile-chat-backdrop.active {
-        opacity: 1 !important;
-        pointer-events: auto !important;
+        opacity: 1;
+        pointer-events: auto;
       }
 
-      /* AI Chat Bottom Sheet */
       .workspace-chat-pane {
-        position: fixed !important;
-        bottom: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        width: 100vw !important;
-        max-width: 100vw !important;
-        min-width: 100vw !important;
-        height: 80vh !important;
-        height: 80dvh !important;
-        max-height: 85vh !important;
-        background: var(--paper) !important;
-        border-radius: 20px 20px 0 0 !important;
-        border: 1px solid var(--line) !important;
-        border-bottom: none !important;
-        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.28) !important;
-        z-index: 999999 !important;
-        display: flex !important;
-        flex-direction: column !important;
-        transform: translateY(0) !important;
-        transition: transform var(--t-ui) var(--ease-out), opacity var(--t-ui) var(--ease-out) !important;
-        opacity: 1 !important;
-        pointer-events: auto !important;
-        flex: none !important;
-        overflow: hidden !important;
+        container-type: normal;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100vw;
+        max-width: 100vw;
+        min-width: 100vw;
+        height: 80vh;
+        height: 80dvh;
+        max-height: 85vh;
+        background: var(--surface);
+        border-radius: 20px 20px 0 0;
+        border: 1px solid var(--line);
+        border-bottom: none;
+        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.28);
+        z-index: 5060;
+        display: flex;
+        flex-direction: column;
+        transform: translateY(0);
+        transition: transform var(--t-ui) var(--ease-spring), opacity var(--t-ui) var(--ease-out);
+        opacity: 1;
+        pointer-events: auto;
+        flex: none;
+        overflow: hidden;
       }
 
       .workspace-chat-pane.collapsed {
-        transform: translateY(105%) !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
+        transform: translateY(105%);
+        opacity: 0;
+        pointer-events: none;
+        width: 100vw;
+        max-width: 100vw;
+        min-width: 100vw;
       }
 
       .btn-close-mobile-sheet {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        width: 32px !important;
-        height: 32px !important;
-        border-radius: 50% !important;
-        background: var(--paper-dark) !important;
-        border: 1px solid var(--line) !important;
-        color: var(--ink) !important;
-        cursor: pointer !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--paper-dark);
+        border: 1px solid var(--line);
+        color: var(--ink);
+        cursor: pointer;
       }
 
-      /* Appearance Sheet */
       .mobile-appearance-sheet {
-        position: fixed !important;
-        bottom: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        width: 100vw !important;
-        max-width: 100vw !important;
-        background: var(--paper) !important;
-        border-radius: 20px 20px 0 0 !important;
-        border: 1px solid var(--line) !important;
-        border-bottom: none !important;
-        box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.3) !important;
-        z-index: 999999 !important;
-        display: flex !important;
-        flex-direction: column !important;
-        transform: translateY(105%) !important;
-        transition: transform 0.3s var(--ease-out) !important;
-        padding-bottom: max(14px, env(safe-area-inset-bottom)) !important;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100vw;
+        max-width: 100vw;
+        background: var(--surface);
+        border-radius: 20px 20px 0 0;
+        border: 1px solid var(--line);
+        border-bottom: none;
+        box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.3);
+        z-index: 5060;
+        display: flex;
+        flex-direction: column;
+        transform: translateY(105%);
+        transition: transform 0.28s var(--ease-out);
+        padding-bottom: max(14px, env(safe-area-inset-bottom));
       }
 
       .mobile-appearance-sheet.open {
-        transform: translateY(0) !important;
+        transform: translateY(0);
       }
 
       .mobile-sheet-drag-handle {
@@ -7334,24 +7317,25 @@
         gap: 8px;
       }
 
-      /* TOC and Notes Sidebars on Mobile: 85% width sliding drawers */
+      /* TOC and Notes Sidebars on Mobile: 85% width sliding drawers above top bar */
       .pdf-notes-sidebar,
       .pdf-toc-sidebar {
-        position: fixed !important;
-        top: 0 !important;
-        bottom: 0 !important;
-        left: 0 !important;
-        width: 85% !important;
-        max-width: 320px !important;
-        z-index: 999999 !important;
-        box-shadow: 0 0 35px rgba(0, 0, 0, 0.3) !important;
-        transform: translateX(-105%) !important;
-        transition: transform 0.28s var(--ease-out) !important;
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 85%;
+        max-width: 320px;
+        z-index: 5065;
+        box-shadow: 0 0 35px rgba(0, 0, 0, 0.3);
+        transform: translateX(-105%);
+        transition: transform 0.26s var(--ease-out);
       }
 
       .pdf-notes-sidebar.open,
       .pdf-toc-sidebar.open {
-        transform: translateX(0) !important;
+        width: 85%;
+        transform: translateX(0);
       }
     }
 
@@ -7366,7 +7350,7 @@
     }
 
     .pdf-spread-row .pdf-page-wrapper {
-      margin-bottom: 0;
+      margin: 0;
       transition: transform var(--t-micro) var(--ease-out);
     }
 
@@ -7389,5 +7373,6 @@
     [data-theme="dark"] .pdf-spread-row .pdf-page-wrapper.spread-right {
       box-shadow: 8px 12px 28px rgba(0, 0, 0, 0.4), inset 4px 0 10px rgba(0, 0, 0, 0.2);
     }
+}
 
 

@@ -894,6 +894,8 @@
       }
 
       if (logs.length > 0) {
+        const lastLog = logs[logs.length - 1];
+        const lastLogSig = `${lastLog?.ts || ''}|${lastLog?.msg || ''}`;
         let details = card.querySelector('.ops-log-details');
         if (!details) {
           const isOpen = _shouldDetailsBeOpen(t.id, logs.length, null);
@@ -901,7 +903,7 @@
           details = _createOpsElementFromHtml(`
             <details class="ops-log-details" data-task-id="${esc(t.id)}" ${isOpen ? 'open' : ''}>
               <summary><i class="fas fa-list-ul"></i> <span class="ops-log-summary-text">İşlem Günlüğü (${logs.length})</span></summary>
-              <div class="ops-log-stream" data-rendered-count="${logs.length}">${visibleLogs.map(_renderStreamLineHtml).join('')}</div>
+              <div class="ops-log-stream" data-rendered-count="${logs.length}" data-last-log-sig="${esc(lastLogSig)}">${visibleLogs.map(_renderStreamLineHtml).join('')}</div>
             </details>
           `);
           if (details) card.appendChild(details);
@@ -914,10 +916,11 @@
           const stream = details.querySelector('.ops-log-stream');
           if (stream) {
             const prevCount = Number(stream.dataset.renderedCount || 0);
+            const prevSig = stream.dataset.lastLogSig || '';
             const wasNearBottom = (stream.scrollHeight - stream.scrollTop - stream.clientHeight) < 20;
             const prevStreamScroll = stream.scrollTop;
 
-            if (logs.length < prevCount) {
+            if (logs.length < prevCount || (logs.length === prevCount && prevSig !== lastLogSig)) {
               stream.innerHTML = logs.slice(-24).map(_renderStreamLineHtml).join('');
             } else if (logs.length > prevCount) {
               const delta = logs.slice(prevCount);
@@ -930,6 +933,7 @@
               }
             }
             stream.dataset.renderedCount = String(logs.length);
+            stream.dataset.lastLogSig = lastLogSig;
             if (wasNearBottom) {
               stream.scrollTop = stream.scrollHeight;
             } else {

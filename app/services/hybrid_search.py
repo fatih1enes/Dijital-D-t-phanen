@@ -1,8 +1,11 @@
 """Hybrid Search Engine combining SQLite FTS5 (BM25) and Vector Search with RRF."""
 
+import asyncio
 import html
 import re
 from typing import Any
+
+import numpy as np
 
 from app.database import DatabaseManager
 from app.logger import log_event
@@ -159,27 +162,67 @@ class HybridSearchEngine:
 
             cursor = await db.conn.execute(sql, params)
             rows = await cursor.fetchall()
-            scored: list[dict[str, Any]] = []
+            if not rows:
+                return []
 
-            for r in rows:
-                emb_blob = r[5]
-                if not emb_blob:
-                    continue
-                vec = deserialize_vector(emb_blob)
-                sim = cosine_similarity(query_vector, vec)
-                scored.append(
-                    {
-                        "id": r[0],
-                        "dosya_hash": r[1],
-                        "sayfa_no": r[2],
-                        "chunk_index": r[3],
-                        "metin": r[4],
-                        "vector_score": sim,
-                    }
-                )
+            def _score_rows_vectorized() -> list[dict[str, Any]]:
+                q_arr = np.asarray(query_vector, dtype=np.float32)
+                q_norm = float(np.linalg.norm(q_arr))
+                if q_norm < 1e-12:
+                    return []
+                q_unit = q_arr / q_norm
+                dim = len(q_unit)
 
-            scored.sort(key=lambda x: x["vector_score"], reverse=True)
-            return scored[:limit]
+                valid_rows = []
+                blobs = []
+                fallback_scored: list[dict[str, Any]] = []
+                expected_bytes = dim * 4
+
+                for r in rows:
+                    emb_blob = r[5]
+                    if not emb_blob:
+                        continue
+                    if len(emb_blob) == expected_bytes:
+                        valid_rows.append(r)
+                        blobs.append(np.frombuffer(emb_blob, dtype=np.float32))
+                    else:
+                        vec = deserialize_vector(emb_blob)
+                        if len(vec) == dim:
+                            sim = cosine_similarity(q_unit, vec)
+                            fallback_scored.append(
+                                {
+                                    "id": r[0],
+                                    "dosya_hash": r[1],
+                                    "sayfa_no": r[2],
+                                    "chunk_index": r[3],
+                                    "metin": r[4],
+                                    "vector_score": sim,
+                                }
+                            )
+
+                scored: list[dict[str, Any]] = list(fallback_scored)
+                if blobs:
+                    mat = np.vstack(blobs)
+                    norms = np.linalg.norm(mat, axis=1)
+                    safe_norms = np.where(norms < 1e-12, 1.0, norms)
+                    sims = (mat @ q_unit) / safe_norms
+                    sims = np.where(norms < 1e-12, 0.0, sims)
+                    for r, sim_val in zip(valid_rows, sims.tolist(), strict=False):
+                        scored.append(
+                            {
+                                "id": r[0],
+                                "dosya_hash": r[1],
+                                "sayfa_no": r[2],
+                                "chunk_index": r[3],
+                                "metin": r[4],
+                                "vector_score": float(sim_val),
+                            }
+                        )
+
+                scored.sort(key=lambda x: x["vector_score"], reverse=True)
+                return scored[:limit]
+
+            return await asyncio.to_thread(_score_rows_vectorized)
         except Exception as e:
             log_event("database", "WARNING", f"Vektör arama uyarısı: {e}")
             return []

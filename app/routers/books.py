@@ -47,7 +47,6 @@ from app.models import (
     SaveProgressRequest,
 )
 from app.pdf import prepare_cover_image
-from app.tasks import active_tasks
 from app.utils import (
     get_file_hash_from_path,
     is_path_within,
@@ -181,9 +180,11 @@ async def get_books(
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
     response.headers["Pragma"] = "no-cache"
     response.headers["Expires"] = "0"
-    offset = (page - 1) * limit
+    safe_page = max(1, page)
+    safe_limit = max(1, min(1000, limit))
+    offset = (safe_page - 1) * safe_limit
     return await db.get_all_books(
-        limit=limit,
+        limit=safe_limit,
         offset=offset,
         category=category,
         search=search,
@@ -207,7 +208,8 @@ async def deep_search(
     clean_q = str(q or "").strip()
     if not clean_q:
         return {"query": "", "total_matches": 0, "results": []}
-    results = await hybrid_search_engine.deep_search_pages(db, query=clean_q, limit=limit)
+    safe_limit = max(1, min(100, limit))
+    results = await hybrid_search_engine.deep_search_pages(db, query=clean_q, limit=safe_limit)
     return {"query": clean_q, "total_matches": len(results), "results": results}
 
 
@@ -306,7 +308,9 @@ async def upload_pdf(
             }
         ],
     }
-    active_tasks[task_id] = task_entry
+    from app.tasks import register_task
+
+    register_task(task_id, task_entry)
 
     log_event(
         "upload",
@@ -404,9 +408,23 @@ async def sync_library(
             shutil.copy2(src_path, tmp.name)
             return tmp.name
 
+    # Pre-fetch existing normalized paths to skip redundant SHA-256 hashing of already-indexed files
+    path_cur = await db.conn.execute("SELECT dosya_yolu FROM kitaplar WHERE dosya_yolu IS NOT NULL")
+    existing_paths = {
+        os.path.normcase(os.path.realpath(os.path.abspath(r[0])))
+        for r in await path_cur.fetchall()
+        if r[0]
+    }
+
+    from app.tasks import register_task
+
     enqueued_count = 0
     for file_path in scanned_files:
         if _is_ignorable_sync_file(file_path):
+            continue
+
+        norm_candidate = os.path.normcase(os.path.realpath(os.path.abspath(file_path)))
+        if norm_candidate in existing_paths:
             continue
 
         try:
@@ -419,22 +437,25 @@ async def sync_library(
 
             filename = os.path.basename(file_path)
             task_id = str(uuid.uuid4())
-            active_tasks[task_id] = {
-                "filename": filename,
-                "status": "processing",
-                "percentage": 0,
-                "log_message": "Kuyrukta bekliyor...",
-                "last_update": time.time(),
-                "logs": [
-                    {
-                        "ts": time.time(),
-                        "message": "Dosya tarama sonucu kuyruğa alındı...",
-                        "status": "processing",
-                        "state": "pending",
-                        "pct": 0,
-                    }
-                ],
-            }
+            register_task(
+                task_id,
+                {
+                    "filename": filename,
+                    "status": "processing",
+                    "percentage": 0,
+                    "log_message": "Kuyrukta bekliyor...",
+                    "last_update": time.time(),
+                    "logs": [
+                        {
+                            "ts": time.time(),
+                            "message": "Dosya tarama sonucu kuyruğa alındı...",
+                            "status": "processing",
+                            "state": "pending",
+                            "pct": 0,
+                        }
+                    ],
+                },
+            )
 
             await request.app.state.task_queue.enqueue(
                 {
@@ -460,17 +481,26 @@ async def sync_library(
     return {"status": "success", "enqueued_count": enqueued_count}
 
 
-@router.delete("/books/{file_hash}")
+@router.delete(
+    "/books/{file_hash}",
+    responses={409: {"description": "Dosya başka bir işlem tarafından kullanılıyor"}},
+)
 async def delete_book(
     file_hash: str, request: Request, db: DatabaseManager = Depends(get_db)
 ) -> dict:
     """Delete book endpoint."""
     file_hash = validate_file_hash(file_hash)
     _ensure_authorized(request)
-    await db.delete_book(file_hash)
     from app.services.session_manager import book_session_manager
 
-    book_session_manager.clear_session(file_hash)
+    await asyncio.to_thread(book_session_manager.clear_session, file_hash)
+    try:
+        await db.delete_book(file_hash)
+    except PermissionError as lock_err:
+        raise HTTPException(
+            status_code=409,
+            detail="Kitap dosyası başka bir işlem tarafından kullanıldığı için şu an silinemiyor.",
+        ) from lock_err
     from app.event_bus import BookDeletedEvent, event_bus
 
     await event_bus.publish(BookDeletedEvent(file_hash=file_hash))
@@ -667,8 +697,8 @@ async def toggle_favorite(
 )
 async def download_book(
     file_hash: str, request: Request, db: DatabaseManager = Depends(get_db)
-) -> FileResponse:
-    """Download book endpoint."""
+) -> Response:
+    """Download/stream book endpoint with ETag 304 and HTTP Range support."""
     file_hash = validate_file_hash(file_hash)
     _ensure_authorized(request)
     row = await db.get_book_path(file_hash)
@@ -689,6 +719,19 @@ async def download_book(
     if not os.path.exists(safe_path):
         raise HTTPException(status_code=404, detail="File not found on disk")
 
+    stat_res = os.stat(safe_path)
+    etag = f'"{file_hash[:16]}-{stat_res.st_mtime_ns:x}-{stat_res.st_size:x}"'
+    inm = request.headers.get("if-none-match", "")
+    if inm and etag in inm and not request.headers.get("range"):
+        return Response(
+            status_code=304,
+            headers={
+                "ETag": etag,
+                "Cache-Control": "private, max-age=3600",
+                "Accept-Ranges": "bytes",
+            },
+        )
+
     media_type = "application/pdf"
     lower_path = safe_path.lower()
     if lower_path.endswith(EXT_EPUB):
@@ -699,8 +742,57 @@ async def download_book(
     return FileResponse(
         safe_path,
         media_type=media_type,
-        headers={"Content-Disposition": f"inline; filename*=utf-8''{quote(name)}"},
+        headers={
+            "Content-Disposition": f"inline; filename*=utf-8''{quote(name)}",
+            "Accept-Ranges": "bytes",
+            "ETag": etag,
+            "Cache-Control": "private, max-age=3600",
+        },
     )
+
+
+@router.get(
+    "/books/{file_hash}/reader-content",
+    responses={
+        400: {"description": "Yalnızca EPUB ve TXT belgeleri için yapılandırılmış metin döner"},
+        404: {"description": "Kitap veya dosya bulunamadı"},
+    },
+)
+async def get_reader_content(
+    file_hash: str, request: Request, db: DatabaseManager = Depends(get_db)
+) -> dict:
+    """Return structured paginated pages and TOC for in-browser EPUB and TXT reading."""
+    file_hash = validate_file_hash(file_hash)
+    _ensure_authorized(request)
+    row = await db.get_book_path(file_hash)
+    if not row:
+        raise HTTPException(status_code=404, detail=ERR_BOOK_NOT_FOUND)
+
+    path, name = row
+    safe_path = os.path.realpath(os.path.abspath(path))
+    if not is_path_within(LIBRARY_ROOT, safe_path) or not os.path.exists(safe_path):
+        raise HTTPException(status_code=404, detail="File not found on disk")
+
+    lower_path = safe_path.lower()
+    if not lower_path.endswith((EXT_EPUB, EXT_TXT)):
+        raise HTTPException(status_code=400, detail="Structured reader content applies to EPUB/TXT")
+
+    from app.epub import extract_structured_reader_pages
+
+    data = await asyncio.to_thread(extract_structured_reader_pages, safe_path)
+    total_pages = int(data.get("total_pages") or 0)
+    if total_pages > 0 and await db._has_page_size_columns():
+        await db.conn.execute(
+            "UPDATE kitaplar SET sayfa_sayisi = ? WHERE dosya_hash = ? AND COALESCE(sayfa_sayisi, 0) = 0",
+            (total_pages, file_hash),
+        )
+        await db.conn.commit()
+
+    return {
+        "file_hash": file_hash,
+        "filename": name,
+        **data,
+    }
 
 
 @router.patch(
@@ -713,13 +805,13 @@ async def save_progress(
     payload: SaveProgressRequest,
     db: DatabaseManager = Depends(get_db),
 ) -> dict:
-    """Save reading progress."""
+    """Save reading progress (and sync total page count if provided)."""
     file_hash = validate_file_hash(file_hash)
     _ensure_authorized(request)
     if payload.page < 1 or payload.page > 100000:
         raise HTTPException(status_code=400, detail="Invalid page number")
-    await db.update_reading_progress(file_hash, payload.page)
-    return {"status": "updated", "page": payload.page}
+    await db.update_reading_progress(file_hash, payload.page, total_pages=payload.total_pages)
+    return {"status": "updated", "page": payload.page, "total_pages": payload.total_pages}
 
 
 @router.get("/books/{file_hash}/annotations")
@@ -890,18 +982,25 @@ async def upload_cover(
     os.makedirs(thumb_dir, exist_ok=True)
     thumb_path = os.path.join(thumb_dir, f"{file_hash}.jpg")
 
-    try:
+    def _process_and_save_cover() -> None:
+        os.makedirs(thumb_dir, exist_ok=True)
         img = prepare_cover_image(content, MAX_IMAGE_PIXELS)
-        img.thumbnail((400, 560), Image.Resampling.LANCZOS)
-        img.save(thumb_path, "JPEG", quality=90)
-        img.close()
+        try:
+            img.thumbnail((400, 560), Image.Resampling.LANCZOS)
+            img.save(thumb_path, "JPEG", quality=90)
+        finally:
+            img.close()
+
+    try:
+        await asyncio.to_thread(_process_and_save_cover)
         await db.conn.execute(
             "UPDATE kitaplar SET has_cover = 1 WHERE dosya_hash = ?", (file_hash,)
         )
         await db.conn.commit()
         await FastAPICache.clear(namespace=CACHE_NAMESPACE_BOOKS)
+        notify_ws(WS_EVENT_LIBRARY_UPDATE, {"reason": "cover_updated", "file_hash": file_hash})
         log_event(LOG_CAT_FILESYSTEM, "INFO", "Cover image updated", file_hash=file_hash)
-        return {"status": "updated", "thumbnail": f"/thumbnails/{file_hash}.jpg"}
+        return {"status": "updated", "thumbnail": f"/thumbnails/{file_hash}.jpg?v={int(time.time())}"}
     except ValueError as val_err:
         log_event(
             LOG_CAT_FILESYSTEM,
@@ -966,10 +1065,10 @@ async def export_book_data(
 
     fmt = export_format.lower().strip()
     from app.services.pkm_exporter import PKMExporter
-    from app.utils import sanitize_filename
+    from app.utils import sanitize_export_stem
 
     raw_title = book.get("kitap_adi") or "kitap"
-    clean_title = sanitize_filename(raw_title) or "kitap"
+    clean_title = sanitize_export_stem(raw_title, default="kitap")
 
     if fmt in ("obsidian", "markdown", "md"):
         annotations = await db.get_book_annotations(file_hash)

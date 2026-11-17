@@ -19,12 +19,28 @@
     return Boolean(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   }
 
+  function _finiteAnims(el) {
+    if (typeof el.getAnimations !== 'function') return [];
+    return el.getAnimations({ subtree: false }).filter((a) => {
+      try {
+        const iters = a.effect && typeof a.effect.getComputedTiming === 'function'
+          ? a.effect.getComputedTiming().iterations
+          : 1;
+        return iters !== Infinity;
+      } catch (_) {
+        return true;
+      }
+    });
+  }
+
   function waitAnimations(el) {
     return new Promise((resolve) => {
       let resolved = false;
+      const safetyTimer = setTimeout(() => done(), 650);
       const done = () => {
         if (resolved) return;
         resolved = true;
+        clearTimeout(safetyTimer);
         el.removeEventListener('animationend', done);
         el.removeEventListener('animationcancel', done);
         resolve();
@@ -39,18 +55,13 @@
           done();
           return;
         }
-        const anims = typeof el.getAnimations === 'function'
-          ? el.getAnimations({ subtree: false })
-          : [];
+        const anims = _finiteAnims(el);
         if (anims.length > 0) {
           Promise.allSettled(anims.map((a) => a.finished)).then(done);
         } else {
-          // Ekstra bir frame kontrolü — CSS sınıfı az önce uygulanmışsa animasyon bu karede başlamış olabilir
           requestAnimationFrame(() => {
             if (resolved) return;
-            const retryAnims = typeof el.getAnimations === 'function'
-              ? el.getAnimations({ subtree: false })
-              : [];
+            const retryAnims = _finiteAnims(el);
             if (retryAnims.length > 0) {
               Promise.allSettled(retryAnims.map((a) => a.finished)).then(done);
             } else {
@@ -250,35 +261,42 @@
     const moves = [];
 
     if (prevRects && prevRects.size > 0) {
+      const resolvedPairs = [];
       prevRects.forEach((oldRect, key) => {
         const el = key instanceof Element
           ? key
           : (target instanceof Element ? target.querySelector(`[data-hash="${key}"], [data-task-id="${key}"]`) : null);
         if (!el || !el.isConnected || el.style.display === 'none') return;
+        // Cancel any in-flight FLIP animation BEFORE measuring newRect so interrupted transforms never accumulate!
+        if (el._flipAnim) {
+          try { el._flipAnim.cancel(); } catch (_) {}
+          el._flipAnim = null;
+        }
+        resolvedPairs.push([el, oldRect]);
+      });
+
+      for (const [el, oldRect] of resolvedPairs) {
         const newRect = el.getBoundingClientRect();
-        if (!newRect.width || newRect.bottom < -180 || newRect.top > vh + 240) return;
+        if (!newRect.width || newRect.bottom < -180 || newRect.top > vh + 240) continue;
         const dx = oldRect.left - newRect.left;
         const dy = oldRect.top - newRect.top;
         if (Math.abs(dx) > 1.5 || Math.abs(dy) > 1.5) {
           moves.push({ el, dx, dy });
         }
-      });
+      }
     }
 
     for (const { el, dx, dy } of moves) {
-      if (el._flipAnim) {
-        try { el._flipAnim.cancel(); } catch (_) {}
-      }
       if (typeof el.animate === 'function') {
         try {
           el._flipAnim = el.animate([
             { transform: `translate3d(${dx}px, ${dy}px, 0)` },
-            { transform: 'translate3d(0, 0, 0)' }
+            { transform: 'none' }
           ], { duration, easing });
         } catch (_) {
           el._flipAnim = el.animate([
             { transform: `translate3d(${dx}px, ${dy}px, 0)` },
-            { transform: 'translate3d(0, 0, 0)' }
+            { transform: 'none' }
           ], { duration, easing: EASE_OUT });
         }
         const a = el._flipAnim;

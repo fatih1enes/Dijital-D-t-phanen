@@ -33,7 +33,16 @@ var wsReconnectTimer = null;
 var wsReconnectDelay = 1500;
 var colTargetHash = null;
 var dragSrcEl = null;
-var customOrder = JSON.parse(localStorage.getItem('kutuphane-custom-order') || 'null');
+var customOrder = (function () {
+  try {
+    const raw = localStorage.getItem('kutuphane-custom-order');
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch (_e) {
+    return null;
+  }
+})();
 var network = null;
 var networkFocusBookHash = null;
 var isDeepSearchActive = false;

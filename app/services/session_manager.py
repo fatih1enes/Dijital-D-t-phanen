@@ -198,21 +198,27 @@ class BookSession:
             self.close()
             raise
 
-    def send_user_message(self, user_text: str) -> str:
+    def send_user_message(self, user_text: str, context_prefix: str = "") -> str:
         """Sends a message to the existing Gemini chat session without re-uploading the PDF."""
         self.last_accessed = time.time()
         if not self.chat_session:
             raise RuntimeError("Sohbet oturumu başlatılmamış.")
 
-        # Send directly to the active session first
-        response = self.chat_session.send_message(user_text)
+        wire_message = (
+            f"{context_prefix.strip()}\n\nKullanıcı Sorusu: {user_text}"
+            if context_prefix and context_prefix.strip()
+            else user_text
+        )
+
+        # Send to the active session
+        response = self.chat_session.send_message(wire_message)
         reply_text = (
             response.text.strip()
             if response and hasattr(response, "text") and response.text
             else "Yanıt alınamadı."
         )
 
-        # Record user message and assistant reply in history only after successful API call
+        # Record clean user message and assistant reply in UI history only after successful API call
         self.messages.append({"role": "user", "text": user_text, "timestamp": time.time()})
         self.messages.append({"role": "model", "text": reply_text, "timestamp": time.time()})
 
@@ -243,6 +249,7 @@ class BookSessionManager:
             return self._locks[book_hash]
 
     def _evict_ttl_expired(self, now: float) -> None:
+        to_close: list[BookSession] = []
         with self._state_lock:
             stale_hashes = [
                 h
@@ -253,9 +260,12 @@ class BookSessionManager:
                 sess = self._sessions.pop(h, None)
                 self._release_lock_if_free(h)
                 if sess:
-                    sess.close()
+                    to_close.append(sess)
+        for sess in to_close:
+            sess.close()
 
     def _evict_lru_excess(self) -> None:
+        to_close: list[BookSession] = []
         with self._state_lock:
             if len(self._sessions) <= self.max_sessions:
                 return
@@ -265,7 +275,9 @@ class BookSessionManager:
                 sess = self._sessions.pop(h, None)
                 self._release_lock_if_free(h)
                 if sess:
-                    sess.close()
+                    to_close.append(sess)
+        for sess in to_close:
+            sess.close()
 
     def _evict_stale_sessions(self) -> None:
         """Evict sessions that have exceeded TTL or trim oldest when max_sessions is exceeded."""
@@ -274,17 +286,19 @@ class BookSessionManager:
         self._evict_lru_excess()
 
     def get_session(self, book_hash: str) -> BookSession | None:
+        popped: BookSession | None = None
         with self._state_lock:
             session = self._sessions.get(book_hash)
             if session:
                 if (time.time() - session.last_accessed) > self.ttl_seconds or session.is_expired():
                     popped = self._sessions.pop(book_hash, None)
                     self._release_lock_if_free(book_hash)
-                    if popped:
-                        popped.close()
-                    return None
-                session.last_accessed = time.time()
-            return session
+                    session = None
+                else:
+                    session.last_accessed = time.time()
+        if popped:
+            popped.close()
+        return session
 
     def get_or_create_session(
         self,
@@ -295,57 +309,58 @@ class BookSessionManager:
         api_key: str,
     ) -> BookSession:
         self._evict_stale_sessions()
-        session = self._sessions.get(book_hash)
+        popped: BookSession | None = None
+        with self._state_lock:
+            session = self._sessions.get(book_hash)
+            if (
+                session
+                and session.pdf_path == pdf_path
+                and session.is_initialized
+                and not session.is_expired()
+            ):
+                session.last_accessed = time.time()
+                return session
+            if session:
+                popped = self._sessions.pop(book_hash, None)
 
-        # If session exists, file matches, and hasn't expired, reuse it
-        if (
-            session
-            and session.pdf_path == pdf_path
-            and session.is_initialized
-            and not session.is_expired()
-        ):
-            session.last_accessed = time.time()
-            return session
+        if popped:
+            popped.close()
 
-        # Close and evict stale or path-mismatched session if it exists
-        if session:
-            popped = self._sessions.pop(book_hash, None)
-            if popped:
-                popped.close()
-
-        # Create new session
-        session = BookSession(
+        # Create and initialize outside _state_lock (serialized per-book via lock_for)
+        new_session = BookSession(
             book_hash=book_hash,
             pdf_path=pdf_path,
             model_name=model_name,
             system_instruction=system_instruction,
         )
-        session.initialize_session(api_key=api_key)
-        self._sessions[book_hash] = session
-        return session
+        new_session.initialize_session(api_key=api_key)
+        with self._state_lock:
+            self._sessions[book_hash] = new_session
+        return new_session
 
     def get_history(self, book_hash: str) -> list[dict[str, Any]]:
         session = self.get_session(book_hash)
         if not session:
             return []
-        return session.messages
+        return list(session.messages)
 
     def clear_session(self, book_hash: str) -> bool:
         with self._state_lock:
             session = self._sessions.pop(book_hash, None)
             self._release_lock_if_free(book_hash)
-            if session:
-                session.close()
-                return True
-            return False
+        if session:
+            session.close()
+            return True
+        return False
 
     def close_all(self) -> None:
         """Clean up all active sessions and cloud files upon shutdown."""
         with self._state_lock:
-            for sess in self._sessions.values():
-                sess.close()
+            sessions = list(self._sessions.values())
             self._sessions.clear()
             self._locks.clear()
+        for sess in sessions:
+            sess.close()
 
 
 # Global thread-safe session manager instance

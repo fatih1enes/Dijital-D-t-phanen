@@ -1,9 +1,67 @@
 /* ═══════════ ui_core.js — UI Rendering, Grid, Table & Collections ═══════════ */
     window.shouldStagger = true;
+    window._coverBustMap = window._coverBustMap || {};
+
+    function trNorm(val) {
+      if (!val) return '';
+      return String(val)
+        .normalize('NFC')
+        .replace(/İ/g, 'i')
+        .replace(/I/g, 'ı')
+        .toLocaleLowerCase('tr-TR');
+    }
+    window.trNorm = trNorm;
+
+    function getBookCoverUrl(hash) {
+      const bust = window._coverBustMap?.[hash];
+      return bust ? `/thumbnails/${hash}.jpg?v=${bust}` : `/thumbnails/${hash}.jpg`;
+    }
+    window.getBookCoverUrl = getBookCoverUrl;
+
+    function setModalTransformOrigin(modalBox, sourceEl) {
+      if (!modalBox) return;
+      if (!sourceEl || sourceEl === document.body || typeof sourceEl.getBoundingClientRect !== 'function') {
+        modalBox.style.removeProperty('--modal-origin-x');
+        modalBox.style.removeProperty('--modal-origin-y');
+        return;
+      }
+      const srcRect = sourceEl.getBoundingClientRect();
+      if (srcRect.width <= 0 && srcRect.height <= 0) {
+        modalBox.style.removeProperty('--modal-origin-x');
+        modalBox.style.removeProperty('--modal-origin-y');
+        return;
+      }
+      const srcCenterX = srcRect.left + srcRect.width / 2;
+      const srcCenterY = srcRect.top + srcRect.height / 2;
+      const applyRelative = () => {
+        const boxRect = modalBox.getBoundingClientRect();
+        if (boxRect.width > 0 && boxRect.height > 0) {
+          modalBox.style.setProperty('--modal-origin-x', `${Math.round(srcCenterX - boxRect.left)}px`);
+          modalBox.style.setProperty('--modal-origin-y', `${Math.round(srcCenterY - boxRect.top)}px`);
+        } else {
+          const vw = window.innerWidth || 1280;
+          const vh = window.innerHeight || 800;
+          const estW = Math.min(vw * 0.92, 680);
+          const estH = Math.min(vh * 0.85, 560);
+          modalBox.style.setProperty('--modal-origin-x', `${Math.round(srcCenterX - (vw - estW) / 2)}px`);
+          modalBox.style.setProperty('--modal-origin-y', `${Math.round(srcCenterY - (vh - estH) / 2)}px`);
+        }
+      };
+      applyRelative();
+      requestAnimationFrame(() => {
+        const boxRect = modalBox.getBoundingClientRect();
+        if (boxRect.width > 0 && boxRect.height > 0) {
+          modalBox.style.setProperty('--modal-origin-x', `${Math.round(srcCenterX - boxRect.left)}px`);
+          modalBox.style.setProperty('--modal-origin-y', `${Math.round(srcCenterY - boxRect.top)}px`);
+        }
+      });
+    }
+    window.setModalTransformOrigin = setModalTransformOrigin;
+
     // --- CATEGORY LABELS ---
     function buildCategoryTags() {
       const books = window.allBooks || [];
-      const cats = [...new Set(books.map(b => b.category).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+      const cats = [...new Set(books.map(b => b.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'tr', { sensitivity: 'base' }));
       const menu = document.getElementById('category-menu');
       const trigger = document.getElementById('category-trigger');
 
@@ -259,7 +317,7 @@
              </button>
              <div class="dropdown-menu" style="right:0; top:calc(100% + 5px); min-width:180px; z-index:100; left:auto; width:auto; padding:0.4rem;">
                 <button type="button" class="dropdown-item" role="menuitem" style="padding:0.6rem 0.8rem;" onclick="window.location.href='/api/share-collection/${c.id}'"><i class="fas fa-file-download"></i> JSON İndir</button>
-                <button type="button" class="dropdown-item" role="menuitem" style="padding:0.6rem 0.8rem;" onclick="copyCollectionMarkdown(${c.id}, decodeURIComponent('${encodedName}'))"><i class="fas fa-copy"></i> Markdown Kopyala</button>
+                <button type="button" class="dropdown-item" role="menuitem" style="padding:0.6rem 0.8rem;" data-col-name="${encodedName}" onclick="copyCollectionMarkdown(${c.id}, decodeURIComponent(this.dataset.colName))"><i class="fas fa-copy"></i> Markdown Kopyala</button>
              </div>
            </div>
 
@@ -287,13 +345,6 @@
         const triggerEl = document.activeElement instanceof HTMLElement ? document.activeElement : null;
         colModal._sourceTriggerEl = triggerEl;
         const modalBox = colModal.querySelector('.modal');
-        if (modalBox && triggerEl && triggerEl !== document.body && typeof triggerEl.getBoundingClientRect === 'function') {
-          const r = triggerEl.getBoundingClientRect();
-          if (r.width > 0 || r.height > 0) {
-            modalBox.style.setProperty('--modal-origin-x', `${Math.round(r.left + r.width / 2)}px`);
-            modalBox.style.setProperty('--modal-origin-y', `${Math.round(r.top + r.height / 2)}px`);
-          }
-        }
         colModal.classList.remove('closing');
         document.body.classList.add('modal-open');
         if (window.Motion && typeof window.Motion.enter === 'function') {
@@ -301,6 +352,7 @@
         } else {
           colModal.classList.add('open');
         }
+        setModalTransformOrigin(modalBox, triggerEl);
         activateModalFocus(colModal);
       }
     }
@@ -429,17 +481,41 @@
       });
     }
 
-    // --- FILTER (Feature 7: Enhanced with AND Logic) ---
+    // --- FILTER (Feature 7: Enhanced with AND Logic + Turkish Normalization) ---
     function getFiltered() {
-      const q = document.getElementById('search-input')?.value?.toLowerCase() || '';
+      const q = trNorm(document.getElementById('search-input')?.value || '').trim();
 
-      return (window.allBooks || []).filter(b => {
+      const filtered = (window.allBooks || []).filter(b => {
         const matchCat = window.activeCategory === 'all' || b.category === window.activeCategory;
         const matchCol = window.activeCollection === 'all' || (b.collections?.map(String).includes(String(window.activeCollection)));
-        const matchQ = !q || [b.title, b.author, b.category, b.subcat, b.summary, b.keywords].some(v => v?.toLowerCase().includes(q));
+        const matchQ = !q || [b.title, b.author, b.category, b.subcat, b.summary, b.keywords].some(v => v && trNorm(v).includes(q));
         const matchFav = !window.showOnlyFav || b.is_favorite === true;
         return matchCat && matchCol && matchQ && matchFav;
       });
+
+      const sortKeys = ['title', 'author', 'category', 'subcat', 'summary'];
+      if (typeof window.sortCol === 'number' && window.sortCol >= 0 && window.sortCol < sortKeys.length) {
+        const key = sortKeys[window.sortCol];
+        const dir = window.sortDir || 1;
+        return filtered.slice().sort((a, b) => {
+          const va = String(a[key] || '').trim();
+          const vb = String(b[key] || '').trim();
+          return compareTableValues(va, vb, dir);
+        });
+      }
+
+      if (Array.isArray(window.customOrder) && window.customOrder.length > 0) {
+        const orderMap = new Map();
+        window.customOrder.forEach((h, idx) => orderMap.set(h, idx));
+        return filtered.slice().sort((a, b) => {
+          const ia = orderMap.has(a.hash) ? orderMap.get(a.hash) : -1;
+          const ib = orderMap.has(b.hash) ? orderMap.get(b.hash) : -1;
+          if (ia === ib) return 0;
+          return ia - ib;
+        });
+      }
+
+      return filtered;
     }
 
     function clearFiltersAndSearch() {
@@ -515,68 +591,13 @@
     }
     window.isMotionReduced = isMotionReduced;
 
-    function animateSegmentedPill(containerOrSelector, prevBtn, nextBtn, prevRectOverride = null) {
-      if (isMotionReduced()) return;
-      const container = typeof containerOrSelector === 'string'
-        ? document.querySelector(containerOrSelector)
-        : containerOrSelector;
-      if (!container || !prevBtn || !nextBtn || prevBtn === nextBtn) return;
-      if (!container.contains(prevBtn) || !container.contains(nextBtn)) return;
-
-      const cRect = container.getBoundingClientRect();
-      const pRect = prevRectOverride || prevBtn.getBoundingClientRect();
-      const nRect = nextBtn.getBoundingClientRect();
-      if (!pRect.width || !nRect.width) return;
-
-      container.querySelectorAll('.seg-glide-indicator').forEach(el => el.remove());
-
-      const pill = document.createElement('span');
-      pill.className = 'seg-glide-indicator';
-      const targetStyle = window.getComputedStyle(nextBtn);
-      if (targetStyle.borderRadius) {
-        pill.style.borderRadius = targetStyle.borderRadius;
-      }
-
-      const xFrom = pRect.left - cRect.left + container.scrollLeft;
-      const yFrom = pRect.top - cRect.top + container.scrollTop;
-      const xTo = nRect.left - cRect.left + container.scrollLeft;
-      const yTo = nRect.top - cRect.top + container.scrollTop;
-
-      container.appendChild(pill);
-      nextBtn.classList.add('is-gliding-target');
-
-      let cleaned = false;
-      const cleanup = () => {
-        if (cleaned) return;
-        cleaned = true;
-        pill.remove();
-        nextBtn.classList.remove('is-gliding-target');
+    if (typeof window.animateSegmentedPill !== 'function') {
+      window.animateSegmentedPill = function fallbackGlidePill(containerOrSelector, prevBtn, nextBtn, prevRectOverride = null) {
+        if (window.Motion && typeof window.Motion.glidePill === 'function') {
+          window.Motion.glidePill(containerOrSelector, prevBtn, nextBtn, prevRectOverride);
+        }
       };
-
-      if (typeof pill.animate === 'function') {
-        const anim = pill.animate([
-          {
-            transform: `translate3d(${xFrom}px, ${yFrom}px, 0)`,
-            width: `${pRect.width}px`,
-            height: `${pRect.height}px`
-          },
-          {
-            transform: `translate3d(${xTo}px, ${yTo}px, 0)`,
-            width: `${nRect.width}px`,
-            height: `${nRect.height}px`
-          }
-        ], {
-          duration: 320,
-          easing: 'cubic-bezier(0.22, 1, 0.36, 1)'
-        });
-        anim.addEventListener('finish', cleanup, { once: true });
-        anim.addEventListener('cancel', cleanup, { once: true });
-        setTimeout(cleanup, 360);
-      } else {
-        cleanup();
-      }
     }
-    window.animateSegmentedPill = animateSegmentedPill;
 
     function captureGridPositions(grid) {
       if (!grid || grid.style.display === 'none' || isMotionReduced()) return null;
@@ -659,7 +680,7 @@
         <div class="recent-shelf-grid">
           ${recentBooks.map(b => {
             const cover = b.has_cover
-              ? `<img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" loading="lazy" decoding="async" onload="this.classList.add('loaded')">`
+              ? `<img src="${getBookCoverUrl(b.hash)}" alt="${esc(b.title)}" loading="lazy" decoding="async" onload="this.classList.add('loaded')">`
               : `<div class="shelf-cover-placeholder"><i class="fas fa-book"></i></div>`;
             const progress = (typeof getBookReadingProgress === 'function') ? getBookReadingProgress(b) : null;
             const scaleVal = progress ? (progress.pct / 100).toFixed(3) : '0';
@@ -705,6 +726,125 @@
     const tableRowsMap = new Map();
     window.tableRowsMap = tableRowsMap;
 
+    function computeBookSig(b) {
+      if (!b) return '';
+      const bust = window._coverBustMap?.[b.hash] || 0;
+      return [
+        b.title || '',
+        b.author || '',
+        b.category || '',
+        b.subcat || '',
+        b.summary || '',
+        b.has_cover ? 1 : 0,
+        b.is_favorite ? 1 : 0,
+        b.okunulan_sayfa || b.read_page || 0,
+        b.sayfa_sayisi || b.pages || b.page_count || 0,
+        bust
+      ].join('\u001f');
+    }
+
+    function syncBookCardElement(card, b) {
+      if (!card || !b) return;
+      const sig = computeBookSig(b);
+      if (card._bookSig === sig) return;
+      card._bookSig = sig;
+      card.setAttribute('aria-label', b.title || 'Kitap detayları');
+
+      const catEl = card.querySelector('.card-cat-badge');
+      if (catEl) catEl.textContent = b.category || '';
+
+      const favBtn = card.querySelector('.btn-favorite-card');
+      if (favBtn) {
+        const favBtnText = b.is_favorite ? 'Favorilerden Çıkar' : 'Favorilere Ekle';
+        favBtn.title = favBtnText;
+        favBtn.setAttribute('aria-label', favBtnText);
+        favBtn.innerHTML = b.is_favorite
+          ? `<i class="fas fa-heart" style="color: var(--danger); font-size: 1.1rem;"></i>`
+          : `<i class="far fa-heart" style="color: var(--paper); font-size: 1.1rem;"></i>`;
+      }
+
+      const coverWrap = card.querySelector('.card-cover');
+      if (coverWrap) {
+        const existingImg = coverWrap.querySelector('img');
+        const existingPlaceholder = coverWrap.querySelector('.card-cover-placeholder');
+        if (b.has_cover) {
+          const desiredSrc = getBookCoverUrl(b.hash);
+          if (existingPlaceholder) existingPlaceholder.remove();
+          if (existingImg) {
+            if (existingImg.getAttribute('src') !== desiredSrc) {
+              existingImg.classList.remove('loaded');
+              existingImg.setAttribute('src', desiredSrc);
+              if (existingImg.complete) existingImg.classList.add('loaded');
+            }
+            existingImg.setAttribute('alt', b.title || '');
+          } else {
+            const img = document.createElement('img');
+            img.src = desiredSrc;
+            img.alt = b.title || '';
+            img.loading = 'lazy';
+            img.decoding = 'async';
+            img.onload = function () { this.classList.add('loaded'); };
+            coverWrap.appendChild(img);
+            if (img.complete) img.classList.add('loaded');
+          }
+        } else {
+          if (existingImg) existingImg.remove();
+          if (existingPlaceholder) {
+            const span = existingPlaceholder.querySelector('span');
+            if (span) span.textContent = b.title || 'Kapak yok';
+          } else {
+            const ph = document.createElement('div');
+            ph.className = 'card-cover-placeholder';
+            ph.innerHTML = `${BOOK_ICON_LG}<span>${esc(b.title) || 'Kapak yok'}</span>`;
+            coverWrap.appendChild(ph);
+          }
+        }
+
+        const progress = getBookReadingProgress(b);
+        let progBar = coverWrap.querySelector('.card-progress-bar');
+        if (progress) {
+          const scaleVal = (progress.pct / 100).toFixed(3);
+          const titleText = `%${progress.pct} okundu (${progress.readPage}/${progress.totalPages} sayfa)`;
+          if (!progBar) {
+            progBar = document.createElement('div');
+            progBar.className = 'card-progress-bar';
+            coverWrap.appendChild(progBar);
+          }
+          progBar.style.setProperty('--progress', scaleVal);
+          progBar.style.transform = `scaleX(${scaleVal})`;
+          progBar.title = titleText;
+        } else if (progBar) {
+          progBar.remove();
+        }
+      }
+
+      const titleEl = card.querySelector('.card-title');
+      if (titleEl) {
+        if (b.title) titleEl.textContent = b.title;
+        else titleEl.innerHTML = '<em>İsimsiz</em>';
+      }
+
+      const authorWrap = card.querySelector('.card-author');
+      if (authorWrap) {
+        const progress = getBookReadingProgress(b);
+        const progressBadgeHtml = progress ? `<span class="card-progress-badge">%${progress.pct}</span>` : '';
+        authorWrap.innerHTML = `<span>${esc(b.author) || 'Bilinmeyen Yazar'}</span>${progressBadgeHtml}`;
+      }
+    }
+    window.syncBookCardElement = syncBookCardElement;
+
+    function syncBookCardByHash(hash) {
+      if (!hash) return;
+      const b = (window.allBooks || []).find(x => x.hash === hash);
+      if (!b) return;
+      const card = cardElementsMap.get(hash);
+      if (card) syncBookCardElement(card, b);
+      const tr = tableRowsMap.get(hash);
+      if (tr) syncTableRowElement(tr, b);
+      renderRecentShelf();
+    }
+    window.syncBookCardByHash = syncBookCardByHash;
+
     function createBookCardElement(b) {
       const card = document.createElement('div');
       card.className = 'book-card';
@@ -715,7 +855,7 @@
       card.setAttribute('aria-label', b.title || 'Kitap detayları');
 
       const coverInner = b.has_cover
-        ? `<img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" loading="lazy" decoding="async" onload="this.classList.add('loaded')">`
+        ? `<img src="${getBookCoverUrl(b.hash)}" alt="${esc(b.title)}" loading="lazy" decoding="async" onload="this.classList.add('loaded')">`
         : `<div class="card-cover-placeholder">${BOOK_ICON_LG}<span>${esc(b.title) || 'Kapak yok'}</span></div>`;
 
       const favIcon = b.is_favorite
@@ -811,6 +951,7 @@
         }
       };
 
+      card._bookSig = computeBookSig(b);
       return card;
     }
 
@@ -892,26 +1033,21 @@
       }
 
       // 3. Synchronize existing DOM
-      const existingCardsInGrid = new Set(Array.from(grid.querySelectorAll('.book-card')).map(c => c.dataset.hash));
-      let hasMissingCards = false;
+      const hasFlipEngine = Boolean(window.Motion && typeof window.Motion.flip === 'function');
 
-      books.forEach((b, i) => {
+      books.forEach((b) => {
         let card = cardElementsMap.get(b.hash);
         if (!card) {
           card = createBookCardElement(b);
           cardElementsMap.set(b.hash, card);
+        } else {
+          syncBookCardElement(card, b);
         }
 
-        // Update favorite & selection visual state without re-creating card
-        const favBtn = card.querySelector('.btn-favorite-card');
-        if (favBtn) {
-          favBtn.innerHTML = b.is_favorite
-            ? `<i class="fas fa-heart" style="color: var(--danger); font-size: 1.1rem;"></i>`
-            : `<i class="far fa-heart" style="color: var(--paper); font-size: 1.1rem;"></i>`;
-        }
+        card.classList.remove('fadeOut');
         card.classList.toggle('selected', selectedBooks.has(b.hash));
 
-        const wasHidden = card.style.display === 'none';
+        const wasHidden = card.style.display === 'none' || !card.isConnected;
 
         // Check if this card just settled from an active upload
         const fileKey = (b.file || '').toLowerCase().trim();
@@ -943,16 +1079,14 @@
           card.style.animation = '';
           if (wasHidden) {
             newlyRevealed.push(card);
-            card.classList.add('card-revealing');
-            setTimeout(() => card.classList.remove('card-revealing'), 320);
+            if (!hasFlipEngine) {
+              card.classList.add('card-revealing');
+              setTimeout(() => card.classList.remove('card-revealing'), 320);
+            }
           }
         }
 
         card.style.display = '';
-
-        if (!existingCardsInGrid.has(b.hash)) {
-          hasMissingCards = true;
-        }
       });
 
       // Hide cards in DOM that are filtered out (Zero DOM removal, zero image reloads)
@@ -963,14 +1097,21 @@
         }
       }
 
-      // Populate if cards were missing or grid was empty
-      if (hasMissingCards || grid.querySelectorAll('.book-card').length === 0) {
-        grid.innerHTML = '';
-        activeUploads.forEach(node => grid.appendChild(node));
-        books.forEach(b => {
-          const card = cardElementsMap.get(b.hash);
-          if (card) grid.appendChild(card);
-        });
+      // Remove any stale skeleton placeholders before reconciling order
+      grid.querySelectorAll('.book-card.skeleton').forEach(skel => skel.remove());
+
+      // Incremental DOM order reconciliation (preserves loaded images, focus, and scroll)
+      const desiredNodes = [...activeUploads];
+      books.forEach(b => {
+        const card = cardElementsMap.get(b.hash);
+        if (card) desiredNodes.push(card);
+      });
+      for (let idx = 0; idx < desiredNodes.length; idx++) {
+        const desired = desiredNodes[idx];
+        const currentAtIdx = grid.children[idx] || null;
+        if (currentAtIdx !== desired) {
+          grid.insertBefore(desired, currentAtIdx);
+        }
       }
 
       if (morphedCards.length > 0 && !isMotionReduced()) {
@@ -986,7 +1127,7 @@
                 { transform: `translate3d(${dx}px, ${dy}px, 0) scale(${sx}, ${sy})`, opacity: 0.78 },
                 { transform: 'translate3d(0, 0, 0) scale(1, 1)', opacity: 1 }
               ],
-              { duration: 360, easing: 'cubic-bezier(0.32, 0.72, 0, 1)', fill: 'both' }
+              { duration: 360, easing: 'cubic-bezier(0.32, 0.72, 0, 1)', fill: 'backwards' }
             );
           }
         });
@@ -1011,14 +1152,39 @@
           body: formData
         });
         if (res?.ok) {
+          window._coverBustMap = window._coverBustMap || {};
+          window._coverBustMap[hash] = Date.now();
           showToast('Kapak başarıyla güncellendi.', 'success');
           loadBooksFromAPI().catch(err => console.error(err));
           closeModalDirect();
+        } else {
+          showToast('Kapak güncellenemedi.', 'error');
         }
       } catch (err) {
         console.error('Kapak yüklenemedi:', err);
+        showToast('Kapak yüklenirken hata oluştu.', 'error');
       }
     }
+
+    function syncTableRowElement(tr, b) {
+      if (!tr || !b) return;
+      const sig = computeBookSig(b);
+      if (tr._bookSig === sig) return;
+      tr._bookSig = sig;
+
+      const thumbCell = b.has_cover
+        ? `<td class="td-cover"><img src="${getBookCoverUrl(b.hash)}" alt="" loading="lazy" decoding="async"></td>`
+        : `<td class="td-cover"><div class="td-cover-empty">${BOOK_ICON_SM}</div></td>`;
+      tr.innerHTML = `
+        ${thumbCell}
+        <td class="td-title">${esc(b.title) || '—'}</td>
+        <td class="td-author">${esc(b.author) || '—'}</td>
+        <td class="td-cat">${esc(b.category) || '—'}</td>
+        <td class="td-cat">${esc(b.subcat) || '—'}</td>
+        <td class="td-summary"><div class="summary-text">${esc(b.summary)}</div></td>
+      `;
+    }
+    window.syncTableRowElement = syncTableRowElement;
 
     function createTableRowElement(b) {
       const tr = document.createElement('tr');
@@ -1026,7 +1192,7 @@
       tr.dataset.hash = b.hash;
 
       const thumbCell = b.has_cover
-        ? `<td class="td-cover"><img src="/thumbnails/${b.hash}.jpg" alt="" loading="lazy" decoding="async"></td>`
+        ? `<td class="td-cover"><img src="${getBookCoverUrl(b.hash)}" alt="" loading="lazy" decoding="async"></td>`
         : `<td class="td-cover"><div class="td-cover-empty">${BOOK_ICON_SM}</div></td>`;
       tr.innerHTML = `
         ${thumbCell}
@@ -1046,6 +1212,7 @@
         }
       };
 
+      tr._bookSig = computeBookSig(b);
       return tr;
     }
 
@@ -1089,6 +1256,8 @@
         if (!tr) {
           tr = createTableRowElement(b);
           tableRowsMap.set(b.hash, tr);
+        } else {
+          syncTableRowElement(tr, b);
         }
 
         tr.classList.toggle('selected', selectedBooks.has(b.hash));
@@ -1129,19 +1298,24 @@
 
     // --- SIRALA ---
     function sortTable(col) {
-      const keys = ['title', 'author', 'category', 'subcat', 'summary'];
-      if (window.sortCol === col) window.sortDir *= -1; else { window.sortCol = col; window.sortDir = 1; }
-      (window.allBooks || []).sort((a, b) => {
-        const va = String(a[keys[col]] || '').trim();
-        const vb = String(b[keys[col]] || '').trim();
-        return compareTableValues(va, vb, window.sortDir);
-      });
+      if (window.sortCol === col) {
+        if (window.sortDir === -1) {
+          window.sortCol = null;
+          window.sortDir = 1;
+        } else {
+          window.sortDir = -1;
+        }
+      } else {
+        window.sortCol = col;
+        window.sortDir = 1;
+      }
       document.querySelectorAll('thead th').forEach((th, i) => {
         const dataCol = i - 1; // first th is cover column (index 0), data columns start from 1
-        th.classList.toggle('sorted', dataCol === col);
+        const isActive = window.sortCol === dataCol;
+        th.classList.toggle('sorted', isActive);
         const arrow = th.querySelector('.sort-arrow');
         if (arrow) {
-          if (dataCol !== col) {
+          if (!isActive) {
             arrow.textContent = '↕';
           } else {
             arrow.textContent = window.sortDir === 1 ? '↑' : '↓';
@@ -1165,7 +1339,7 @@
         : '';
 
       const coverHtml = b.has_cover
-        ? `<div class="modal-cover-wrap"><img src="/thumbnails/${b.hash}.jpg" alt="${esc(b.title)}" loading="lazy" decoding="async" onload="this.classList.add('loaded')"></div>`
+        ? `<div class="modal-cover-wrap"><img src="${getBookCoverUrl(b.hash)}" alt="${esc(b.title)}" loading="lazy" decoding="async" onload="this.classList.add('loaded')"></div>`
         : `<div class="modal-cover-wrap"><div class="modal-cover-empty">${BOOK_ICON_LG}</div></div>`;
 
       const progress = getBookReadingProgress(b);
@@ -1173,7 +1347,7 @@
       const progressModalHtml = progress ? `
         <div class="modal-progress-wrap">
           <div class="modal-progress-track">
-            <div class="modal-progress-fill" style="--progress:${modalScale}; transform:scaleX(${modalScale});"></div>
+            <div class="modal-progress-fill" style="--progress:${modalScale};"></div>
           </div>
           <span>%${progress.pct} (${progress.readPage} / ${progress.totalPages} sayfa)</span>
         </div>
@@ -1297,19 +1471,6 @@
       const originRectSource = (originCover && originCover.offsetParent !== null)
         ? originCover
         : (sourceEl instanceof HTMLElement && sourceEl.offsetParent !== null ? sourceEl : null);
-      if (modalBox && originRectSource) {
-        const r = originRectSource.getBoundingClientRect();
-        if (r.width > 0 && r.height > 0) {
-          modalBox.style.setProperty('--modal-origin-x', `${Math.round(r.left + r.width / 2)}px`);
-          modalBox.style.setProperty('--modal-origin-y', `${Math.round(r.top + r.height / 2)}px`);
-        } else {
-          modalBox.style.removeProperty('--modal-origin-x');
-          modalBox.style.removeProperty('--modal-origin-y');
-        }
-      } else if (modalBox) {
-        modalBox.style.removeProperty('--modal-origin-x');
-        modalBox.style.removeProperty('--modal-origin-y');
-      }
 
       const canMorph = Boolean(
         document.startViewTransition &&
@@ -1322,6 +1483,7 @@
       const openDom = () => {
         modalEl.classList.add('open');
         document.body.classList.add('modal-open');
+        setModalTransformOrigin(modalBox, originRectSource);
       };
 
       if (canMorph && window.Motion && typeof window.Motion.transition === 'function') {
@@ -1373,7 +1535,11 @@
       if (!modalEl) return [];
       return Array.from(modalEl.querySelectorAll(
         'button:not([disabled]), [href], input:not([disabled]):not([type="hidden"]):not([type="file"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      )).filter(el => el.offsetParent !== null || window.getComputedStyle(el).display !== 'none');
+      )).filter(el => {
+        const style = window.getComputedStyle(el);
+        if (style.display === 'none' || style.visibility === 'hidden') return false;
+        return el.offsetParent !== null || style.position === 'fixed';
+      });
     }
 
     function handleModalTabKey(e) {
@@ -1488,7 +1654,7 @@
           modalBox.style.removeProperty('--modal-origin-x');
           modalBox.style.removeProperty('--modal-origin-y');
         }
-        const anyModal = document.querySelector('.modal-overlay.open, .modal-overlay.closing');
+        const anyModal = document.querySelector('.modal-overlay.open, .modal-overlay.closing, .logs-modal.open, #workspace-reader.open');
         if (!anyModal) {
           document.body.classList.remove('modal-open');
         }
@@ -1534,7 +1700,7 @@
             modalBox.style.removeProperty('--modal-origin-x');
             modalBox.style.removeProperty('--modal-origin-y');
           }
-          const anyModal = document.querySelector('.modal-overlay.open, .modal-overlay.closing');
+          const anyModal = document.querySelector('.modal-overlay.open, .modal-overlay.closing, .logs-modal.open, #workspace-reader.open');
           if (!anyModal) document.body.classList.remove('modal-open');
           window.currentModalHash = null;
         };
@@ -1610,6 +1776,7 @@
         const handleKey = (e) => {
           if (e.key === 'Escape') {
             e.preventDefault();
+            e.stopImmediatePropagation();
             cleanup(false);
           }
         };
@@ -1732,6 +1899,7 @@
 
     function isModalOrDropdownOpen() {
       const modalIds = [
+        'app-confirm-modal',
         'handoff-modal',
         'shortcuts-modal',
         'telegram-modal',
@@ -1754,12 +1922,29 @@
         return;
       }
 
+      const confirmEl = document.getElementById('app-confirm-modal');
+      if (isElementVisible(confirmEl)) {
+        const cancelBtn = confirmEl.querySelector('#confirm-dialog-cancel');
+        if (cancelBtn) cancelBtn.click();
+        return;
+      }
+
       const modalCloseHandlers = [
         { id: 'handoff-modal', fn: window.closeHandoffModal },
         { id: 'shortcuts-modal', fn: closeShortcutsModal },
         { id: 'telegram-modal', fn: window.closeTelegramModal },
         { id: 'pdf-note-modal', fn: window.closePdfNoteModalDirect },
-        { id: 'workspace-reader', fn: window.closeWorkspace },
+        {
+          id: 'workspace-reader',
+          fn: () => {
+            if (typeof window.handleWorkspaceEscape === 'function' && window.handleWorkspaceEscape()) {
+              return;
+            }
+            if (typeof window.closeWorkspace === 'function') {
+              window.closeWorkspace();
+            }
+          }
+        },
         { id: 'duplicates-modal', fn: closeDuplicatesModal },
         { id: 'col-modal', fn: window.closeColModalDirect },
         { id: 'book-modal', fn: closeModalDirect },
@@ -1951,6 +2136,8 @@
       const grid = document.getElementById('grid-view');
       if (!grid) return;
       grid.querySelectorAll('.book-card[data-hash]').forEach(card => {
+        if (card._dragBound) return;
+        card._dragBound = true;
         card.setAttribute('draggable', 'true');
         card.addEventListener('dragstart', handleDragStart);
         card.addEventListener('dragover', handleDragOver);
@@ -1986,7 +2173,11 @@
         // Sıralamayı localStorage'a kaydet
         const newOrder = [...grid.querySelectorAll('.book-card[data-hash]')].map(c => c.dataset.hash);
         window.customOrder = newOrder;
-        localStorage.setItem('kutuphane-custom-order', JSON.stringify(newOrder));
+        try {
+          localStorage.setItem('kutuphane-custom-order', JSON.stringify(newOrder));
+        } catch (storageErr) {
+          console.warn("Özel sıralama yerel depolamaya yazılamadı:", storageErr);
+        }
         // Sıralamayı sunucuya senkronize et
         apiFetch('/api/books/order', {
           method: 'PUT',

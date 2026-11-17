@@ -293,10 +293,12 @@ def _save_cover_thumbnail(cover_data: bytes, out_path: str) -> bool:
                     "EPUB kapak görseli boyut sınırını aşıyor, atlandı.",
                 )
                 return False
-            if img.mode in ("RGBA", "P"):
-                img = img.convert("RGB")
-            img.thumbnail((400, 560), Image.Resampling.LANCZOS)
-            img.save(out_path, "JPEG", quality=88)
+            work = img.convert("RGB") if img.mode != "RGB" else img.copy()
+            try:
+                work.thumbnail((400, 560), Image.Resampling.LANCZOS)
+                work.save(out_path, "JPEG", quality=88)
+            finally:
+                work.close()
         return True
     except Image.DecompressionBombError:
         log_event(
@@ -304,6 +306,9 @@ def _save_cover_thumbnail(cover_data: bytes, out_path: str) -> bool:
             "WARNING",
             "EPUB kapağı decompression bomb koruması nedeniyle reddedildi.",
         )
+        return False
+    except (OSError, SyntaxError, ValueError) as img_err:
+        log_event("epub", "DEBUG", f"EPUB kapağı işlenemedi: {img_err}")
         return False
 
 
@@ -350,3 +355,224 @@ def extract_text_from_txt(file_path: str, max_chars: int = 25000) -> str:
             return f.read()
     except Exception:
         return ""
+
+
+def _parse_html_blocks(raw_html: str) -> tuple[str, list[dict[str, str]]]:
+    """Extract chapter heading and clean structured blocks (h1/h2/h3/blockquote/p) from EPUB XHTML."""
+    import html as html_lib
+    import re
+
+    if not raw_html:
+        return "", []
+
+    cleaned = re.sub(r"<(script|style|head)[^>]*>.*?</\1>", "", raw_html, flags=re.DOTALL | re.I)
+    title_match = re.search(r"<h[1-3][^>]*>(.*?)</h[1-3]>", cleaned, flags=re.DOTALL | re.I)
+    chapter_title = ""
+    if title_match:
+        chapter_title = re.sub(r"<[^>]+>", " ", title_match.group(1))
+        chapter_title = re.sub(r"\s+", " ", html_lib.unescape(chapter_title)).strip()
+
+    blocks: list[dict[str, str]] = []
+    token_pattern = re.compile(
+        r"<(h1|h2|h3|blockquote|li|p|div)[^>]*>(.*?)</\1>",
+        flags=re.DOTALL | re.I,
+    )
+    matches = list(token_pattern.finditer(cleaned))
+    if matches:
+        for m in matches:
+            tag = m.group(1).lower()
+            inner = m.group(2)
+            # Skip nested container divs that wrap other block elements
+            if tag == "div" and re.search(r"<(p|div|h1|h2|h3|blockquote)\b", inner, flags=re.I):
+                continue
+            inner_with_br = re.sub(r"<br\s*/?>", "\n", inner, flags=re.I)
+            plain = re.sub(r"<[^>]+>", "", inner_with_br)
+            plain = html_lib.unescape(plain)
+            plain = re.sub(r"[ \t]+", " ", plain).strip()
+            if not plain:
+                continue
+            btype = tag if tag in ("h1", "h2", "h3", "blockquote", "li") else "p"
+            blocks.append({"type": btype, "text": plain})
+    else:
+        fallback = clean_html_content(raw_html)
+        for para in fallback.splitlines():
+            p = para.strip()
+            if p:
+                blocks.append({"type": "p", "text": p})
+
+    return chapter_title, blocks
+
+
+def _paginate_blocks(
+    blocks: list[dict[str, str]],
+    chapter_title: str,
+    start_page: int,
+    chars_per_page: int = 2200,
+) -> list[dict[str, Any]]:
+    """Split structured blocks into comfortable book-sized virtual pages without breaking paragraphs."""
+    pages: list[dict[str, Any]] = []
+    cur_blocks: list[dict[str, str]] = []
+    cur_chars = 0
+    page_num = start_page
+
+    def flush_page() -> None:
+        nonlocal cur_blocks, cur_chars, page_num
+        if not cur_blocks:
+            return
+        plain_text = "\n\n".join(b["text"] for b in cur_blocks)
+        pages.append(
+            {
+                "page": page_num,
+                "title": chapter_title,
+                "blocks": cur_blocks,
+                "text": plain_text,
+            }
+        )
+        page_num += 1
+        cur_blocks = []
+        cur_chars = 0
+
+    for blk in blocks:
+        btext = blk["text"]
+        blen = len(btext)
+        if blen > chars_per_page * 1.4 and blk["type"] == "p":
+            # Split extra-long single paragraph at sentence boundaries
+            sentences = re.split(r"(?<=[.!?])\s+", btext)
+            buf: list[str] = []
+            buf_len = 0
+            for s in sentences:
+                if buf and buf_len + len(s) > chars_per_page:
+                    cur_blocks.append({"type": "p", "text": " ".join(buf)})
+                    cur_chars += buf_len
+                    flush_page()
+                    buf = [s]
+                    buf_len = len(s)
+                else:
+                    buf.append(s)
+                    buf_len += len(s) + 1
+            if buf:
+                btext = " ".join(buf)
+                blen = len(btext)
+                blk = {"type": "p", "text": btext}
+            else:
+                continue
+
+        if cur_blocks and (cur_chars + blen > chars_per_page):
+            flush_page()
+        cur_blocks.append(blk)
+        cur_chars += blen
+
+    flush_page()
+    return pages
+
+
+def extract_structured_reader_pages(file_path: str, chars_per_page: int = 2200) -> dict[str, Any]:
+    """Extract paginated structured reading pages and TOC for EPUB and TXT documents."""
+    if not file_path or not os.path.exists(file_path):
+        return {"format": "unknown", "total_pages": 0, "pages": [], "toc": []}
+
+    lower = file_path.lower()
+    pages: list[dict[str, Any]] = []
+    toc: list[dict[str, Any]] = []
+
+    if lower.endswith(".epub"):
+        try:
+            with zipfile.ZipFile(file_path, "r") as z:
+                opf_path = _locate_opf_path(z)
+                entry_paths: list[str] = []
+                if opf_path:
+                    opf_dir = os.path.dirname(opf_path)
+                    opf_data = safe_read_zip_entry(z, opf_path, max_bytes=5 * 1024 * 1024)
+                    if opf_data:
+                        root_opf = ET.fromstring(opf_data)
+                        manifest, spine_idrefs = _parse_opf_manifest_and_spine(root_opf)
+                        for idref in spine_idrefs:
+                            resolved = _resolve_entry_path(z, opf_dir, manifest[idref])
+                            if resolved:
+                                entry_paths.append(resolved)
+
+                if not entry_paths:
+                    entry_paths = [
+                        n
+                        for n in sorted(z.namelist())
+                        if n.lower().endswith((".html", ".xhtml", ".htm"))
+                    ]
+
+                chapter_idx = 0
+                for ep in entry_paths:
+                    raw_bytes = safe_read_zip_entry(z, ep)
+                    if not raw_bytes:
+                        continue
+                    raw_html = raw_bytes.decode("utf-8", errors="replace")
+                    ch_title, blocks = _parse_html_blocks(raw_html)
+                    if not blocks:
+                        continue
+                    chapter_idx += 1
+                    label = ch_title or f"Bölüm {chapter_idx}"
+                    start_p = len(pages) + 1
+                    ch_pages = _paginate_blocks(
+                        blocks, label, start_page=start_p, chars_per_page=chars_per_page
+                    )
+                    if ch_pages:
+                        toc.append(
+                            {
+                                "title": label[:120],
+                                "page_number": start_p,
+                                "target_page": start_p,
+                                "level": 1,
+                                "source": "epub_spine",
+                            }
+                        )
+                        pages.extend(ch_pages)
+        except Exception as e:
+            log_event("epub", "ERROR", f"EPUB okuyucu sayfalandırma hatası ({file_path}): {e}")
+
+        return {
+            "format": "epub",
+            "total_pages": len(pages),
+            "pages": pages,
+            "toc": toc,
+        }
+
+    # TXT structured pagination (keeping exact 1800-char alignment compatible with chunker where possible)
+    raw_txt = extract_text_from_txt(file_path, max_chars=0)
+    if not raw_txt or not raw_txt.strip():
+        return {"format": "txt", "total_pages": 0, "pages": [], "toc": []}
+
+    heading_re = re.compile(
+        r"^(?:bölüm|chapter|part|kısım|\d+\s*[\.\-]|(?:[IVXLCDM]+)\.)\s+.{1,80}$",
+        flags=re.I | re.U,
+    )
+    raw_paras = [p.strip() for p in re.split(r"\r?\n\s*\r?\n", raw_txt) if p.strip()]
+    if len(raw_paras) <= 1:
+        raw_paras = [ln.strip() for ln in raw_txt.splitlines() if ln.strip()]
+
+    blocks_all: list[dict[str, str]] = []
+    for p in raw_paras:
+        if len(p) <= 90 and heading_re.match(p):
+            blocks_all.append({"type": "h2", "text": p})
+        else:
+            blocks_all.append({"type": "p", "text": p})
+
+    pages = _paginate_blocks(blocks_all, "", start_page=1, chars_per_page=chars_per_page)
+    for pg in pages:
+        for blk in pg["blocks"]:
+            if blk["type"] in ("h1", "h2"):
+                toc.append(
+                    {
+                        "title": blk["text"][:120],
+                        "page_number": pg["page"],
+                        "target_page": pg["page"],
+                        "level": 1,
+                        "source": "txt_heading",
+                    }
+                )
+                if not pg["title"]:
+                    pg["title"] = blk["text"][:90]
+
+    return {
+        "format": "txt",
+        "total_pages": len(pages),
+        "pages": pages,
+        "toc": toc,
+    }

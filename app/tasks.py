@@ -18,13 +18,23 @@ FIELD_LOGS = "logs"
 
 
 def _collect_stale_active_tasks(tasks: dict, now: float) -> list[str]:
-    """Find active tasks eligible for archiving."""
+    """Find active tasks eligible for archiving without dropping queued/in-flight batch uploads."""
     to_archive = []
     for tid, t in tasks.items():
         age = now - t.get(FIELD_LAST_UPDATE, now)
-        if (t.get(FIELD_STATUS) in (STATUS_SUCCESS, STATUS_ERROR) and age > 15) or age > 120:
+        status = t.get(FIELD_STATUS)
+        if status in (STATUS_SUCCESS, STATUS_ERROR) and age > 15:
+            to_archive.append(tid)
+        elif age > 3600:
             to_archive.append(tid)
     return to_archive
+
+
+def register_task(task_id: str, task_entry: dict) -> None:
+    """Thread-safely register or overwrite an active task."""
+    with _tasks_lock:
+        active_tasks[task_id] = task_entry
+        _trim_active_tasks_if_overflow()
 
 
 def _archive_task_items(to_archive: list[str]) -> None:

@@ -21,7 +21,7 @@ from app.database import DatabaseManager
 from app.dependencies import get_db
 from app.logger import log_event
 from app.models import CollectionAddBookRequest, CollectionCreateRequest
-from app.utils import sanitize_filename, validate_file_hash
+from app.utils import sanitize_export_stem, validate_file_hash
 
 router = APIRouter(prefix="/api", tags=["collections"])
 
@@ -146,7 +146,7 @@ async def export_collection(
     }
 
     content = json.dumps(export_data, ensure_ascii=False, indent=2)
-    filename = f"{sanitize_filename(col_name)}_export.json"
+    filename = f"{sanitize_export_stem(col_name, default='koleksiyon')}_export.json"
 
     return Response(
         content=content,

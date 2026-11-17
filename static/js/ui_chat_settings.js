@@ -67,7 +67,13 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text })
       })
-        .then(r => r ? r.json() : null)
+        .then(async r => {
+          if (!r || !r.ok) {
+            const errPayload = r ? await r.json().catch(() => ({})) : {};
+            throw new Error(errPayload?.detail || errPayload?.message || 'Sunucu yanıt vermedi.');
+          }
+          return r.json();
+        })
         .then(data => {
           const msgEl = document.getElementById(aiMsgId);
           if (msgEl) {
@@ -76,7 +82,7 @@
         })
         .catch(err => {
           const msgEl = document.getElementById(aiMsgId);
-          if (msgEl) msgEl.textContent = "Hata oluştu. Lütfen tekrar dene.";
+          if (msgEl) msgEl.textContent = err?.message || "Hata oluştu. Lütfen tekrar dene.";
         })
         .finally(() => {
           // Unlock UI
@@ -306,19 +312,15 @@
           const triggerEl = document.activeElement instanceof HTMLElement ? document.activeElement : null;
           modal._sourceTriggerEl = triggerEl;
           const modalBox = modal.querySelector('.modal');
-          if (modalBox && triggerEl && triggerEl !== document.body && typeof triggerEl.getBoundingClientRect === 'function') {
-            const r = triggerEl.getBoundingClientRect();
-            if (r.width > 0 || r.height > 0) {
-              modalBox.style.setProperty('--modal-origin-x', `${Math.round(r.left + r.width / 2)}px`);
-              modalBox.style.setProperty('--modal-origin-y', `${Math.round(r.top + r.height / 2)}px`);
-            }
-          }
           modal.classList.remove('closing');
           document.body.classList.add('modal-open');
           if (window.Motion && typeof window.Motion.enter === 'function') {
             void window.Motion.enter(modal, { className: '', addClass: 'open', cleanExitClass: 'closing' });
           } else {
             modal.classList.add('open');
+          }
+          if (typeof window.setModalTransformOrigin === 'function') {
+            window.setModalTransformOrigin(modalBox, triggerEl);
           }
           switchSettingsTab('ai');
           if (typeof activateModalFocus === 'function') activateModalFocus(modal);
@@ -842,7 +844,13 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       })
-        .then(r => r ? r.json() : null)
+        .then(async r => {
+          if (!r || !r.ok) {
+            const errPayload = r ? await r.json().catch(() => ({})) : {};
+            throw new Error(errPayload?.detail || errPayload?.message || `HTTP ${r?.status || 500}`);
+          }
+          return r.json();
+        })
         .then(() => {
           showToast('Kitap bilgileri güncellendi.', 'success');
           closeModalDirect();
@@ -853,7 +861,7 @@
         })
         .catch(err => {
           console.error("saveBookEdit error:", err);
-          showToast('Kitap güncellenirken hata oluştu.', 'error');
+          showToast(`Kitap güncellenirken hata oluştu: ${err?.message || ''}`.trim(), 'error');
         });
     }
 
@@ -981,9 +989,6 @@
           clearTimeout(ops._closeTimer);
           ops._closeTimer = null;
         }
-        if (typeof flushOpsBodyIfDirty === 'function') {
-          flushOpsBodyIfDirty();
-        }
         if (toggleBtn) {
           toggleBtn.classList.add('is-open');
           toggleBtn.setAttribute('aria-expanded', 'true');
@@ -1004,6 +1009,9 @@
           ops.classList.remove('closing');
           ops.classList.add('active');
           if (focusTarget && typeof focusTarget.focus === 'function') focusTarget.focus();
+        }
+        if (typeof flushOpsBodyIfDirty === 'function') {
+          flushOpsBodyIfDirty();
         }
         if (typeof fetchTasksFromAPI === 'function') {
           void fetchTasksFromAPI();
@@ -1121,7 +1129,7 @@
                 duration: 280,
                 delay: Math.min(idx * 22, 180),
                 easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-                fill: 'both'
+                fill: 'backwards'
               }
             );
           }

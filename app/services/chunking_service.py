@@ -53,7 +53,7 @@ class DocumentChunker:
 
     @staticmethod
     def chunk_pdf(doc_path: str, file_hash: str, max_chars: int = 600) -> list[dict[str, Any]]:
-        """Extract chunks page-by-page from a PDF using pypdfium2."""
+        """Extract chunks page-by-page from a PDF using pypdfium2 with pdfplumber fallback."""
         import pypdfium2
 
         from app.pdf import PDFIUM_LOCK
@@ -74,7 +74,11 @@ class DocumentChunker:
                         try:
                             page = pdf[page_idx]
                             textpage = page.get_textpage()
-                            page_text = textpage.get_text_range() or ""
+                            try:
+                                page_text = textpage.get_text_range() or ""
+                            finally:
+                                textpage.close()
+                                page.close()
                             clean_text = page_text.strip()
                             if not clean_text:
                                 continue
@@ -99,8 +103,38 @@ class DocumentChunker:
                             )
                 finally:
                     pdf.close()
+            if chunks:
+                return chunks
         except Exception as e:
-            log_event("pdf", "ERROR", f"PDF pypdfium2 chunking hatası ({doc_path}): {e}")
+            log_event("pdf", "WARNING", f"PDF pypdfium2 chunking uyarısı, pdfplumber deneniyor ({doc_path}): {e}")
+
+        # Fallback: pdfplumber when pypdfium2 encounters malformed xref/data format or zero text
+        try:
+            import pdfplumber
+
+            chunk_global_idx = 0
+            with pdfplumber.open(doc_path) as pl_pdf:
+                for page_idx, pl_page in enumerate(pl_pdf.pages):
+                    page_no = page_idx + 1
+                    try:
+                        clean_text = (pl_page.extract_text() or "").strip()
+                        if not clean_text:
+                            continue
+                        for c_text in _split_text_into_chunks(clean_text, max_chars=max_chars):
+                            chunks.append(
+                                {
+                                    "dosya_hash": file_hash,
+                                    "sayfa_no": page_no,
+                                    "chunk_index": chunk_global_idx,
+                                    "metin": c_text,
+                                    "char_count": len(c_text),
+                                }
+                            )
+                            chunk_global_idx += 1
+                    except Exception as pl_err:
+                        log_event("pdf", "DEBUG", f"pdfplumber sayfa {page_no} notu: {pl_err}")
+        except Exception as fb_err:
+            log_event("pdf", "ERROR", f"PDF chunking fallback hatası ({doc_path}): {fb_err}")
 
         return chunks
 
@@ -122,8 +156,9 @@ class DocumentChunker:
 
                 full_text = extract_text_from_epub(doc_path, max_chars=500000)
             else:
-                with open(doc_path, encoding="utf-8", errors="replace") as f:
-                    full_text = f.read()
+                from app.epub import extract_text_from_txt
+
+                full_text = extract_text_from_txt(doc_path, max_chars=0)
         except Exception as e:
             log_event("document", "ERROR", f"EPUB/TXT okuma hatası ({doc_path}): {e}")
             return chunks

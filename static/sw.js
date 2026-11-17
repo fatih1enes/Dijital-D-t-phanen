@@ -1,5 +1,5 @@
 /* ═══════════ sw.js — Dijital Kütüphane PWA Service Worker ═══════════ */
-const CACHE_NAME = 'dijital-kutuphane-v2026111506';
+const CACHE_NAME = 'dijital-kutuphane-v2026111801';
 const STATIC_ASSETS = [
   '/',
   '/static/favicon.svg',
@@ -61,8 +61,8 @@ async function handleNavigationFetch(request) {
 
 async function handleStaticAssetFetch(request) {
   try {
-    const cached = await caches.match(request);
-    if (cached) return cached;
+    const exactCached = await caches.match(request);
+    if (exactCached) return exactCached;
 
     const response = await fetch(request);
     if (response?.status === 200 && response.type === 'basic') {
@@ -77,32 +77,41 @@ async function handleStaticAssetFetch(request) {
     return response;
   } catch (err) {
     console.warn('PWA static asset fetch failed:', err);
-    return (await caches.match('/')) || Response.error();
+    const ignoreQueryMatch = await caches.match(request, { ignoreSearch: true });
+    if (ignoreQueryMatch) return ignoreQueryMatch;
+    // Never return '/' HTML for JS/CSS assets (which triggers SyntaxError: Unexpected token '<')
+    return Response.error();
   }
 }
 
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
+  const req = event.request;
+  if (req.method !== 'GET' || req.headers.has('range')) {
+    return;
+  }
 
-  // Bypass cache for API calls, WebSocket, handoff, and book downloads
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
+  // Bypass cache for API calls, WebSocket, auth/login, handoff, thumbnails, and book downloads
   if (
     url.pathname.startsWith('/api/') ||
     url.pathname.startsWith('/ws') ||
     url.pathname.startsWith('/handoff/') ||
     url.pathname.startsWith('/thumbnails/') ||
     url.pathname.startsWith('/opds') ||
-    event.request.method !== 'GET'
+    url.pathname === '/login' ||
+    url.pathname === '/sw.js'
   ) {
     return;
   }
 
-  // Network-first strategy for HTML pages, cache fallback
-  if (event.request.mode === 'navigate') {
-    event.respondWith(handleNavigationFetch(event.request));
+  if (req.mode === 'navigate') {
+    event.respondWith(handleNavigationFetch(req));
     return;
   }
 
-  // Cache-first strategy for static assets
-  event.respondWith(handleStaticAssetFetch(event.request));
+  event.respondWith(handleStaticAssetFetch(req));
 });
-

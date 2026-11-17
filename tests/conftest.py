@@ -105,6 +105,8 @@ def init_test_db():
                 dosya_yolu TEXT,
                 is_favorite BOOLEAN DEFAULT 0,
                 okunulan_sayfa INTEGER DEFAULT 1,
+                sayfa_sayisi INTEGER DEFAULT 0,
+                dosya_boyutu INTEGER DEFAULT 0,
                 sira_numarasi INTEGER DEFAULT 999999,
                 has_cover BOOLEAN DEFAULT 0,
                 ekleme_tarihi TIMESTAMP DEFAULT CURRENT_TIMESTAMP

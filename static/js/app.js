@@ -1,5 +1,11 @@
 /* ═══════════ app.js — Application Bootstrap & Initialization ═══════════ */
 
+    function isExternalFileDrag(e) {
+      const types = e?.dataTransfer?.types;
+      if (!types) return false;
+      return Array.from(types).includes('Files');
+    }
+
     // ── API ENTEGRASYONU ──────────────────────────────────────
     async function bootstrap() {
       try {
@@ -14,14 +20,20 @@
         fetchTasksFromAPI().catch(err => console.warn("Task fetch error:", err));
       }
 
-      // Infinite Scroll listener
+      // Infinite Scroll listener (passive + rAF throttled for 60fps scroll)
+      let scrollCheckTicking = false;
       window.addEventListener('scroll', () => {
-        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
-          if (!window.isLoadingMore && (window.allBooks?.length || 0) < (window.totalBooks || 0)) {
-            loadBooksFromAPI((window.currentPage || 1) + 1, true).catch(err => console.error(err));
+        if (scrollCheckTicking) return;
+        scrollCheckTicking = true;
+        requestAnimationFrame(() => {
+          scrollCheckTicking = false;
+          if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
+            if (!window.isLoadingMore && (window.allBooks?.length || 0) < (window.totalBooks || 0)) {
+              loadBooksFromAPI((window.currentPage || 1) + 1, true).catch(err => console.error(err));
+            }
           }
-        }
-      });
+        });
+      }, { passive: true });
 
       // Chat Counter Listener
       const chatInput = document.getElementById('chat-input');
@@ -29,26 +41,11 @@
         chatInput.addEventListener('input', updateChatCounter);
       }
 
-      // Sürükle-Bırak Entegrasyonu (Tüm pencere ve hero alanı)
+      // Hero drop-box visual highlight (only for external OS file drags; drop is handled centrally by setupGlobalDragDrop)
       const dropBox = document.getElementById('drop-box');
       if (dropBox) {
-        window.addEventListener('dragover', (e) => {
-          e.preventDefault();
-          dropBox.classList.add('dragover');
-        });
-        window.addEventListener('dragleave', (e) => {
-          if (!e.relatedTarget) {
-            dropBox.classList.remove('dragover');
-          }
-        });
-        window.addEventListener('drop', (e) => {
-          e.preventDefault();
-          dropBox.classList.remove('dragover');
-          if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-            handleFiles(e.dataTransfer.files);
-          }
-        });
         dropBox.addEventListener('dragover', (e) => {
+          if (!isExternalFileDrag(e)) return;
           e.preventDefault();
           dropBox.classList.add('dragover');
         });
@@ -56,10 +53,11 @@
           dropBox.classList.remove('dragover');
         });
         dropBox.addEventListener('drop', (e) => {
+          if (!isExternalFileDrag(e)) return;
           e.preventDefault();
           e.stopPropagation();
           dropBox.classList.remove('dragover');
-          if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          if (e.dataTransfer?.files?.length > 0) {
             handleFiles(e.dataTransfer.files);
           }
         });
@@ -82,7 +80,7 @@
       const pill = overlay ? overlay.querySelector('.pill') : null;
 
       const show = (e) => {
-        if (!overlay) return;
+        if (!overlay || !isExternalFileDrag(e)) return;
         overlay.classList.add('visible');
         const items = e?.dataTransfer?.items;
         if (pill && items) {
@@ -101,27 +99,38 @@
       };
 
       ['dragenter', 'dragover'].forEach(evt => {
-        window.addEventListener(evt, (e) => { e.preventDefault(); show(e); });
+        window.addEventListener(evt, (e) => {
+          if (!isExternalFileDrag(e)) return;
+          e.preventDefault();
+          show(e);
+        });
       });
       window.addEventListener('dragleave', (e) => {
         if (e.clientX <= 0 || e.clientY <= 0 || e.clientX >= window.innerWidth || e.clientY >= window.innerHeight) hide();
       });
       window.addEventListener('drop', (e) => {
+        if (!isExternalFileDrag(e)) return;
         e.preventDefault();
         if (e.target?.closest?.('#drop-overlay')) return;
         hide();
-        handleFiles(e.dataTransfer.files);
+        if (e.dataTransfer?.files?.length > 0) {
+          handleFiles(e.dataTransfer.files);
+        }
       });
       if (overlay) {
         overlay.addEventListener('drop', (e) => {
+          if (!isExternalFileDrag(e)) {
+            hide();
+            return;
+          }
           e.preventDefault();
           e.stopPropagation();
           hide();
-          handleFiles(e.dataTransfer.files);
+          if (e.dataTransfer?.files?.length > 0) {
+            handleFiles(e.dataTransfer.files);
+          }
         });
       }
-      document.addEventListener('dragover', (e) => e.preventDefault());
-      document.addEventListener('drop', (e) => e.preventDefault());
     }
 
     function makeUploadKey(file) {
@@ -173,7 +182,9 @@
         : `<i class="fas fa-moon${spinClass}"></i>`;
       const mainThemeBtn = document.getElementById('theme-toggle');
       if (mainThemeBtn) mainThemeBtn.innerHTML = iconHTML;
-      document.querySelectorAll('.compact-theme-toggle').forEach(btn => btn.innerHTML = iconHTML);
+      document.querySelectorAll('#compact-theme-btn, .compact-theme-btn, .compact-theme-toggle').forEach(btn => {
+        btn.innerHTML = iconHTML;
+      });
     }
 
     function toggleTheme() {
@@ -182,8 +193,12 @@
 
       const apply = () => {
         html.dataset.theme = next;
-        localStorage.setItem('kutuphane-theme', next);
-        localStorage.setItem('theme', next);
+        try {
+          localStorage.setItem('kutuphane-theme', next);
+          localStorage.setItem('theme', next);
+        } catch (_e) {
+          /* Storage unavailable */
+        }
         updateThemeIcons(next, true);
         updateThemeMeta(next);
       };
@@ -204,15 +219,21 @@
       document.startViewTransition(apply);
     }
 
-    // Sayfa yüklenirken kaydedilmiş tema tercihini uygula
+    // Sayfa yüklenirken kaydedilmiş veya sistem tema tercihini uygula
     (function () {
-      const saved = localStorage.getItem('kutuphane-theme') || localStorage.getItem('theme') || 'light';
+      let saved = document.documentElement.dataset.theme;
+      try {
+        saved = localStorage.getItem('kutuphane-theme') || localStorage.getItem('theme') || saved;
+      } catch (_e) {
+        /* Storage unavailable */
+      }
+      if (!saved) {
+        saved = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
       document.documentElement.dataset.theme = saved;
       updateThemeIcons(saved, false);
       updateThemeMeta(saved);
     })();
-
-    // ─── İŞLEM MERKEZİ MANTIĞI ──────────────────────────────────────────
 
     // ─── HEADER & COMPACT-NAV INTERSECTION OBSERVER (Zero Jitter) ──────
     const mainHeader = document.querySelector('header:not(.workspace-header)');
@@ -225,8 +246,8 @@
         if (entry.isIntersecting) {
           compactNav.classList.remove('visible');
         } else {
-          const workspace = document.getElementById('workspace-view');
-          const isWorkspaceActive = workspace && workspace.classList.contains('active');
+          const workspace = document.getElementById('workspace-reader');
+          const isWorkspaceActive = workspace && workspace.classList.contains('open');
           if (!isWorkspaceActive) {
             compactNav.classList.add('visible');
           }

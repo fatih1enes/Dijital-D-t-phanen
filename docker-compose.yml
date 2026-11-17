@@ -10,7 +10,7 @@ services:
       - .env
     environment:
       # Container dış ağa açıldığı için .env içinde ACCESS_PASSWORD tanımlanmalıdır!
+      - HOST=0.0.0.0
       - PORT=8000
-      - AUTO_OPEN_BROWSER=False
       - AUTO_OPEN_BROWSER=False
     restart: unless-stopped

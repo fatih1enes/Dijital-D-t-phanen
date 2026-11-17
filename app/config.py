@@ -179,22 +179,32 @@ def save_config(config: dict) -> None:
     """Save configuration to file and invalidate/update cache atomically with Windows retry."""
     global _cached_config, _cached_config_mtime
     normalized = _normalize_config(config)
-    tmp_path = f"{CONFIG_PATH}.tmp"
-    with open(tmp_path, "w", encoding="utf-8") as f:
-        json.dump(normalized, f, indent=4, ensure_ascii=False)
-
     with _config_lock:
-        replaced = False
-        for attempt in range(5):
-            try:
-                os.replace(tmp_path, CONFIG_PATH)
-                replaced = True
-                break
-            except OSError:
-                time.sleep(0.05 * (attempt + 1))
+        os.makedirs(os.path.dirname(CONFIG_PATH) or ".", exist_ok=True)
+        tmp_path = f"{CONFIG_PATH}.{os.getpid()}.{threading.get_ident()}.tmp"
+        try:
+            with open(tmp_path, "w", encoding="utf-8") as f:
+                json.dump(normalized, f, indent=4, ensure_ascii=False)
 
-        if not replaced:
-            os.replace(tmp_path, CONFIG_PATH)
+            replaced = False
+            for attempt in range(5):
+                try:
+                    os.replace(tmp_path, CONFIG_PATH)
+                    replaced = True
+                    break
+                except OSError:
+                    time.sleep(0.05 * (attempt + 1))
+
+            if not replaced:
+                os.replace(tmp_path, CONFIG_PATH)
+        finally:
+            if os.path.exists(tmp_path):
+                try:
+                    os.remove(tmp_path)
+                except OSError as rm_err:
+                    import logging
+
+                    logging.debug("Config temp cleanup warning: %s", rm_err)
 
         try:
             _cached_config_mtime = os.path.getmtime(CONFIG_PATH)
@@ -203,13 +213,24 @@ def save_config(config: dict) -> None:
         _cached_config = normalized
 
 
+def is_safe_tesseract_executable(cmd_path: str) -> bool:
+    """Ensure Tesseract command points strictly to a local tesseract binary and not arbitrary executables/UNC."""
+    if not cmd_path:
+        return True
+    cleaned = cmd_path.strip()
+    if cleaned.startswith("\\\\") or "\x00" in cleaned:
+        return False
+    base = os.path.basename(cleaned).lower()
+    return base in ("tesseract", "tesseract.exe")
+
+
 def configure_tesseract_from_config(config: dict) -> str:
     """Configure Tesseract OCR command from config if specified, with Windows auto-detection."""
-    import os
-
     import pytesseract
 
     tess_cmd = str(config.get("tesseract_cmd") or "").strip()
+    if tess_cmd and not is_safe_tesseract_executable(tess_cmd):
+        tess_cmd = ""
 
     # Windows auto-detection if not explicitly set
     if not tess_cmd and os.name == "nt":

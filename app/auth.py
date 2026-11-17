@@ -181,11 +181,14 @@ def _is_matching_host(normalized: str, host: str) -> bool:
 
 
 def _is_host_private_or_local(host_name: str) -> bool:
-    """Determine if a given hostname is loopback, local, or private IP."""
-    if _is_local_host(host_name) or host_name in ("0.0.0.0",):
+    """Determine if a given hostname is loopback, RFC-reserved local/mDNS LAN, or private IP."""
+    lowered = str(host_name or "").strip().lower()
+    if _is_local_host(lowered) or lowered in ("0.0.0.0", "test"):
+        return True
+    if lowered.endswith((".local", ".lan", ".home.arpa", ".localhost")):
         return True
     try:
-        ip = ipaddress.ip_address(host_name)
+        ip = ipaddress.ip_address(lowered)
         return ip.is_private or ip.is_loopback
     except ValueError:
         return False
@@ -250,6 +253,13 @@ def _ensure_safe_request_origin(
             raise HTTPException(status_code=403, detail="Invalid referer origin")
 
 
+def _safe_compare_secret(a: str | None, b: str | None) -> bool:
+    """Constant-time secret comparison supporting full UTF-8/Turkish characters without TypeError."""
+    if a is None or b is None:
+        return False
+    return secrets.compare_digest(str(a).encode("utf-8"), str(b).encode("utf-8"))
+
+
 def _is_session_authenticated(request: Request) -> bool:
     """Check if session is authenticated."""
     token = request.cookies.get(AUTH_COOKIE_NAME)
@@ -264,7 +274,7 @@ def _is_session_authenticated(request: Request) -> bool:
         boot_id = _get_boot_id()
         is_auth = bool(request.session.get("authenticated"))
         session_boot_id = str(request.session.get("boot_id") or "")
-        return is_auth and secrets.compare_digest(session_boot_id, boot_id)
+        return is_auth and _safe_compare_secret(session_boot_id, boot_id)
     except Exception:
         return False
 
@@ -298,8 +308,10 @@ def _ensure_authorized(
     admin_token = os.environ.get("ADMIN_TOKEN", ADMIN_TOKEN).strip()
     if admin_token:
         provided = request.headers.get("X-Admin-Token", "").strip()
-        if provided and secrets.compare_digest(provided, admin_token):
+        if provided and _safe_compare_secret(provided, admin_token):
             return
+    if not _get_access_password() and _is_unprotected_remote_allowed():
+        return
     raise HTTPException(status_code=403, detail="Unauthorized")
 
 

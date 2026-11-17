@@ -1,8 +1,11 @@
 """Lightweight, in-process embedding service with vector serialization and cosine math."""
 
 import hashlib
+import re
 
 import numpy as np
+
+from app.utils import tr_lower
 
 EMBEDDING_DIM = 384
 
@@ -57,7 +60,9 @@ class EmbeddingService:
             return [0.0] * self.dim
 
         vec = np.zeros(self.dim, dtype=np.float32)
-        words = text.lower().split()
+        words = re.findall(r"\w+", tr_lower(text), flags=re.UNICODE)
+        if not words:
+            return [0.0] * self.dim
 
         for word in words:
             # 1. Word level hash projection
@@ -84,6 +89,10 @@ class EmbeddingService:
         """Generate embedding and immediately serialize to SQLite BLOB bytes."""
         vec = self.generate_embedding(text)
         return serialize_vector(vec)
+
+    def generate_embeddings_batch(self, texts: list[str]) -> list[bytes]:
+        """Generate serialized float32 BLOB embeddings for a batch of chunk texts."""
+        return [self.generate_embedding_blob(t) for t in texts]
 
 
 # Global singleton instance
