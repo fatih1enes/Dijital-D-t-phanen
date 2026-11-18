@@ -587,7 +587,7 @@ h1 em {
   top: 0;
   left: 0;
   right: 0;
-  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  background: color-mix(in srgb, var(--surface) 96%, var(--paper));
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   border-bottom: 1px solid var(--line);

@@ -237,37 +237,36 @@
       updateThemeMeta(saved);
     })();
 
-    // ─── HEADER & COMPACT-NAV INTERSECTION OBSERVER (Zero Jitter) ──────
+    // ─── HEADER & COMPACT-NAV SCROLL VISIBILITY ──────────────────────────────
     const mainHeader = document.querySelector('header:not(.workspace-header)');
     const compactNav = document.getElementById('compact-nav');
     const scrollBtn = document.getElementById('scroll-top-btn');
 
-    if (mainHeader && compactNav && 'IntersectionObserver' in window) {
-      const headerObserver = new IntersectionObserver((entries) => {
-        const entry = entries[0];
-        if (entry.isIntersecting) {
-          compactNav.classList.remove('visible');
-        } else {
-          const workspace = document.getElementById('workspace-reader');
-          const isWorkspaceActive = workspace && workspace.classList.contains('open');
-          if (!isWorkspaceActive) {
-            compactNav.classList.add('visible');
-          }
-        }
-      }, {
-        threshold: 0
-      });
-      headerObserver.observe(mainHeader);
-    }
-
-    // Scroll to Top Button Visibility
-    window.addEventListener('scroll', () => {
-      if (window.scrollY > 600) {
+    function updateStickyBarsOnScroll() {
+      const y = window.scrollY || window.pageYOffset || 0;
+      if (y > 600) {
         scrollBtn?.classList.add('visible');
       } else {
         scrollBtn?.classList.remove('visible');
       }
-    }, { passive: true });
+
+      if (!compactNav) return;
+      const workspace = document.getElementById('workspace-reader');
+      const isWorkspaceActive = workspace && workspace.classList.contains('open');
+      if (isWorkspaceActive || document.body.classList.contains('is-library-empty') || y < 180) {
+        compactNav.classList.remove('visible');
+        return;
+      }
+      const controlsPanel = document.querySelector('.controls-panel');
+      const anchorEl = (controlsPanel && controlsPanel.offsetParent !== null) ? controlsPanel : mainHeader;
+      if (anchorEl && anchorEl.getBoundingClientRect().bottom <= 0) {
+        compactNav.classList.add('visible');
+      } else {
+        compactNav.classList.remove('visible');
+      }
+    }
+
+    window.addEventListener('scroll', updateStickyBarsOnScroll, { passive: true });
 
 // EXPOSE FUNCTIONS TO GLOBAL SCOPE
 window.loadBooksFromAPI = loadBooksFromAPI;

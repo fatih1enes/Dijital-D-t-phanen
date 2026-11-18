@@ -382,7 +382,7 @@
       const compactNav = document.getElementById('compact-nav');
 
       document.body.classList.toggle('is-library-empty', !hasItems);
-      _safeLsSet('kutuphane_has_books', hasItems ? '1' : '0');
+      _safeLsSet('kutuphane_has_books', (window.allBooks && window.allBooks.length > 0) ? '1' : '0');
 
       if (hasItems) {
         if (importZone) importZone.style.display = 'none';
@@ -397,6 +397,7 @@
           compactAddBtn.style.display = 'inline-flex';
           compactAddBtn.classList.remove('hidden');
         }
+        if (typeof window.syncUploadEmptyState === 'function') window.syncUploadEmptyState();
       } else {
         if (importZone) importZone.style.display = 'block';
         if (mainContent) mainContent.style.display = 'none';
@@ -659,6 +660,9 @@
     </div>
   `;
       grid.prepend(card);
+      const emptyState = document.getElementById('empty-state');
+      if (emptyState) emptyState.style.display = 'none';
+      if (typeof window.syncUploadEmptyState === 'function') window.syncUploadEmptyState();
       return {
         card,
         filename,
@@ -991,6 +995,7 @@
       }
       if (holder?.dedupeKey) pendingUploads.delete(holder.dedupeKey);
       if (holder?.card && !keep) {
+        holder.card.dataset.exiting = '1';
         if (immediate) {
           holder.card.remove();
         } else if (window.Motion && typeof window.Motion.exit === 'function') {
@@ -1010,6 +1015,9 @@
       for (const [fn, tmp] of telegramDlCards.entries()) {
         if (tmp === tempId) telegramDlCards.delete(fn);
       }
+      const hasRemaining = Boolean((window.allBooks && window.allBooks.length > 0) || uploadingCards.size > 0);
+      updateLibraryZoneVisibility(hasRemaining);
+      if (typeof window.syncUploadEmptyState === 'function') window.syncUploadEmptyState();
     }
 
     async function deleteBook(hash) {

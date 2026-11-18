@@ -594,9 +594,33 @@
     }
     window.renderGridSkeletons = renderGridSkeletons;
 
+    function getActiveUploadingCount() {
+      const mapCount = (typeof uploadingCards !== 'undefined' && uploadingCards) ? uploadingCards.size : 0;
+      const domCount = document.querySelectorAll('#grid-view .book-card.uploading:not([data-exiting])').length;
+      return Math.max(mapCount, domCount);
+    }
+
+    function syncUploadEmptyState() {
+      const books = (typeof getFiltered === 'function') ? getFiltered() : (window.allBooks || []);
+      const uploadingCount = getActiveUploadingCount();
+      const emptyState = document.getElementById('empty-state');
+      updateEmptyStateUI(emptyState, books.length);
+      const resultInfo = document.getElementById('result-info');
+      if (resultInfo) {
+        if (books.length === 0 && uploadingCount > 0) {
+          resultInfo.textContent = `${uploadingCount} belge işleniyor...`;
+        } else if (books.length > 0 && uploadingCount > 0) {
+          resultInfo.textContent = `${books.length} kitap gösteriliyor · ${uploadingCount} belge işleniyor...`;
+        } else {
+          resultInfo.textContent = `${books.length} kitap gösteriliyor`;
+        }
+      }
+    }
+    window.syncUploadEmptyState = syncUploadEmptyState;
+
     function updateEmptyStateUI(emptyState, booksCount) {
       if (!emptyState) return;
-      if (booksCount > 0) {
+      if (booksCount > 0 || getActiveUploadingCount() > 0) {
         emptyState.style.display = 'none';
         return;
       }
@@ -664,10 +688,7 @@
     // --- RENDER ---
     function render() {
       const books = getFiltered();
-      const resultInfo = document.getElementById('result-info');
-      if (resultInfo) resultInfo.textContent = `${books.length} kitap gösteriliyor`;
-      const emptyState = document.getElementById('empty-state');
-      updateEmptyStateUI(emptyState, books.length);
+      syncUploadEmptyState();
 
       renderRecentShelf();
 

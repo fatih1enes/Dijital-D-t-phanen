@@ -1,5 +1,5 @@
 /* ═══════════ sw.js — Dijital Kütüphane PWA Service Worker ═══════════ */
-const CACHE_NAME = 'dijital-kutuphane-v2026111808';
+const CACHE_NAME = 'dijital-kutuphane-v2026111809';
 const CDN_CACHE_NAME = 'dijital-kutuphane-cdn-v2';
 const PERSISTENT_CACHES = new Set([
   CACHE_NAME,
