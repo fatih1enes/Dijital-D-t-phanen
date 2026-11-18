@@ -298,7 +298,7 @@ async def _create_schema_tables(conn: aiosqlite.Connection) -> None:
             dosya_hash TEXT UNIQUE,
             dosya_yolu TEXT,
             is_favorite BOOLEAN DEFAULT 0,
-            okunulan_sayfa INTEGER DEFAULT 1,
+            okunulan_sayfa INTEGER DEFAULT 0,
             sira_numarasi INTEGER DEFAULT 999999,
             has_cover BOOLEAN DEFAULT 0,
             sayfa_sayisi INTEGER DEFAULT 0,
@@ -378,8 +378,64 @@ async def _create_schema_tables(conn: aiosqlite.Connection) -> None:
             metin TEXT NOT NULL,
             char_count INTEGER NOT NULL,
             embedding BLOB,
+            embedding_model TEXT DEFAULT 'hash-v1',
             olusturma_tarihi TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (dosya_hash) REFERENCES kitaplar(dosya_hash) ON DELETE CASCADE
+        )
+    """)
+    await conn.execute("""
+        CREATE TABLE IF NOT EXISTS kitap_ocr_sayfalar (
+            dosya_hash TEXT NOT NULL,
+            sayfa_no INTEGER NOT NULL,
+            img_w INTEGER NOT NULL DEFAULT 0,
+            img_h INTEGER NOT NULL DEFAULT 0,
+            words_json TEXT NOT NULL DEFAULT '[]',
+            full_text TEXT NOT NULL DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (dosya_hash, sayfa_no)
+        )
+    """)
+    await conn.execute("""
+        CREATE TABLE IF NOT EXISTS kitap_yer_imleri (
+            dosya_hash TEXT NOT NULL,
+            sayfa_no INTEGER NOT NULL,
+            etiket TEXT DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (dosya_hash, sayfa_no)
+        )
+    """)
+    await conn.execute("""
+        CREATE TABLE IF NOT EXISTS okuma_oturumlari (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            dosya_hash TEXT NOT NULL,
+            tarih_gun TEXT NOT NULL,
+            sure_saniye INTEGER NOT NULL DEFAULT 0,
+            okunan_sayfa_sayisi INTEGER NOT NULL DEFAULT 0,
+            baslangic_sayfa INTEGER DEFAULT 1,
+            bitis_sayfa INTEGER DEFAULT 1,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(dosya_hash, tarih_gun)
+        )
+    """)
+    await conn.execute("""
+        CREATE TABLE IF NOT EXISTS srs_kartlari (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            dosya_hash TEXT NOT NULL,
+            not_id TEXT,
+            sayfa_no INTEGER DEFAULT 1,
+            on_yuz TEXT NOT NULL,
+            arka_yuz TEXT NOT NULL,
+            baglam TEXT DEFAULT '',
+            durum INTEGER DEFAULT 0,
+            stability REAL DEFAULT 0.0,
+            difficulty REAL DEFAULT 5.0,
+            reps INTEGER DEFAULT 0,
+            lapses INTEGER DEFAULT 0,
+            scheduled_days INTEGER DEFAULT 0,
+            elapsed_days INTEGER DEFAULT 0,
+            last_review TEXT,
+            due_at TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
     await conn.execute("""
@@ -498,6 +554,17 @@ async def _run_migrations(conn: aiosqlite.Connection) -> None:
             "INSERT OR IGNORE INTO schema_migrations (version, name) VALUES (7, 'add_page_count_and_file_size')"
         )
 
+    if 8 not in applied_versions:
+        cur = await conn.execute("PRAGMA table_info(kitap_chunks)")
+        chunk_cols = {row[1] for row in await cur.fetchall()}
+        if "embedding_model" not in chunk_cols:
+            await conn.execute(
+                "ALTER TABLE kitap_chunks ADD COLUMN embedding_model TEXT DEFAULT 'hash-v1'"
+            )
+        await conn.execute(
+            "INSERT OR IGNORE INTO schema_migrations (version, name) VALUES (8, 'rd_v8_embeddings_ocr_bookmarks_srs')"
+        )
+
 
 async def _create_indexes(conn: aiosqlite.Connection) -> None:
     """Create indexes across tables for high-performance lookups."""
@@ -524,6 +591,12 @@ async def _create_indexes(conn: aiosqlite.Connection) -> None:
         "CREATE INDEX IF NOT EXISTS idx_kg_relations_tgt ON kg_relations(target_id)",
         "CREATE INDEX IF NOT EXISTS idx_kg_relations_type ON kg_relations(relation_type)",
         "CREATE INDEX IF NOT EXISTS idx_kitap_toc_hash ON kitap_toc(dosya_hash)",
+        "CREATE INDEX IF NOT EXISTS idx_kitap_ocr_hash ON kitap_ocr_sayfalar(dosya_hash)",
+        "CREATE INDEX IF NOT EXISTS idx_kitap_yer_imleri_hash ON kitap_yer_imleri(dosya_hash)",
+        "CREATE INDEX IF NOT EXISTS idx_okuma_oturumlari_tarih ON okuma_oturumlari(tarih_gun)",
+        "CREATE INDEX IF NOT EXISTS idx_okuma_oturumlari_hash ON okuma_oturumlari(dosya_hash)",
+        "CREATE INDEX IF NOT EXISTS idx_srs_kartlari_due ON srs_kartlari(due_at)",
+        "CREATE INDEX IF NOT EXISTS idx_srs_kartlari_hash ON srs_kartlari(dosya_hash)",
     ]
     for idx_sql in indexes:
         await conn.execute(idx_sql)

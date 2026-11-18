@@ -61,23 +61,42 @@
 
       const aiMsgId = 'ai-typing-' + Date.now();
       addChatMessage('ai', 'Düşünüyorum...', aiMsgId);
+      const bodyEl = document.getElementById('chat-body');
+      let streamedText = '';
+      let chatRaf = 0;
 
-      apiFetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text })
-      })
-        .then(async r => {
-          if (!r || !r.ok) {
-            const errPayload = r ? await r.json().catch(() => ({})) : {};
-            throw new Error(errPayload?.detail || errPayload?.message || 'Sunucu yanıt vermedi.');
+      const renderStreamChunk = () => {
+        chatRaf = 0;
+        const msgEl = document.getElementById(aiMsgId);
+        if (!msgEl) return;
+        const nearBottom = !bodyEl || (bodyEl.scrollHeight - bodyEl.scrollTop - bodyEl.clientHeight) < 60;
+        msgEl.innerHTML = parseMarkdown(streamedText);
+        if (nearBottom && bodyEl) bodyEl.scrollTop = bodyEl.scrollHeight;
+      };
+
+      streamChatSSE(
+        { message: text },
+        {
+          onToken: (delta) => {
+            if (!delta) return;
+            streamedText += delta;
+            if (!chatRaf) chatRaf = requestAnimationFrame(renderStreamChunk);
+          },
+          onError: (errMsg) => {
+            const msgEl = document.getElementById(aiMsgId);
+            if (msgEl && !streamedText) msgEl.textContent = errMsg;
           }
-          return r.json();
-        })
-        .then(data => {
+        }
+      )
+        .then(() => {
+          if (chatRaf) {
+            cancelAnimationFrame(chatRaf);
+            chatRaf = 0;
+          }
           const msgEl = document.getElementById(aiMsgId);
-          if (msgEl) {
-            startChatTypewriter(data?.response || '', msgEl);
+          if (msgEl && streamedText) {
+            msgEl.innerHTML = parseMarkdown(streamedText);
+            if (bodyEl) bodyEl.scrollTop = bodyEl.scrollHeight;
           }
         })
         .catch(err => {
@@ -1029,6 +1048,9 @@
 
 
     async function loadStats() {
+      if (typeof loadFocusedReadingAnalytics === 'function') {
+        void loadFocusedReadingAnalytics();
+      }
       try {
         const res = await apiFetch('/api/stats');
         const data = await res.json();

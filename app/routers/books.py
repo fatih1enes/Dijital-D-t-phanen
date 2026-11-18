@@ -42,6 +42,7 @@ from app.logger import log_event, notify_ws
 from app.models import (
     AnnotationBatchRequest,
     AnnotationCreateRequest,
+    BookmarkToggleRequest,
     BookOrderRequest,
     BookUpdateRequest,
     SaveProgressRequest,
@@ -1100,5 +1101,390 @@ async def export_book_data(
         headers={
             "Content-Disposition": f"attachment; filename*=UTF-8''{safe_name}",
             "Cache-Control": "no-cache",
+        },
+    )
+
+
+@router.get("/books/embedding-status")
+async def get_embedding_status(
+    request: Request, db: DatabaseManager = Depends(get_db)
+) -> dict[str, Any]:
+    """Return breakdown of active semantic embedding models across indexed book chunks."""
+    _ensure_authorized(request)
+    from app.services.embedding_service import embedding_service
+
+    models_breakdown: dict[str, int] = {}
+    try:
+        cur = await db.conn.execute(
+            "SELECT COALESCE(embedding_model, 'hash-v1') AS m, COUNT(*) FROM kitap_chunks GROUP BY m"
+        )
+        for m_name, cnt in await cur.fetchall():
+            models_breakdown[str(m_name)] = int(cnt)
+    except Exception as err:
+        log_event("database", "DEBUG", f"Embedding status query note: {err}")
+
+    return {
+        "status": STATUS_SUCCESS,
+        "local_engine": embedding_service.active_local_model_id(),
+        "models": models_breakdown,
+        "total_chunks": sum(models_breakdown.values()),
+    }
+
+
+@router.post("/books/reindex-embeddings")
+async def reindex_all_book_embeddings(
+    request: Request,
+    x_ai_provider: str | None = Header(None, alias="X-AI-Provider"),
+    x_ai_key: str | None = Header(None, alias="X-AI-Key"),
+    x_ai_base_url: str | None = Header(None, alias="X-AI-Base-Url"),
+    db: DatabaseManager = Depends(get_db),
+) -> dict[str, Any]:
+    """Re-generate semantic vector embeddings for all books in the library in the background."""
+    _ensure_authorized(request)
+    cfg = load_config()
+    provider, api_key, _, base_url = resolve_ai_credentials(
+        provider=x_ai_provider,
+        api_key=x_ai_key,
+        model=None,
+        base_url=x_ai_base_url,
+        cfg=cfg,
+        is_key_fn=is_real_api_key,
+    )
+
+    cur = await db.conn.execute("SELECT dosya_hash, kitap_adi, dosya_yolu FROM kitaplar")
+    books = [dict(r) for r in await cur.fetchall()]
+    if not books:
+        return {"status": STATUS_SUCCESS, "message": "İndekslenecek kitap bulunamadı.", "queued": 0}
+
+    task_id = f"reindex-{uuid.uuid4().hex[:10]}"
+    from app.tasks import ACTIVE_TASKS, update_task_status
+
+    ACTIVE_TASKS[task_id] = {
+        "filename": "Anlamsal Vektör Yeniden İndeksleme",
+        "status": "processing",
+        "percentage": 5,
+        "log_message": f"{len(books)} kitap için anlamsal vektörler hazırlanıyor...",
+        "last_update": time.time(),
+        "logs": [],
+    }
+
+    async def _run_reindex_job() -> None:
+        from app.database import get_db_context
+        from app.services.chunking_service import DocumentChunker, index_document_chunks
+        from app.services.embedding_service import embedding_service
+        from app.utils import resolve_portable_book_path
+
+        reindexed_books = 0
+        total_books = max(1, len(books))
+        used_model = embedding_service.active_local_model_id()
+        try:
+            async with get_db_context() as bg_db:
+                for idx_b, b_row in enumerate(books):
+                    b_hash = str(b_row.get("dosya_hash") or "")
+                    b_title = str(b_row.get("kitap_adi") or "Kitap")
+                    pct = min(96, max(8, int(((idx_b + 1) / total_books) * 92)))
+                    update_task_status(
+                        task_id,
+                        "processing",
+                        pct,
+                        f"Anlamsal vektör üretiliyor ({idx_b + 1}/{total_books}): {b_title}",
+                    )
+                    cur_c = await bg_db.conn.execute(
+                        "SELECT sayfa_no, chunk_index, metin, char_count FROM kitap_chunks WHERE dosya_hash = ? ORDER BY chunk_index ASC",
+                        (b_hash,),
+                    )
+                    existing_rows = await cur_c.fetchall()
+                    if existing_rows:
+                        chunks = [
+                            {
+                                "dosya_hash": b_hash,
+                                "sayfa_no": int(r[0]),
+                                "chunk_index": int(r[1]),
+                                "metin": str(r[2]),
+                                "char_count": int(r[3]),
+                            }
+                            for r in existing_rows
+                        ]
+                    else:
+                        raw_p = str(b_row.get("dosya_yolu") or "")
+                        resolved_p = resolve_portable_book_path(raw_p, LIBRARY_ROOT) if raw_p else ""
+                        if not resolved_p or not os.path.exists(resolved_p):
+                            continue
+                        chunks = await asyncio.to_thread(
+                            DocumentChunker.chunk_document, resolved_p, b_hash
+                        )
+                    if not chunks:
+                        continue
+                    texts = [c["metin"] for c in chunks]
+                    blobs, used_model = await asyncio.to_thread(
+                        embedding_service.generate_semantic_embeddings_batch,
+                        texts,
+                        provider,
+                        api_key,
+                        base_url,
+                    )
+                    await index_document_chunks(
+                        bg_db, chunks, embeddings=blobs, embedding_model=used_model
+                    )
+                    reindexed_books += 1
+
+            update_task_status(
+                task_id,
+                STATUS_SUCCESS,
+                100,
+                f"{reindexed_books} kitabın anlamsal vektörleri güncellendi ({used_model}).",
+            )
+            log_event(
+                "database",
+                "INFO",
+                f"Anlamsal vektör yeniden indeksleme tamamlandı ({reindexed_books} kitap, motor: {used_model}).",
+            )
+        except Exception as job_err:
+            update_task_status(task_id, "error", 100, f"Vektör indeksleme hatası: {job_err}")
+            log_event("database", "ERROR", f"Reindex embeddings hatası: {job_err}")
+
+    bg_task = asyncio.create_task(_run_reindex_job())
+    bg_set = getattr(request.app.state, "background_tasks", None)
+    if isinstance(bg_set, set):
+        bg_set.add(bg_task)
+        bg_task.add_done_callback(bg_set.discard)
+
+    return {
+        "status": STATUS_SUCCESS,
+        "task_id": task_id,
+        "queued": len(books),
+        "message": f"{len(books)} kitap için arka planda anlamsal vektör indeksleme başlatıldı.",
+    }
+
+
+@router.get("/books/{file_hash}/ocr-page/{page_num}")
+async def get_scanned_page_ocr_layer(
+    file_hash: str,
+    page_num: int,
+    request: Request,
+    db: DatabaseManager = Depends(get_db),
+) -> dict[str, Any]:
+    """Extract or load cached normalized word-box OCR coordinates for a scanned PDF page."""
+    file_hash = validate_file_hash(file_hash)
+    _ensure_authorized(request)
+    if page_num < 1 or page_num > 10000:
+        raise HTTPException(status_code=400, detail="Geçersiz sayfa numarası.")
+
+    row = await db.get_book_path(file_hash)
+    if not row:
+        raise HTTPException(status_code=404, detail=ERR_BOOK_NOT_FOUND)
+    path, _ = row
+    safe_path = os.path.realpath(os.path.abspath(path))
+    if not is_path_within(LIBRARY_ROOT, safe_path) or not os.path.exists(safe_path):
+        raise HTTPException(status_code=404, detail="Dosya diskte bulunamadı.")
+    if not safe_path.lower().endswith(EXT_PDF):
+        raise HTTPException(status_code=400, detail="OCR katmanı yalnızca PDF belgeleri içindir.")
+
+    from app.services.ocr_layer_service import ocr_layer_service
+
+    return await ocr_layer_service.get_or_extract_page_ocr(db, file_hash, safe_path, page_num)
+
+
+@router.post("/books/{file_hash}/ocr-index")
+async def trigger_full_book_ocr_index(
+    file_hash: str,
+    request: Request,
+    db: DatabaseManager = Depends(get_db),
+) -> dict[str, Any]:
+    """Start a background job to OCR all scanned pages of a PDF and index them into FTS5 + vectors."""
+    file_hash = validate_file_hash(file_hash)
+    _ensure_authorized(request)
+    row = await db.get_book_path(file_hash)
+    if not row:
+        raise HTTPException(status_code=404, detail=ERR_BOOK_NOT_FOUND)
+    path, filename = row
+    safe_path = os.path.realpath(os.path.abspath(path))
+    if not is_path_within(LIBRARY_ROOT, safe_path) or not os.path.exists(safe_path):
+        raise HTTPException(status_code=404, detail="Dosya diskte bulunamadı.")
+    if not safe_path.lower().endswith(EXT_PDF):
+        raise HTTPException(status_code=400, detail="OCR indeksleme yalnızca PDF içindir.")
+
+    from app.pdf import get_pdf_page_count
+    from app.tasks import ACTIVE_TASKS, update_task_status
+
+    total_pages = await asyncio.to_thread(get_pdf_page_count, safe_path)
+    task_id = f"ocr-{uuid.uuid4().hex[:10]}"
+    ACTIVE_TASKS[task_id] = {
+        "filename": f"OCR Katmanı: {filename}",
+        "status": "processing",
+        "percentage": 5,
+        "log_message": f"{total_pages} sayfalık taranmış belge OCR kuyruğuna alındı...",
+        "last_update": time.time(),
+        "logs": [],
+    }
+
+    async def _run_full_ocr_job() -> None:
+        from app.database import get_db_context
+        from app.services.chunking_service import _split_text_into_chunks, index_document_chunks
+        from app.services.embedding_service import embedding_service
+        from app.services.ocr_layer_service import ocr_layer_service
+
+        try:
+            all_chunks: list[dict[str, Any]] = []
+            chunk_idx = 0
+            max_p = max(1, min(total_pages, 400))
+            async with get_db_context() as bg_db:
+                for p_no in range(1, max_p + 1):
+                    pct = min(94, max(6, int((p_no / max_p) * 90)))
+                    update_task_status(
+                        task_id,
+                        "processing",
+                        pct,
+                        f"Sayfa {p_no}/{max_p} OCR metin katmanı çıkarılıyor...",
+                    )
+                    res_p = await ocr_layer_service.get_or_extract_page_ocr(
+                        bg_db, file_hash, safe_path, p_no
+                    )
+                    ft = str(res_p.get("full_text") or "").strip()
+                    if ft:
+                        for c_txt in _split_text_into_chunks(ft, max_chars=600):
+                            all_chunks.append(
+                                {
+                                    "dosya_hash": file_hash,
+                                    "sayfa_no": p_no,
+                                    "chunk_index": chunk_idx,
+                                    "metin": c_txt,
+                                    "char_count": len(c_txt),
+                                }
+                            )
+                            chunk_idx += 1
+
+                if all_chunks:
+                    texts = [c["metin"] for c in all_chunks]
+                    blobs, model_id = await asyncio.to_thread(
+                        embedding_service.generate_semantic_embeddings_batch, texts
+                    )
+                    await index_document_chunks(
+                        bg_db, all_chunks, embeddings=blobs, embedding_model=model_id
+                    )
+
+            update_task_status(
+                task_id,
+                STATUS_SUCCESS,
+                100,
+                f"Taranmış PDF OCR tamamlandı ({len(all_chunks)} aranabilir pasaj).",
+            )
+        except Exception as ocr_job_err:
+            update_task_status(task_id, "error", 100, f"OCR indeksleme hatası: {ocr_job_err}")
+            log_event("pdf", "ERROR", f"Full OCR index hatası ({filename}): {ocr_job_err}")
+
+    bg_task = asyncio.create_task(_run_full_ocr_job())
+    bg_set = getattr(request.app.state, "background_tasks", None)
+    if isinstance(bg_set, set):
+        bg_set.add(bg_task)
+        bg_task.add_done_callback(bg_set.discard)
+
+    return {"status": STATUS_SUCCESS, "task_id": task_id, "total_pages": total_pages}
+
+
+@router.get("/books/{file_hash}/bookmarks")
+async def get_book_bookmarks_endpoint(
+    file_hash: str, request: Request, db: DatabaseManager = Depends(get_db)
+) -> dict[str, Any]:
+    """Return all saved page bookmarks for a book."""
+    file_hash = validate_file_hash(file_hash)
+    _ensure_authorized(request)
+    items = await db.get_book_bookmarks(file_hash)
+    return {"status": STATUS_SUCCESS, "bookmarks": items}
+
+
+@router.post("/books/{file_hash}/bookmarks")
+async def toggle_book_bookmark_endpoint(
+    file_hash: str,
+    payload: BookmarkToggleRequest,
+    request: Request,
+    db: DatabaseManager = Depends(get_db),
+) -> dict[str, Any]:
+    """Toggle or save a page bookmark for a book."""
+    file_hash = validate_file_hash(file_hash)
+    _ensure_authorized(request)
+    res = await db.toggle_or_save_bookmark(
+        file_hash, payload.sayfa_no, etiket=payload.etiket, toggle=payload.toggle
+    )
+    return {"status": STATUS_SUCCESS, **res}
+
+
+@router.delete("/books/{file_hash}/bookmarks/{page_num}")
+async def delete_book_bookmark_endpoint(
+    file_hash: str,
+    page_num: int,
+    request: Request,
+    db: DatabaseManager = Depends(get_db),
+) -> dict[str, Any]:
+    """Delete a page bookmark by page number."""
+    file_hash = validate_file_hash(file_hash)
+    _ensure_authorized(request)
+    deleted = await db.delete_book_bookmark(file_hash, page_num)
+    return {"status": STATUS_SUCCESS, "deleted": deleted, "sayfa_no": page_num}
+
+
+@router.get("/books/{file_hash}/epub-asset")
+async def serve_epub_embedded_asset(
+    file_hash: str,
+    path: str,
+    request: Request,
+    db: DatabaseManager = Depends(get_db),
+) -> Response:
+    """Securely stream an embedded image resource from inside an EPUB archive."""
+    import zipfile
+
+    from app.epub import safe_read_zip_entry
+
+    file_hash = validate_file_hash(file_hash)
+    _ensure_authorized(request)
+
+    clean_rel = path.strip().lstrip("/").replace("\\", "/")
+    norm_rel = os.path.normpath(clean_rel).replace("\\", "/")
+    if not norm_rel or norm_rel.startswith("..") or "/../" in f"/{norm_rel}/":
+        raise HTTPException(status_code=400, detail="Geçersiz EPUB varlık yolu.")
+
+    allowed_media = {
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".png": "image/png",
+        ".webp": "image/webp",
+        ".gif": "image/gif",
+        ".svg": "image/svg+xml",
+    }
+    _, ext = os.path.splitext(norm_rel.lower())
+    if ext not in allowed_media:
+        raise HTTPException(status_code=400, detail="Yalnızca gömülü görsel varlıkları desteklenir.")
+
+    row = await db.get_book_path(file_hash)
+    if not row:
+        raise HTTPException(status_code=404, detail=ERR_BOOK_NOT_FOUND)
+    book_path, _ = row
+    safe_book_path = os.path.realpath(os.path.abspath(book_path))
+    if (
+        not is_path_within(LIBRARY_ROOT, safe_book_path)
+        or not os.path.exists(safe_book_path)
+        or not safe_book_path.lower().endswith(EXT_EPUB)
+    ):
+        raise HTTPException(status_code=404, detail="EPUB dosyası bulunamadı.")
+
+    def _read_asset_bytes() -> bytes | None:
+        with zipfile.ZipFile(safe_book_path, "r") as zf:
+            if norm_rel in zf.namelist():
+                return safe_read_zip_entry(zf, norm_rel, max_bytes=12 * 1024 * 1024)
+            if clean_rel in zf.namelist():
+                return safe_read_zip_entry(zf, clean_rel, max_bytes=12 * 1024 * 1024)
+        return None
+
+    asset_bytes = await asyncio.to_thread(_read_asset_bytes)
+    if not asset_bytes:
+        raise HTTPException(status_code=404, detail="Gömülü EPUB görseli bulunamadı.")
+
+    return Response(
+        content=asset_bytes,
+        media_type=allowed_media[ext],
+        headers={
+            "Cache-Control": "private, max-age=86400",
+            "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; img-src data:;",
+            "X-Content-Type-Options": "nosniff",
         },
     )

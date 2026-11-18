@@ -140,17 +140,28 @@ class HybridSearchEngine:
     @staticmethod
     async def search_vector(
         db: DatabaseManager,
-        query_vector: list[float],
+        query_vector: list[float] | None,
         file_hash: str | None = None,
         exclude_hash: str | None = None,
         limit: int = 20,
+        query_text: str | None = None,
     ) -> list[dict[str, Any]]:
-        """Perform in-process vector cosine similarity search over stored chunk embeddings."""
-        if not query_vector:
+        """Perform vectorized cosine similarity search aligned with each chunk's embedding_model space."""
+        if not query_vector and not (query_text and query_text.strip()):
             return []
 
         try:
-            sql = "SELECT id, dosya_hash, sayfa_no, chunk_index, metin, embedding FROM kitap_chunks WHERE embedding IS NOT NULL"
+            has_emb_model_col = getattr(db.conn, "_has_emb_model_col", None)
+            if has_emb_model_col is None:
+                cur_info = await db.conn.execute("PRAGMA table_info(kitap_chunks)")
+                cols = {row[1] for row in await cur_info.fetchall()}
+                has_emb_model_col = "embedding_model" in cols
+                db.conn._has_emb_model_col = has_emb_model_col  # type: ignore[attr-defined]
+
+            if has_emb_model_col:
+                sql = "SELECT id, dosya_hash, sayfa_no, chunk_index, metin, embedding, COALESCE(embedding_model, 'hash-v1') FROM kitap_chunks WHERE embedding IS NOT NULL"
+            else:
+                sql = "SELECT id, dosya_hash, sayfa_no, chunk_index, metin, embedding, 'hash-v1' FROM kitap_chunks WHERE embedding IS NOT NULL"
             params: list[Any] = []
 
             if file_hash:
@@ -165,20 +176,22 @@ class HybridSearchEngine:
             if not rows:
                 return []
 
-            def _score_rows_vectorized() -> list[dict[str, Any]]:
-                q_arr = np.asarray(query_vector, dtype=np.float32)
+            def _score_bucket(
+                bucket_rows: list[Any], q_vec: list[float]
+            ) -> list[dict[str, Any]]:
+                q_arr = np.asarray(q_vec, dtype=np.float32)
                 q_norm = float(np.linalg.norm(q_arr))
                 if q_norm < 1e-12:
                     return []
                 q_unit = q_arr / q_norm
                 dim = len(q_unit)
+                expected_bytes = dim * 4
 
                 valid_rows = []
                 blobs = []
                 fallback_scored: list[dict[str, Any]] = []
-                expected_bytes = dim * 4
 
-                for r in rows:
+                for r in bucket_rows:
                     emb_blob = r[5]
                     if not emb_blob:
                         continue
@@ -200,7 +213,7 @@ class HybridSearchEngine:
                                 }
                             )
 
-                scored: list[dict[str, Any]] = list(fallback_scored)
+                scored_bucket: list[dict[str, Any]] = list(fallback_scored)
                 if blobs:
                     mat = np.vstack(blobs)
                     norms = np.linalg.norm(mat, axis=1)
@@ -208,7 +221,7 @@ class HybridSearchEngine:
                     sims = (mat @ q_unit) / safe_norms
                     sims = np.where(norms < 1e-12, 0.0, sims)
                     for r, sim_val in zip(valid_rows, sims.tolist(), strict=False):
-                        scored.append(
+                        scored_bucket.append(
                             {
                                 "id": r[0],
                                 "dosya_hash": r[1],
@@ -218,9 +231,24 @@ class HybridSearchEngine:
                                 "vector_score": float(sim_val),
                             }
                         )
+                return scored_bucket
 
-                scored.sort(key=lambda x: x["vector_score"], reverse=True)
-                return scored[:limit]
+            def _score_rows_vectorized() -> list[dict[str, Any]]:
+                if query_vector is not None and not query_text:
+                    scored_all = _score_bucket(rows, query_vector)
+                else:
+                    q_txt = str(query_text or "")
+                    buckets: dict[str, list[Any]] = {}
+                    for r in rows:
+                        m_id = str(r[6] or "hash-v1")
+                        buckets.setdefault(m_id, []).append(r)
+                    scored_all = []
+                    for m_id, b_rows in buckets.items():
+                        q_vec = embedding_service.embed_query_for_model(q_txt, model_id=m_id)
+                        scored_all.extend(_score_bucket(b_rows, q_vec))
+
+                scored_all.sort(key=lambda x: x["vector_score"], reverse=True)
+                return scored_all[:limit]
 
             return await asyncio.to_thread(_score_rows_vectorized)
         except Exception as e:
@@ -249,14 +277,14 @@ class HybridSearchEngine:
             db, query, file_hash=file_hash, exclude_hash=exclude_hash, limit=limit * 3
         )
 
-        # 2. Vector Semantic retrieval
-        query_vec = embedding_service.generate_embedding(query)
+        # 2. Vector Semantic retrieval (offloaded to worker thread + vector-space aligned per chunk model)
         vector_candidates = await cls.search_vector(
             db,
-            query_vec,
+            None,
             file_hash=file_hash,
             exclude_hash=exclude_hash,
             limit=limit * 3,
+            query_text=query,
         )
 
         # 3. Fuse scores via RRF

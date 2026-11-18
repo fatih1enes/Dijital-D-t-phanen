@@ -3548,15 +3548,16 @@ button:active:not(:disabled),
 
 .export-menu-editorial {
   position: absolute;
-  top: 100%;
+  bottom: calc(100% + 6px);
+  top: auto;
   left: 0;
   right: 0;
-  background: var(--surface-elevated);
+  background: var(--surface, #24211d);
   border: 1px solid var(--line-strong);
   border-radius: var(--r-sm);
   box-shadow: var(--shadow-lg);
-  z-index: 100;
-  margin-top: 4px;
+  z-index: 120;
+  margin-top: 0;
   overflow: hidden;
 }
 
@@ -4693,5 +4694,1056 @@ button:active:not(:disabled),
   background: rgba(184, 134, 47, 0.85);
   color: #fff;
   box-shadow: 0 0 0 2px rgba(184, 134, 47, 0.35);
+}
+
+.sticky-note-marker {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* 11. Gerçek SSE Akışı, Doğrulanmış Kanıt Balonları & İptal Rozetleri */
+.chat-msg-body-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.chat-rag-grounding-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  align-self: flex-start;
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--r-full);
+  background: var(--ok-bg);
+  color: var(--ok);
+  border: 1px solid color-mix(in srgb, var(--ok) 28%, transparent);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.chat-session-prep-note {
+  font-size: 0.78rem;
+  opacity: 0.85;
+  margin-bottom: 6px;
+  color: var(--muted);
+}
+
+.chat-stopped-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.55rem;
+  padding: 0.18rem 0.6rem;
+  border-radius: var(--r-full);
+  background: var(--warn-bg);
+  color: var(--warn);
+  border: 1px solid color-mix(in srgb, var(--warn) 32%, transparent);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.citation-preview-popover {
+  position: fixed;
+  z-index: 9500;
+  width: min(340px, calc(100vw - 20px));
+  padding: 0.85rem 1rem;
+  background: var(--surface-elevated, var(--surface));
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(4px) scale(0.98);
+  transition: opacity var(--t-micro) var(--ease-out),
+              transform var(--t-micro) var(--ease-out),
+              visibility var(--t-micro) var(--ease-out);
+}
+
+.citation-preview-popover.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.cite-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.cite-popover-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--ok);
+  background: var(--ok-bg);
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--r-full);
+}
+
+.cite-popover-jump-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.22rem 0.6rem;
+  border-radius: var(--r-xs);
+  border: 1px solid var(--line-strong);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cite-popover-jump-btn:hover {
+  background: var(--accent);
+  color: var(--paper);
+  border-color: var(--accent);
+}
+
+.cite-popover-book {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-bottom: 0.45rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cite-popover-quote {
+  margin: 0;
+  padding: 0.45rem 0.65rem;
+  border-left: 2.5px solid var(--accent);
+  background: var(--paper-dark);
+  border-radius: 0 var(--r-xs) var(--r-xs) 0;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--ink);
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.cite-popover-fallback {
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+/* 12. Faz 3: Görünmez OCR Metin Katmanı, 3 Sekmeli Gezinme Çekmecesi, Yer İmleri & Zengin EPUB */
+.textLayer .ocr-word-span {
+  position: absolute;
+  color: transparent;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+  line-height: 1;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.ocr-status-pill {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent) !important;
+  color: var(--accent) !important;
+  font-size: 0.72rem;
+}
+
+.pdf-tts-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.nav-drawer-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  align-items: stretch !important;
+}
+
+.nav-drawer-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-drawer-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding: 3px;
+  background: var(--paper-dark);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+}
+
+.nav-drawer-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 4px;
+  border: none;
+  border-radius: var(--r-xs);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.nav-drawer-tab.active {
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+
+.pdf-thumbs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px;
+  overflow-y: auto;
+  flex: 1;
+  align-content: start;
+}
+
+.pdf-thumb-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 6px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+  text-align: center;
+}
+
+.pdf-thumb-card:hover {
+  border-color: var(--line-strong);
+}
+
+.pdf-thumb-card.active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--paper));
+}
+
+.pdf-thumb-frame {
+  width: 100%;
+  aspect-ratio: 1 / 1.38;
+  background: var(--surface);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.pdf-thumb-canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.pdf-thumb-placeholder {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.pdf-thumb-doc-mini {
+  width: 100%;
+  aspect-ratio: 1 / 1.32;
+  padding: 8px;
+  background: var(--surface);
+  border-radius: 3px;
+  text-align: left;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.thumb-doc-title {
+  font-family: var(--font-serif);
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.thumb-doc-lines {
+  font-family: var(--font-serif);
+  font-size: 0.56rem;
+  line-height: 1.35;
+  color: var(--muted);
+  overflow: hidden;
+}
+
+.pdf-thumb-num {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+
+.page-bookmark-ribbon {
+  position: absolute;
+  top: -2px;
+  right: 16px;
+  z-index: 9;
+  color: var(--accent);
+  font-size: 1.35rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  pointer-events: none;
+}
+
+.pdf-bookmark-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+}
+
+.bookmark-page-pill {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.bookmark-del-btn {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  padding: 6px 8px;
+  border-radius: var(--r-xs);
+  cursor: pointer;
+}
+
+.bookmark-del-btn:hover {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+#pdf-bookmark-btn.active,
+#mobile-bookmark-btn.active {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Tipografi Açılır Menüsü & Zengin EPUB Öğeleri */
+.doc-typography-popover {
+  position: absolute;
+  top: 48px;
+  right: 64px;
+  z-index: 55;
+  width: 290px;
+  padding: 0.9rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg);
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.typo-popover-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink);
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.typo-close-btn {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.typo-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.typo-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.typo-btn-row {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.typo-choice-btn {
+  flex: 1 1 auto;
+  padding: 5px 8px;
+  border-radius: var(--r-xs);
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 0.73rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.typo-choice-btn.active {
+  background: var(--accent);
+  color: var(--paper);
+  border-color: var(--accent);
+}
+
+.pdf-page-wrapper.doc-page-wrapper {
+  width: min(var(--doc-max-width, 740px), calc(100% - 16px));
+  height: auto;
+  min-height: 320px;
+}
+
+.textLayer.doc-text-layer {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  line-height: var(--doc-line-height, 1.78);
+  z-index: 2;
+}
+
+.textLayer.doc-text-layer :is(span, br) {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+  position: static;
+  white-space: normal;
+  cursor: auto;
+}
+
+.textLayer.doc-text-layer ::selection,
+.textLayer.doc-text-layer *::selection {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+  background: rgba(110, 97, 76, 0.28);
+}
+
+[data-theme="dark"] .textLayer.doc-text-layer ::selection,
+[data-theme="dark"] .textLayer.doc-text-layer *::selection,
+#custom-pdf-viewer[data-surface-mode="chromaguard"] .textLayer.doc-text-layer ::selection,
+#custom-pdf-viewer[data-surface-mode="chromaguard"] .textLayer.doc-text-layer *::selection {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+  background: rgba(196, 181, 155, 0.32);
+}
+
+.doc-reader-sheet {
+  font-family: var(--doc-font-family, var(--font-serif));
+  line-height: var(--doc-line-height, 1.78);
+  letter-spacing: var(--doc-letter-spacing, normal);
+}
+
+.doc-figure {
+  margin: 1.35rem auto;
+  text-align: center;
+}
+
+.doc-embedded-img {
+  max-width: 100%;
+  max-height: 480px;
+  height: auto;
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+.doc-figcaption {
+  margin-top: 0.45rem;
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.epub-footnote-ref {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  margin: 0 1px;
+  border-radius: 4px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.7em;
+  font-weight: 600;
+  vertical-align: super;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.epub-footnote-ref:hover {
+  background: var(--accent);
+  color: var(--paper);
+}
+
+/* 13. Faz 4: Doğal Türkçe Stüdyo TTS Mini-Oynatıcı & 60fps Karaoke Vurgusu */
+.tts-mini-player {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 90;
+  width: min(680px, calc(100% - 28px));
+  padding: 8px 12px;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.tts-player-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.tts-ctrl-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.78rem;
+}
+
+.tts-ctrl-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.tts-play-btn {
+  width: 36px;
+  height: 36px;
+  background: var(--accent);
+  color: var(--paper);
+  border-color: var(--accent);
+}
+
+.tts-play-btn:hover {
+  color: var(--paper);
+  opacity: 0.92;
+}
+
+.tts-live-caption-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tts-engine-badge {
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.tts-live-caption {
+  font-family: var(--font-serif);
+  font-size: 0.84rem;
+  line-height: 1.35;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tts-caption-word-active {
+  background: color-mix(in srgb, var(--accent) 26%, transparent);
+  color: var(--ink);
+  font-weight: 600;
+  padding: 0 3px;
+  border-radius: 3px;
+}
+
+.tts-player-settings {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.tts-select {
+  height: 30px;
+  padding: 0 6px;
+  border-radius: var(--r-xs);
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 0.73rem;
+  cursor: pointer;
+}
+
+.tts-karaoke-sentence-box {
+  position: absolute;
+  background: rgba(184, 134, 47, 0.16);
+  border-bottom: 1.5px solid rgba(184, 134, 47, 0.42);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.tts-karaoke-word-box {
+  position: absolute;
+  background: rgba(184, 134, 47, 0.38);
+  box-shadow: 0 0 0 1.5px rgba(184, 134, 47, 0.65);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.doc-tts-active-block {
+  background: color-mix(in srgb, var(--accent) 11%, transparent);
+  border-left: 3px solid var(--accent);
+  padding-left: 0.65rem;
+  border-radius: 0 var(--r-xs) var(--r-xs) 0;
+}
+
+@media (max-width: 860px) {
+  .tts-mini-player {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+    width: auto;
+    transform: none;
+    z-index: 5025;
+    flex-wrap: wrap;
+    padding: 8px 10px;
+  }
+}
+
+/* 14. Faz 5: Okuma Analitiği Isı Haritası, FSRS v5 Tekrar Stüdyosu & Çevrimdışı Kasa */
+.stats-subtabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  margin-bottom: 1.5rem;
+  background: var(--paper-dark);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.stats-subtab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.stats-subtab-btn.active {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+}
+
+.srs-due-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.heatmap-grid {
+  display: grid;
+  grid-template-rows: repeat(7, 11px);
+  grid-auto-flow: column;
+  grid-auto-columns: 11px;
+  gap: 3px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.heatmap-cell {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  background: var(--paper-dark);
+  border: 1px solid var(--line);
+}
+
+.heatmap-cell.lvl-1 { background: color-mix(in srgb, var(--accent) 28%, var(--paper)); }
+.heatmap-cell.lvl-2 { background: color-mix(in srgb, var(--accent) 52%, var(--paper)); }
+.heatmap-cell.lvl-3 { background: color-mix(in srgb, var(--accent) 76%, var(--paper)); }
+.heatmap-cell.lvl-4 { background: var(--accent); }
+
+.eta-books-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.eta-book-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.eta-book-row:hover {
+  border-color: var(--accent);
+}
+
+.eta-book-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.eta-book-info strong {
+  font-family: var(--font-serif);
+  font-size: 0.92rem;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.eta-book-info span {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.eta-time-pill {
+  flex-shrink: 0;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--paper-dark);
+  border: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* FSRS v5 Active Recall Studio */
+.srs-studio-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 1.25rem;
+}
+
+.srs-deck-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.srs-stat-chip {
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.srs-stat-chip.due {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.srs-card-stage {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.srs-flashcard {
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-lg);
+  padding: 1.8rem 2rem;
+  box-shadow: var(--shadow-md);
+}
+
+.srs-card-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.srs-context-link {
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.srs-progress-pill {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.srs-card-front {
+  font-family: var(--font-serif);
+  font-size: 1.18rem;
+  line-height: 1.65;
+  color: var(--ink);
+  min-height: 80px;
+}
+
+.srs-card-divider {
+  margin: 1.4rem 0 1rem;
+  border-top: 1px dashed var(--line-strong);
+  padding-top: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.srs-card-back {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: var(--ink);
+  background: var(--paper-dark);
+  padding: 1rem 1.2rem;
+  border-radius: var(--r-sm);
+  border-left: 3px solid var(--accent);
+  margin-bottom: 1.4rem;
+}
+
+.srs-reveal-wrap {
+  margin-top: 1.6rem;
+  display: flex;
+  justify-content: center;
+}
+
+.srs-rating-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.srs-rate-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 8px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line-strong);
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.srs-rate-btn:hover {
+  border-color: var(--accent);
+  background: var(--surface-elevated, var(--surface));
+}
+
+.srs-rate-btn .rate-title {
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.srs-rate-btn .rate-interval {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.srs-empty-complete {
+  text-align: center;
+  padding: 2.8rem 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.srs-complete-icon {
+  font-size: 2.2rem;
+  color: var(--ok);
+  margin-bottom: 0.75rem;
+}
+
+.card-vault-badge {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--ok-bg);
+  color: var(--ok);
+  border: 1px solid color-mix(in srgb, var(--ok) 35%, transparent);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 600;
+}
+
+/* ═══════════════ LIVE QA VISUAL & UX POLISH OVERRIDES ═══════════════ */
+html:has(#workspace-reader.open),
+html:has(.modal-overlay.open),
+html:has(.logs-modal.open),
+body.modal-open {
+  overflow: hidden !important;
+}
+
+.drop-overlay:not(.visible),
+.compact-nav:not(.visible) {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.workspace-prompt-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+  overflow: visible;
+}
+
+.pdf-toolbar {
+  scrollbar-width: none;
+}
+
+.pdf-toolbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 1580px) {
+  .pdf-toolbar {
+    gap: 0.25rem;
+    padding-left: 0.65rem;
+    padding-right: 0.65rem;
+  }
+  .pdf-toolbar .pdf-toolbar-group {
+    gap: 0.2rem;
+  }
+  .pdf-toolbar #pdf-fit-width-btn .pdf-btn-label,
+  .pdf-toolbar #pdf-fit-height-btn .pdf-btn-label,
+  .pdf-toolbar #pdf-spread-btn .pdf-btn-label,
+  .pdf-toolbar #btn-lan-handoff .pdf-btn-label {
+    display: none;
+  }
+}
+
+.is-selection-mode .selection-indicator {
+  background: rgba(22, 20, 18, 0.58);
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.44);
+}
+
+.is-selection-mode .book-card.selected .selection-indicator {
+  background: var(--accent);
+  border-color: #ffffff;
+}
+
+.bar-chart {
+  justify-content: center;
+  gap: 1.25rem;
+}
+
+.bar-col {
+  flex: 0 1 68px;
+  max-width: 68px;
+}
+
+.bar-fill {
+  max-width: 48px;
 }
 }

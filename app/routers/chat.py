@@ -1,12 +1,17 @@
 """Chat and workspace AI assistant endpoints router."""
 
 import asyncio
+import json
 import logging
 import os
 import sqlite3
+import threading
 import time
+from collections.abc import AsyncIterator
+from typing import Any
 
 from fastapi import APIRouter, Depends, Header, Request
+from fastapi.responses import StreamingResponse
 
 from app.auth import _ensure_authorized
 from app.config import is_real_api_key, load_config, resolve_ai_credentials
@@ -331,10 +336,15 @@ async def _build_catalog_context(db: DatabaseManager) -> str:
         return ""
 
 
-async def _get_hybrid_passages(db: DatabaseManager, target_book_hash: str, user_query: str) -> str:
-    """Retrieve hybrid semantic passages for a book query."""
+async def _get_hybrid_passages_with_citations(
+    db: DatabaseManager,
+    target_book_hash: str,
+    user_query: str,
+    book_title: str = "",
+) -> tuple[str, list[dict[str, Any]]]:
+    """Retrieve hybrid semantic passages and structured citation cards for a book query."""
     if not user_query or not user_query.strip():
-        return ""
+        return "", []
     try:
         from app.services.hybrid_search import hybrid_search_engine
 
@@ -342,23 +352,41 @@ async def _get_hybrid_passages(db: DatabaseManager, target_book_hash: str, user_
             db, user_query, file_hash=target_book_hash, limit=6
         )
         if not passages:
-            return ""
+            return "", []
         lines = [
             "--- KULLANICININ SORUSUNA İLİŞKİN KİTAPTAN BULUNAN EN İLGİLİ SAYFA VE PASAJLAR ---",
             "Aşağıdaki pasajları esas alarak yanıt ver. Bilgileri aktarırken ilgili cümlenin sonuna mutlaka [Sayfa X] (örn: [Sayfa 42]) şeklinde kaynak sayfa numarasını iliştir:",
         ]
+        citations: list[dict[str, Any]] = []
         for p in passages:
-            lines.append(f"[Sayfa {p['sayfa_no']}]: {p['metin']}")
+            page_no = int(p.get("sayfa_no") or 1)
+            snippet_txt = str(p.get("metin") or "").strip()
+            lines.append(f"[Sayfa {page_no}]: {snippet_txt}")
+            citations.append(
+                {
+                    "page": page_no,
+                    "snippet": snippet_txt,
+                    "score": round(float(p.get("rrf_score") or 0.0), 4),
+                    "book_hash": str(p.get("dosya_hash") or target_book_hash),
+                    "book_title": book_title,
+                }
+            )
         lines.append("--- İLGİLİ PASAJLAR SONU ---\n")
         log_event(
             LOG_CAT_AI_CHAT,
             "INFO",
             f"Hibrit RAG: {len(passages)} adet ilgili sayfa pasajı bağlama eklendi.",
         )
-        return "\n".join(lines) + "\n"
+        return "\n".join(lines) + "\n", citations
     except Exception as rag_err:
         log_event(LOG_CAT_AI_CHAT, "WARNING", f"Hibrit RAG pasaj araması uyarısı: {rag_err}")
-        return ""
+        return "", []
+
+
+async def _get_hybrid_passages(db: DatabaseManager, target_book_hash: str, user_query: str) -> str:
+    """Retrieve hybrid semantic passages for a book query."""
+    text_block, _ = await _get_hybrid_passages_with_citations(db, target_book_hash, user_query)
+    return text_block
 
 
 async def _load_book_text_or_pdf(
@@ -467,11 +495,15 @@ async def _build_target_book_context(
             "summary": k_ozet or "",
             "path": k_yolu or "",
             "supplemental_context": "",
+            "citations": [],
         }
         rag_context += f"SİSTEM BİLGİSİ: Kullanıcı şu anda '{k_adi}' (Yazar: {k_yazar}) kitabını okuyor/inceliyor.\nKitap Özeti: {k_ozet}\n\n"
 
         # Hybrid RAG Semantic Retrieval for targeted query
-        hybrid_passages = await _get_hybrid_passages(db, target_book_hash, user_query)
+        hybrid_passages, citations = await _get_hybrid_passages_with_citations(
+            db, target_book_hash, user_query, book_title=str(k_adi or "")
+        )
+        book_meta["citations"] = citations
         rag_context += hybrid_passages
 
         text_ctx, pdf_path = await _load_book_text_or_pdf(k_yolu, target_book_hash, provider, k_adi)
@@ -704,7 +736,10 @@ async def chat_endpoint(
             cfg=cfg,
         )
 
-        payload = {"response": response_text}
+        payload: dict[str, Any] = {
+            "response": response_text,
+            "citations": book_meta.get("citations", []),
+        }
         if full_book_mode_notice:
             payload["mode_notice"] = full_book_mode_notice
         return payload
@@ -719,4 +754,186 @@ async def chat_endpoint(
         except ImportError:
             err_type = "Sistem/API Hatası"
         log_event(LOG_CAT_AI_CHAT, "ERROR", f"AI chat hatası ({provider}) [{err_type}]: {e}")
-        return {"response": "Üzgünüm, şu an yanıt veremiyorum."}
+        return {"response": "Üzgünüm, şu an yanıt veremiyorum.", "citations": []}
+
+
+def _sse_frame(event_name: str, data_obj: Any) -> str:
+    """Serialize a structured Server-Sent Event frame."""
+    return f"event: {event_name}\ndata: {json.dumps(data_obj, ensure_ascii=False)}\n\n"
+
+
+@router.post("/chat/stream")
+async def chat_stream_endpoint(
+    request: ChatRequest,
+    http_request: Request,
+    x_ai_provider: str | None = Header(None),
+    x_ai_key: str | None = Header(None),
+    x_ai_model: str | None = Header(None, alias="X-AI-Model"),
+    x_ai_model_name: str | None = Header(None, alias="X-AI-Model-Name"),
+    x_ai_base_url: str | None = Header(None, alias="X-AI-Base-Url"),
+    db: DatabaseManager = Depends(get_db),
+) -> StreamingResponse:
+    """True SSE token streaming chat endpoint with pre-emitted grounded page citations and abort support."""
+    _ensure_authorized(http_request)
+    cfg = load_config()
+    provider, api_key, model_name, base_url = resolve_ai_credentials(
+        provider=x_ai_provider,
+        api_key=x_ai_key,
+        model=x_ai_model_name or x_ai_model,
+        base_url=x_ai_base_url,
+        cfg=cfg,
+        is_key_fn=is_real_api_key,
+    )
+
+    if not api_key and provider not in ["ollama", "lmstudio"]:
+        async def _missing_key_stream() -> AsyncIterator[str]:
+            yield _sse_frame("token", {"text": "Lütfen ayarlardan API anahtarınızı girin."})
+            yield _sse_frame("done", {"aborted": False})
+
+        return StreamingResponse(
+            _missing_key_stream(),
+            media_type="text/event-stream",
+            headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        )
+
+    # Assemble RAG & DB context eagerly while request DB connection is active
+    intent, rag_context = await _resolve_agentic_intent(db, request.message)
+    pdf_to_upload: str | None = None
+    book_meta: dict[str, Any] = {}
+    if not intent:
+        if request.target_book_hash:
+            book_meta, book_rag, pdf_to_upload = await _build_target_book_context(
+                db, request.target_book_hash, provider, user_query=request.message
+            )
+            rag_context += book_rag
+        else:
+            rag_context += await _build_catalog_context(db)
+
+    library_profile = await _get_cached_library_stats(db)
+    k_adi = str(book_meta.get("title") or "")
+    k_yazar = str(book_meta.get("author") or "")
+    citations_list: list[dict[str, Any]] = list(book_meta.get("citations") or [])
+
+    if request.target_book_hash and k_adi:
+        is_full = bool(request.load_full_book)
+        system_instruction = build_book_system_instruction(k_adi, k_yazar, is_full_text=is_full)
+        prompt = build_book_chat_prompt(
+            user_message=request.message,
+            rag_context=rag_context,
+            is_native_gemini=(provider == PROVIDER_GEMINI),
+            is_full_text=is_full,
+        )
+    else:
+        system_instruction = build_catalog_system_instruction()
+        prompt = (
+            f"[KULLANICININ KÜTÜPHANE KATALOĞU VE ÖZETLERİ]:\n{rag_context}\n\n"
+            f"[KÜTÜPHANE GENEL İSTATİSTİKLERİ]:\n{library_profile}\n\n"
+            f"Kullanıcının Sorusu / Talebi:\n{request.message}\n\n"
+            "Bu talebi, kütüphanenin içeriğini ve engin kitap kültürünü harmanlayarak doğrudan, samimi ve doyurucu bir şekilde yanıtla:"
+        )
+
+    async def _event_stream() -> AsyncIterator[str]:
+        if citations_list:
+            yield _sse_frame("citations", {"citations": citations_list})
+
+        emitted_tokens = 0
+        try:
+            use_book_session = bool(
+                request.target_book_hash
+                and provider == PROVIDER_GEMINI
+                and pdf_to_upload
+                and os.path.exists(pdf_to_upload)
+            )
+            if use_book_session and request.target_book_hash and pdf_to_upload:
+                from app.services.session_manager import book_session_manager
+
+                target_hash = request.target_book_hash
+                async with book_session_manager.lock_for(target_hash):
+                    book_session = await asyncio.to_thread(
+                        book_session_manager.get_or_create_session,
+                        book_hash=target_hash,
+                        pdf_path=pdf_to_upload,
+                        model_name=model_name or DEFAULT_GEMINI_MODEL,
+                        system_instruction=system_instruction
+                        or f"Sen '{k_adi or 'Kitap'}' kitabını derinlemesine bilen uzman bir asistansın.",
+                        api_key=api_key,
+                    )
+                    yield _sse_frame("session", {"book_loaded": True})
+                    supplemental_ctx = str(book_meta.get("supplemental_context") or "")
+
+                    loop = asyncio.get_running_loop()
+                    token_q: asyncio.Queue[tuple[str | None, Exception | None]] = asyncio.Queue()
+                    cancel_flag = threading.Event()
+
+                    def _pump_session_stream() -> None:
+                        try:
+                            for piece in book_session.send_user_message_stream(
+                                request.message, supplemental_ctx
+                            ):
+                                if cancel_flag.is_set():
+                                    break
+                                loop.call_soon_threadsafe(token_q.put_nowait, (piece, None))
+                            loop.call_soon_threadsafe(token_q.put_nowait, (None, None))
+                        except Exception as pump_err:
+                            loop.call_soon_threadsafe(token_q.put_nowait, (None, pump_err))
+
+                    threading.Thread(target=_pump_session_stream, daemon=True).start()
+
+                    while True:
+                        if await http_request.is_disconnected():
+                            cancel_flag.set()
+                            return
+                        try:
+                            piece, pump_err = await asyncio.wait_for(token_q.get(), timeout=0.3)
+                        except asyncio.TimeoutError:
+                            continue
+                        if pump_err is not None:
+                            raise pump_err
+                        if piece is None:
+                            break
+                        emitted_tokens += 1
+                        yield _sse_frame("token", {"text": piece})
+            else:
+                from app.services.ai_service import AIService
+
+                ai_svc = AIService()
+                google_grounding = bool(cfg.get("google_search_grounding", False))
+                if request.target_book_hash:
+                    yield _sse_frame("session", {"book_loaded": True})
+                async for piece in ai_svc.generate_text_stream(
+                    prompt=prompt,
+                    provider=provider,
+                    api_key=api_key,
+                    model=model_name,
+                    base_url=base_url,
+                    system_instruction=system_instruction,
+                    google_search_grounding=google_grounding,
+                    pdf_path=pdf_to_upload,
+                ):
+                    if await http_request.is_disconnected():
+                        return
+                    emitted_tokens += 1
+                    yield _sse_frame("token", {"text": piece})
+
+            if emitted_tokens == 0:
+                yield _sse_frame("token", {"text": "Yanıt alınamadı."})
+            yield _sse_frame("done", {"aborted": False})
+        except asyncio.CancelledError:
+            log_event(LOG_CAT_AI_CHAT, "INFO", "İstemci AI akışını durdurdu (AbortController).")
+            return
+        except Exception as stream_exc:
+            log_event(LOG_CAT_AI_CHAT, "ERROR", f"SSE sohbet akış hatası: {stream_exc}")
+            yield _sse_frame(
+                "error",
+                {"message": "Üzgünüm, yanıt akışı sırasında bir bağlantı hatası oluştu."},
+            )
+
+    return StreamingResponse(
+        _event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )

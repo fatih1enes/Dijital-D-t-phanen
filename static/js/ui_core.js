@@ -493,6 +493,21 @@
         return matchCat && matchCol && matchQ && matchFav;
       });
 
+      if (window.activeGridSort && window.activeGridSort !== 'recent') {
+        const mode = window.activeGridSort;
+        return filtered.slice().sort((a, b) => {
+          if (mode === 'title_asc') return compareTableValues(String(a.title || ''), String(b.title || ''), 1);
+          if (mode === 'title_desc') return compareTableValues(String(a.title || ''), String(b.title || ''), -1);
+          if (mode === 'author_asc') return compareTableValues(String(a.author || ''), String(b.author || ''), 1);
+          if (mode === 'progress_desc') {
+            const pa = getBookReadingProgress(a)?.pct || 0;
+            const pb = getBookReadingProgress(b)?.pct || 0;
+            return pb - pa;
+          }
+          return 0;
+        });
+      }
+
       const sortKeys = ['title', 'author', 'category', 'subcat', 'summary'];
       if (typeof window.sortCol === 'number' && window.sortCol >= 0 && window.sortCol < sortKeys.length) {
         const key = sortKeys[window.sortCol];
@@ -530,9 +545,28 @@
       if (catTrigger) catTrigger.textContent = 'Tüm Kategoriler';
       const colTrigger = document.getElementById('collection-trigger');
       if (colTrigger) colTrigger.textContent = 'Tüm Koleksiyonlar';
+      window.activeGridSort = 'recent';
+      const sortTrigger = document.getElementById('sort-trigger');
+      if (sortTrigger) sortTrigger.textContent = 'Sırala: Son Eklenen';
       render();
     }
     window.clearFiltersAndSearch = clearFiltersAndSearch;
+
+    function selectSortOption(mode, labelText) {
+      window.activeGridSort = mode || 'recent';
+      window.sortCol = null;
+      const sortTrigger = document.getElementById('sort-trigger');
+      if (sortTrigger) sortTrigger.textContent = labelText || 'Sırala: Son Eklenen';
+      const dd = document.getElementById('dropdown-sort');
+      if (dd) {
+        dd.querySelectorAll('.dropdown-item').forEach(item => {
+          item.classList.toggle('active', item.dataset.sort === window.activeGridSort);
+        });
+        closeCustomDropdown(dd, { restoreFocus: true });
+      }
+      render();
+    }
+    window.selectSortOption = selectSortOption;
 
     function renderGridSkeletons(count = 8) {
       const grid = document.getElementById('grid-view');
@@ -711,9 +745,10 @@
     // --- PERSISTENT ELEMENT MAPS (60FPS ZERO-REBUILD ARCHITECTURE) ---
     function getBookReadingProgress(b) {
       if (!b) return null;
-      const readPage = Number.parseInt(b.okunulan_sayfa || b.read_page || 0, 10);
-      const totalPages = Number.parseInt(b.sayfa_sayisi || b.pages || b.page_count || 0, 10);
+      const readPage = Number.parseInt(b.okunulan_sayfa ?? b.read_page ?? 0, 10) || 0;
+      const totalPages = Number.parseInt(b.sayfa_sayisi || b.pages || b.page_count || 0, 10) || 0;
       if (readPage > 0 && totalPages > 0) {
+        if (readPage === 1 && totalPages > 1) return null;
         const pct = Math.min(100, Math.max(1, Math.round((readPage / totalPages) * 100)));
         return { readPage, totalPages, pct };
       }
@@ -781,6 +816,8 @@
             const img = document.createElement('img');
             img.src = desiredSrc;
             img.alt = b.title || '';
+            img.width = 180;
+            img.height = 260;
             img.loading = 'lazy';
             img.decoding = 'async';
             img.onload = function () { this.classList.add('loaded'); };
@@ -855,7 +892,7 @@
       card.setAttribute('aria-label', b.title || 'Kitap detayları');
 
       const coverInner = b.has_cover
-        ? `<img src="${getBookCoverUrl(b.hash)}" alt="${esc(b.title)}" loading="lazy" decoding="async" onload="this.classList.add('loaded')">`
+        ? `<img src="${getBookCoverUrl(b.hash)}" alt="${esc(b.title)}" width="180" height="260" loading="lazy" decoding="async" onload="this.classList.add('loaded')">`
         : `<div class="card-cover-placeholder">${BOOK_ICON_LG}<span>${esc(b.title) || 'Kapak yok'}</span></div>`;
 
       const favIcon = b.is_favorite
@@ -1138,6 +1175,9 @@
       } else if (!doStagger) {
         playGridFlip(grid, prevRects, newlyRevealed);
       }
+      if (window.OfflineVault && typeof window.OfflineVault.syncVaultBadgesInDOM === 'function') {
+        window.OfflineVault.syncVaultBadgesInDOM();
+      }
     }
 
     async function uploadCover(hash, input) {
@@ -1362,6 +1402,9 @@
           <button type="button" class="btn-modal-primary" onclick="const target = (window.allBooks || []).find(x => x.hash === '${b.hash}'); const modalCover = document.querySelector('#modal .modal-cover-wrap'); if (target) { if (typeof openBookWithMorph === 'function') openBookWithMorph(modalCover, target); else { closeModalDirect(); openWorkspace(target); } }">
             <i class="fas fa-book-open"></i> Kitabı Oku
           </button>
+          <button type="button" id="btn-modal-vault-${b.hash}" class="btn-modal-secondary ${window.OfflineVault?.isBookVaulted(b.hash) ? 'active' : ''}" onclick="toggleVaultBookByHash('${b.hash}')">
+            <i class="fas ${window.OfflineVault?.isBookVaulted(b.hash) ? 'fa-circle-check' : 'fa-cloud-arrow-down'}"></i> ${window.OfflineVault?.isBookVaulted(b.hash) ? 'Çevrimdışı Kasada Kayıtlı' : 'Çevrimdışı Kasaya Kaydet'}
+          </button>
           <button type="button" id="btn-modal-fav" class="${b.is_favorite ? 'btn-modal-fav is-fav' : 'btn-modal-fav'}" onclick="toggleFavorite('${b.hash}')">
             <i class="${b.is_favorite ? 'fas' : 'far'} fa-heart"></i> ${b.is_favorite ? 'Favorilerden Çıkar' : 'Favorilere Ekle'}
           </button>
@@ -1381,7 +1424,7 @@
           </button>
           ` : ''}
           <button type="button" class="btn-modal-secondary modal-btn-compact" onclick="window.open('/api/download/${b.hash}', '_blank')">
-            <i class="fas fa-download"></i> PDF İndir
+            <i class="fas fa-download"></i> ${b.file?.toLowerCase().endsWith('.epub') ? 'EPUB İndir' : (b.file?.toLowerCase().endsWith('.txt') ? 'TXT İndir' : 'PDF İndir')}
           </button>
           <div class="export-dropdown-wrapper">
             <button type="button" class="btn-modal-secondary modal-btn-compact modal-btn-export" onclick="toggleExportMenu('${b.hash}')">
@@ -2265,7 +2308,7 @@
     }
 
     document.addEventListener('click', (e) => {
-      if (!e.target.closest('.export-dropdown-wrapper')) {
+      if (!e.target.closest('.export-dropdown-wrapper, .workspace-export-wrapper')) {
         document.querySelectorAll('.export-menu').forEach(el => el.style.display = 'none');
       }
       // Backdrop click to close modals cleanly
@@ -2330,8 +2373,12 @@
     window.toggleDeepSearchMode = toggleDeepSearchMode;
 
     function closeDeepSearch() {
+      const searchInput = document.getElementById('search-input');
+      if (searchInput) searchInput.value = '';
       if (window.isDeepSearchActive) {
         toggleDeepSearchMode();
+      } else {
+        render();
       }
     }
     window.closeDeepSearch = closeDeepSearch;
@@ -2422,6 +2469,8 @@
         const data = await res.json();
         const results = data.results || [];
         if (countEl) countEl.textContent = `${results.length} eşleşme`;
+        const resInfo = document.getElementById('result-info');
+        if (resInfo) resInfo.textContent = `DERİN ARAMA · ${results.length} SAYFA EŞLEŞMESİ`;
 
         if (results.length === 0) {
           if (listEl) listEl.innerHTML = '<div style="text-align:center; padding:2rem; color:var(--muted);"><i class="fas fa-search" style="font-size:2rem; opacity:0.3; margin-bottom:0.5rem; display:block;"></i>Bu kelimeyi içeren herhangi bir kitap sayfası bulunamadı.</div>';

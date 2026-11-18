@@ -1,5 +1,16 @@
 /* ═══════════ sw.js — Dijital Kütüphane PWA Service Worker ═══════════ */
-const CACHE_NAME = 'dijital-kutuphane-v2026111801';
+const CACHE_NAME = 'dijital-kutuphane-v2026111805';
+const CDN_CACHE_NAME = 'dijital-kutuphane-cdn-v1';
+const PERSISTENT_CACHES = new Set([
+  CACHE_NAME,
+  'dijital-kutuphane-vault-v1',
+  CDN_CACHE_NAME
+]);
+const CDN_HOSTS = new Set([
+  'cdnjs.cloudflare.com',
+  'fonts.googleapis.com',
+  'fonts.gstatic.com'
+]);
 const STATIC_ASSETS = [
   '/',
   '/static/favicon.svg',
@@ -12,11 +23,19 @@ const STATIC_ASSETS = [
   '/static/js/state.js',
   '/static/js/motion.js',
   '/static/js/api.js',
+  '/static/js/offline_vault.js',
   '/static/js/ui_core.js',
-  '/static/js/ui_workspace.js',
-  '/static/js/ui_chat_settings.js',
   '/static/js/ui_logs.js',
+  '/static/js/ui_chat_settings.js',
+  '/static/js/ui_srs.js',
   '/static/js/ui_telegram.js',
+  '/static/js/workspace_state.js',
+  '/static/js/workspace_selection.js',
+  '/static/js/workspace_renderer.js',
+  '/static/js/workspace_search.js',
+  '/static/js/workspace_tts.js',
+  '/static/js/workspace_chat.js',
+  '/static/js/ui_workspace.js',
   '/static/js/websocket.js',
   '/static/js/app.js'
 ];
@@ -42,7 +61,7 @@ self.addEventListener('activate', (event) => {
     try {
       const keys = await caches.keys();
       await Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        keys.filter((key) => !PERSISTENT_CACHES.has(key)).map((key) => caches.delete(key))
       );
       await self.clients.claim();
     } catch (err) {
@@ -56,6 +75,23 @@ async function handleNavigationFetch(request) {
     return await fetch(request);
   } catch {
     return (await caches.match('/')) || Response.error();
+  }
+}
+
+async function handleCdnAssetFetch(request) {
+  const cache = await caches.open(CDN_CACHE_NAME);
+  const cached = await cache.match(request);
+  if (cached) return cached;
+  try {
+    const resp = await fetch(request);
+    if (resp && (resp.status === 200 || resp.type === 'opaque')) {
+      try {
+        await cache.put(request, resp.clone());
+      } catch (_putErr) {}
+    }
+    return resp;
+  } catch {
+    return Response.error();
   }
 }
 
@@ -79,7 +115,6 @@ async function handleStaticAssetFetch(request) {
     console.warn('PWA static asset fetch failed:', err);
     const ignoreQueryMatch = await caches.match(request, { ignoreSearch: true });
     if (ignoreQueryMatch) return ignoreQueryMatch;
-    // Never return '/' HTML for JS/CSS assets (which triggers SyntaxError: Unexpected token '<')
     return Response.error();
   }
 }
@@ -91,11 +126,15 @@ self.addEventListener('fetch', (event) => {
   }
 
   const url = new URL(req.url);
+  if (CDN_HOSTS.has(url.hostname)) {
+    event.respondWith(handleCdnAssetFetch(req));
+    return;
+  }
+
   if (url.origin !== self.location.origin) {
     return;
   }
 
-  // Bypass cache for API calls, WebSocket, auth/login, handoff, thumbnails, and book downloads
   if (
     url.pathname.startsWith('/api/') ||
     url.pathname.startsWith('/ws') ||

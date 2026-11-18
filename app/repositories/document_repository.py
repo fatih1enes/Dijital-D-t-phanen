@@ -70,8 +70,8 @@ class DocumentRepository:
         if await self._has_page_size_columns():
             query = """
                 INSERT INTO kitaplar
-                (kitap_adi, yazar, kategori, alt_kategori, ozet, anahtar_kelimeler, dosya_adi, dosya_hash, dosya_yolu, has_cover, sayfa_sayisi, dosya_boyutu)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (kitap_adi, yazar, kategori, alt_kategori, ozet, anahtar_kelimeler, dosya_adi, dosya_hash, dosya_yolu, has_cover, okunulan_sayfa, sayfa_sayisi, dosya_boyutu)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(dosya_hash) DO UPDATE SET
                     kitap_adi=excluded.kitap_adi,
                     yazar=excluded.yazar,
@@ -82,6 +82,7 @@ class DocumentRepository:
                     dosya_adi=excluded.dosya_adi,
                     dosya_yolu=excluded.dosya_yolu,
                     has_cover=excluded.has_cover,
+                    okunulan_sayfa=CASE WHEN excluded.okunulan_sayfa > 0 THEN excluded.okunulan_sayfa ELSE kitaplar.okunulan_sayfa END,
                     sayfa_sayisi=CASE WHEN excluded.sayfa_sayisi > 0 THEN excluded.sayfa_sayisi ELSE kitaplar.sayfa_sayisi END,
                     dosya_boyutu=CASE WHEN excluded.dosya_boyutu > 0 THEN excluded.dosya_boyutu ELSE kitaplar.dosya_boyutu END
             """
@@ -96,6 +97,7 @@ class DocumentRepository:
                 safe_str(data.get("dosya_hash")),
                 safe_str(data.get("dosya_yolu")),
                 1 if data.get("has_cover") else 0,
+                safe_int(data.get("okunulan_sayfa", 0)),
                 safe_int(data.get("sayfa_sayisi")),
                 safe_int(data.get("dosya_boyutu")),
             )
@@ -388,6 +390,22 @@ class DocumentRepository:
         await self.conn.execute("DELETE FROM koleksiyon_kitap WHERE kitap_hash = ?", (file_hash,))
         await self.conn.execute("DELETE FROM kitap_chunks WHERE dosya_hash = ?", (file_hash,))
         await self.conn.execute("DELETE FROM kitap_chunks_fts WHERE dosya_hash = ?", (file_hash,))
+        for extra_table in (
+            "kitap_ocr_sayfalar",
+            "kitap_yer_imleri",
+            "okuma_oturumlari",
+            "srs_kartlari",
+        ):
+            try:
+                await self.conn.execute(
+                    f"DELETE FROM {extra_table} WHERE dosya_hash = ?", (file_hash,)
+                )
+            except sqlite3.OperationalError as op_err:
+                import logging
+
+                logging.getLogger(__name__).debug(
+                    "Optional table %s cleanup skipped: %s", extra_table, op_err
+                )
         await self.conn.execute(
             "DELETE FROM kg_relations WHERE source_id = ? OR target_id = ?",
             (book_entity_id, book_entity_id),
@@ -784,3 +802,74 @@ class DocumentRepository:
         self._inspect_book_file_sizes(books)
         by_title_author, by_size = self._index_candidate_duplicates(books)
         return self._collect_duplicate_groups(by_title_author, by_size)
+
+    async def _ensure_bookmarks_table(self) -> None:
+        """Ensure kitap_yer_imleri exists on custom or standalone SQLite connections."""
+        if getattr(self.conn, "_has_bookmarks_tbl", False):
+            return
+        await self.conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS kitap_yer_imleri (
+                dosya_hash TEXT NOT NULL,
+                sayfa_no INTEGER NOT NULL,
+                etiket TEXT DEFAULT '',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (dosya_hash, sayfa_no)
+            )
+            """
+        )
+        self.conn._has_bookmarks_tbl = True  # type: ignore[attr-defined]
+
+    async def get_book_bookmarks(self, file_hash: str) -> list[dict[str, Any]]:
+        """Return all saved page bookmarks for ``file_hash`` ordered by page number."""
+        await self._ensure_bookmarks_table()
+        cur = await self.conn.execute(
+            """
+            SELECT dosya_hash, sayfa_no, etiket, created_at
+            FROM kitap_yer_imleri
+            WHERE dosya_hash = ?
+            ORDER BY sayfa_no ASC
+            """,
+            (file_hash,),
+        )
+        return [dict(r) for r in await cur.fetchall()]
+
+    async def toggle_or_save_bookmark(
+        self, file_hash: str, sayfa_no: int, etiket: str = "", toggle: bool = True
+    ) -> dict[str, Any]:
+        """Toggle or upsert a page bookmark and return its new state."""
+        await self._ensure_bookmarks_table()
+        cur = await self.conn.execute(
+            "SELECT etiket FROM kitap_yer_imleri WHERE dosya_hash = ? AND sayfa_no = ?",
+            (file_hash, sayfa_no),
+        )
+        existing = await cur.fetchone()
+        if existing is not None and toggle and not etiket.strip():
+            await self.conn.execute(
+                "DELETE FROM kitap_yer_imleri WHERE dosya_hash = ? AND sayfa_no = ?",
+                (file_hash, sayfa_no),
+            )
+            await self.conn.commit()
+            return {"bookmarked": False, "sayfa_no": sayfa_no, "etiket": ""}
+
+        clean_label = etiket.strip() or (str(existing[0]) if existing else f"Sayfa {sayfa_no}")
+        await self.conn.execute(
+            """
+            INSERT INTO kitap_yer_imleri (dosya_hash, sayfa_no, etiket)
+            VALUES (?, ?, ?)
+            ON CONFLICT(dosya_hash, sayfa_no) DO UPDATE SET etiket = excluded.etiket
+            """,
+            (file_hash, sayfa_no, clean_label),
+        )
+        await self.conn.commit()
+        return {"bookmarked": True, "sayfa_no": sayfa_no, "etiket": clean_label}
+
+    async def delete_book_bookmark(self, file_hash: str, sayfa_no: int) -> bool:
+        """Remove a specific page bookmark."""
+        await self._ensure_bookmarks_table()
+        cur = await self.conn.execute(
+            "DELETE FROM kitap_yer_imleri WHERE dosya_hash = ? AND sayfa_no = ?",
+            (file_hash, sayfa_no),
+        )
+        await self.conn.commit()
+        return bool(cur.rowcount and cur.rowcount > 0)

@@ -35,10 +35,27 @@
     function convertPageCitations(html) {
       const bracketPattern = /\[(?:Sayfa|s\.|Page)[:\s]+(\d+)(?:[-–,]\s*\d+)?\]/gi;
       const plainPattern = /\b(?:Sayfa|s\.)\s+(\d+)\b/gi;
-      const citeReplacer = (_match, pageNum) => {
-        return `<span class="chat-page-cite" data-jump-page="${pageNum}" role="button" tabindex="0" title="Sayfa ${pageNum}'e git"><i class="fas fa-bookmark"></i> Sayfa ${pageNum}</span>`;
+      const citeTokens = [];
+      const tagTokens = [];
+
+      let safeHtml = html.replace(/<[^>]+>/g, (tag) => {
+        const tok = `\x00HTAG_${tagTokens.length}\x00`;
+        tagTokens.push(tag);
+        return tok;
+      });
+
+      const pushCite = (_match, pageNum) => {
+        const tok = `\x00CITE_${citeTokens.length}\x00`;
+        citeTokens.push(
+          `<span class="chat-page-cite" data-jump-page="${pageNum}" role="button" tabindex="0" title="Sayfa ${pageNum}'e git"><i class="fas fa-bookmark"></i> Sayfa ${pageNum}</span>`
+        );
+        return tok;
       };
-      return html.replace(bracketPattern, citeReplacer).replace(plainPattern, citeReplacer);
+
+      safeHtml = safeHtml.replace(bracketPattern, pushCite).replace(plainPattern, pushCite);
+      safeHtml = safeHtml.replace(/\x00HTAG_(\d+)\x00/g, (_m, idx) => tagTokens[Number(idx)] || '');
+      safeHtml = safeHtml.replace(/\x00CITE_(\d+)\x00/g, (_m, idx) => citeTokens[Number(idx)] || '');
+      return safeHtml;
     }
 
     function parseMarkdown(text) {
@@ -66,12 +83,123 @@
       }
 
       if (window.DOMPurify && typeof window.DOMPurify.sanitize === 'function') {
-        return window.DOMPurify.sanitize(html, { ADD_ATTR: ['data-jump-page'] });
+        return window.DOMPurify.sanitize(html, { ADD_ATTR: ['data-jump-page', 'data-cite-quote'] });
       }
       // Fail-safe: If DOMPurify is unavailable (CDN error / adblock), never output unsanitized marked HTML
       return esc(text).replaceAll('\n', '<br>');
     }
     window.parseMarkdown = parseMarkdown;
+
+    async function streamChatSSE(payload, callbacks = {}, externalSignal = null) {
+      const response = await apiFetch('/api/chat/stream', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream'
+        },
+        body: JSON.stringify(payload),
+        signal: externalSignal || undefined,
+        timeout: 0
+      });
+
+      if (!response) return;
+      if (!response.ok || !response.body || typeof response.body.getReader !== 'function') {
+        const fallbackResp = await apiFetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: externalSignal || undefined
+        });
+        if (!fallbackResp?.ok) {
+          throw new Error(fallbackResp ? `Sunucu hatası (${fallbackResp.status})` : 'Sunucuya ulaşılamadı.');
+        }
+        const fbData = await fallbackResp.json();
+        if (Array.isArray(fbData.citations) && fbData.citations.length > 0) {
+          callbacks.onCitations?.(fbData.citations);
+        }
+        callbacks.onSession?.({ book_loaded: true });
+        callbacks.onToken?.(fbData.response || 'Yanıt alınamadı.');
+        callbacks.onDone?.({ aborted: false, mode_notice: fbData.mode_notice || '' });
+        return;
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+
+      const dispatchFrame = (rawBlock) => {
+        const lines = rawBlock.split('\n');
+        let eventName = 'message';
+        const dataLines = [];
+        for (const line of lines) {
+          if (line.startsWith('event:')) {
+            eventName = line.slice(6).trim();
+          } else if (line.startsWith('data:')) {
+            dataLines.push(line.slice(5).trimStart());
+          }
+        }
+        if (!dataLines.length) return;
+        let parsed = null;
+        try {
+          parsed = JSON.parse(dataLines.join('\n'));
+        } catch (_parseErr) {
+          parsed = { text: dataLines.join('\n') };
+        }
+        if (eventName === 'citations') {
+          callbacks.onCitations?.(parsed?.citations || []);
+        } else if (eventName === 'session') {
+          callbacks.onSession?.(parsed || {});
+        } else if (eventName === 'token') {
+          callbacks.onToken?.(parsed?.text || '');
+        } else if (eventName === 'done') {
+          callbacks.onDone?.(parsed || {});
+        } else if (eventName === 'error') {
+          callbacks.onError?.(parsed?.message || 'Yanıt akışı sırasında hata oluştu.');
+        }
+      };
+
+      try {
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true }).replaceAll('\r\n', '\n');
+          let sepIdx = buffer.indexOf('\n\n');
+          while (sepIdx !== -1) {
+            const frame = buffer.slice(0, sepIdx).trim();
+            buffer = buffer.slice(sepIdx + 2);
+            if (frame) dispatchFrame(frame);
+            sepIdx = buffer.indexOf('\n\n');
+          }
+        }
+        buffer += decoder.decode().replaceAll('\r\n', '\n');
+        if (buffer.trim()) {
+          dispatchFrame(buffer.trim());
+        }
+      } finally {
+        try { reader.releaseLock(); } catch (_relErr) {}
+      }
+    }
+    window.streamChatSSE = streamChatSSE;
+
+    async function reindexAllBookEmbeddings() {
+      try {
+        const resp = await apiFetch('/api/books/reindex-embeddings', { method: 'POST' });
+        if (!resp?.ok) {
+          if (typeof showToast === 'function') showToast('Vektör indeksleme başlatılamadı.', 'error');
+          return;
+        }
+        const data = await resp.json();
+        if (typeof showToast === 'function') {
+          showToast(data.message || 'Anlamsal vektör indeksleme arka planda başlatıldı.', 'success');
+        }
+        if (typeof fetchTasksFromAPI === 'function') {
+          void fetchTasksFromAPI();
+        }
+      } catch (_err) {
+        if (typeof showToast === 'function') showToast('Sunucu bağlantısı kurulamadı.', 'error');
+      }
+    }
+    window.reindexAllBookEmbeddings = reindexAllBookEmbeddings;
 
     function _safeLsGet(key) {
       try {
@@ -249,6 +377,7 @@
       const mainContent = document.getElementById('main-content');
       const controlsPanel = document.querySelector('.controls-panel');
       const headerAddBtn = document.getElementById('header-add-book-btn');
+      const headerDivider = document.querySelector('.header-action-divider');
       const compactAddBtn = document.getElementById('compact-add-book-btn');
       const compactNav = document.getElementById('compact-nav');
 
@@ -256,6 +385,7 @@
         if (importZone) importZone.style.display = 'none';
         if (mainContent) mainContent.style.display = 'block';
         if (controlsPanel) controlsPanel.style.display = 'flex';
+        if (headerDivider) headerDivider.style.display = '';
         if (headerAddBtn) {
           headerAddBtn.style.display = 'inline-flex';
           headerAddBtn.classList.remove('hidden');
@@ -268,6 +398,7 @@
         if (importZone) importZone.style.display = 'block';
         if (mainContent) mainContent.style.display = 'none';
         if (controlsPanel) controlsPanel.style.display = 'none';
+        if (headerDivider) headerDivider.style.display = 'none';
         if (headerAddBtn) {
           headerAddBtn.style.display = 'none';
           headerAddBtn.classList.add('hidden');
@@ -293,7 +424,7 @@
         has_cover: !!row['has_cover'],
         is_favorite: !!row['is_favorite'],
         collections: row['koleksiyonlar'] || [],
-        okunulan_sayfa: Number.parseInt(row['okunulan_sayfa'] || 1, 10),
+        okunulan_sayfa: Math.max(0, Number.parseInt(row['okunulan_sayfa'] ?? 0, 10) || 0),
         sayfa_sayisi: Number.parseInt(row['sayfa_sayisi'] || 0, 10),
         dosya_boyutu: Number.parseInt(row['dosya_boyutu'] || 0, 10)
       };
@@ -306,6 +437,9 @@
 
       const mapped = items.map(mapBookRow);
       window.allBooks = append ? (window.allBooks || []).concat(mapped) : mapped;
+      if (window.OfflineVault && typeof window.OfflineVault.saveCatalogSnapshot === 'function') {
+        void window.OfflineVault.saveCatalogSnapshot(window.allBooks);
+      }
 
       updateLibraryZoneVisibility(window.allBooks.length > 0 || uploadingCards.size > 0);
 
@@ -343,6 +477,20 @@
         _applyLoadedBooksData(data, page, append);
       } catch (error) {
         console.error("Kitaplar yüklenirken hata:", error);
+        if (window.OfflineVault && typeof window.OfflineVault.loadCatalogSnapshot === 'function') {
+          const snap = await window.OfflineVault.loadCatalogSnapshot();
+          if (Array.isArray(snap) && snap.length > 0) {
+            window.allBooks = snap;
+            window.totalBooks = snap.length;
+            updateLibraryZoneVisibility(true);
+            buildCategoryTags();
+            render();
+            if (typeof showToast === 'function') {
+              showToast('Çevrimdışı Kasa kataloğu yüklendi.', 'info');
+            }
+            return;
+          }
+        }
         if (typeof showToast === 'function') {
           showToast("Kitaplar yüklenemedi: Sunucu bağlantısını kontrol edin.", "error");
         }

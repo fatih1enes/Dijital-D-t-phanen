@@ -73,8 +73,9 @@ KEY_FILE_HASH = "file_hash"
 
 def _make_fallback_metadata(filename: str, ozet: str) -> dict:
     """Construct default metadata dict when AI extraction fails."""
+    clean_stem = re.sub(r"\.(pdf|epub|txt)$", "", filename, flags=re.I)
     return {
-        FIELD_KITAP_ADI: filename.replace(".pdf", ""),
+        FIELD_KITAP_ADI: clean_stem,
         FIELD_YAZAR: VAL_UNKNOWN_AUTHOR,
         FIELD_KATEGORI: VAL_UNKNOWN,
         FIELD_ALT_KATEGORI: VAL_UNKNOWN,
@@ -98,11 +99,11 @@ def _extract_full_text_in_background(
     pdf_path: str, final_path: str, filename: str, task_id: str | None = None
 ) -> None:
     """Background daemon worker to index full book text without blocking UI / ingestion."""
-    if final_path.lower().endswith((".txt", FULL_TEXT_EXT)):
+    lower_final = final_path.lower()
+    if lower_final.endswith((".txt", FULL_TEXT_EXT)):
         return
     try:
         from app.logger import log_event
-        from app.pdf import extract_text_from_pdf
 
         log_event(
             "pdf",
@@ -110,7 +111,14 @@ def _extract_full_text_in_background(
             f"Tam metin arşivi arka planda indeksleniyor: {filename}",
             task_id=task_id,
         )
-        full_text = extract_text_from_pdf(pdf_path, max_pages=0)
+        if lower_final.endswith(".epub"):
+            from app.epub import extract_text_from_epub
+
+            full_text = extract_text_from_epub(pdf_path, max_chars=0)
+        else:
+            from app.pdf import extract_text_from_pdf
+
+            full_text = extract_text_from_pdf(pdf_path, max_pages=0)
         if full_text and full_text.strip():
             text_path = final_path + FULL_TEXT_EXT
             try:
@@ -781,10 +789,16 @@ async def _save_book_and_index_chunks(
             from app.services.embedding_service import embedding_service
 
             chunk_texts = [str(c.get("metin", "")) for c in chunks]
-            embeddings = await asyncio.to_thread(
-                embedding_service.generate_embeddings_batch, chunk_texts
+            embeddings, emb_model = await asyncio.to_thread(
+                embedding_service.generate_semantic_embeddings_batch,
+                chunk_texts,
+                task_data.get("provider"),
+                task_data.get("api_key"),
+                task_data.get("base_url"),
             )
-            indexed_count = await index_document_chunks(bg_db, chunks, embeddings=embeddings)
+            indexed_count = await index_document_chunks(
+                bg_db, chunks, embeddings=embeddings, embedding_model=emb_model
+            )
             log_event(
                 LOG_CATEGORY_DATABASE,
                 "INFO",
@@ -891,12 +905,24 @@ class TaskQueue:
 
     def __init__(self, max_workers: int | None = None):
         self._queue: asyncio.Queue = asyncio.Queue()
+        self._loop: asyncio.AbstractEventLoop | None = None
         # Configurable concurrency via MAX_CONCURRENT_TASKS (default 1 to conserve resources)
         workers = max_workers if max_workers is not None else MAX_CONCURRENT_TASKS
-        self._executor = ThreadPoolExecutor(max_workers=max(1, workers))
+        self._max_workers: int = max(1, workers)
+        self._executor = ThreadPoolExecutor(max_workers=self._max_workers)
+
+    def ensure_active_loop(self) -> None:
+        """Rebind internal asyncio.Queue and ThreadPoolExecutor if event loop changed or restarted."""
+        running_loop = asyncio.get_running_loop()
+        if self._loop is not running_loop:
+            self._queue = asyncio.Queue()
+            self._loop = running_loop
+        if getattr(self._executor, "_shutdown", False):
+            self._executor = ThreadPoolExecutor(max_workers=self._max_workers)
 
     async def enqueue(self, task_data: dict) -> None:
         """Add a PDF processing job to the internal queue."""
+        self.ensure_active_loop()
         await self._queue.put(task_data)
 
     async def worker_loop(self) -> None:
@@ -905,6 +931,7 @@ class TaskQueue:
         from app.logger import log_event
         from app.tasks import update_task_status
 
+        self.ensure_active_loop()
         loop = asyncio.get_running_loop()
 
         while True:
@@ -929,11 +956,17 @@ class TaskQueue:
 
             try:
                 # ── Phase 1: CPU-heavy work in background thread pool ────
+                fn_low = str(task_data.get("filename") or "").lower()
+                fmt_label = (
+                    "EPUB"
+                    if fn_low.endswith(".epub")
+                    else ("Metin" if fn_low.endswith(".txt") else "PDF")
+                )
                 update_task_status(
                     task_id,
                     STATUS_PROCESSING,
                     15,
-                    f"PDF metni okunuyor ve analiz için hazırlanıyor: {task_data['filename']}",
+                    f"{fmt_label} metni okunuyor ve analiz için hazırlanıyor: {task_data['filename']}",
                     log_state="INFO",
                 )
 

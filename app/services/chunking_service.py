@@ -206,41 +206,71 @@ class DocumentChunker:
 
 
 async def index_document_chunks(
-    db: Any, chunks: list[dict[str, Any]], embeddings: list[bytes] | None = None
+    db: Any,
+    chunks: list[dict[str, Any]],
+    embeddings: list[bytes] | None = None,
+    embedding_model: str | None = None,
 ) -> int:
     """Store chunks into kitap_chunks and synchronize FTS5 virtual table."""
     if not chunks:
         return 0
 
+    from app.services.embedding_service import embedding_service
+
     conn = getattr(db, "conn", db)
     file_hash = chunks[0]["dosya_hash"]
+    active_model = embedding_model or embedding_service.active_local_model_id()
 
     # Clear existing chunks for this book to allow idempotent re-indexing
     await conn.execute("DELETE FROM kitap_chunks WHERE dosya_hash = ?", (file_hash,))
     await conn.execute("DELETE FROM kitap_chunks_fts WHERE dosya_hash = ?", (file_hash,))
 
-    # Batch insert into kitap_chunks
-    chunk_rows = []
-    for i, c in enumerate(chunks):
-        emb_blob = embeddings[i] if embeddings and i < len(embeddings) else None
-        chunk_rows.append(
+    has_emb_model_col = getattr(conn, "_has_emb_model_col", None)
+    if has_emb_model_col is None:
+        cur = await conn.execute("PRAGMA table_info(kitap_chunks)")
+        cols = {row[1] for row in await cur.fetchall()}
+        has_emb_model_col = "embedding_model" in cols
+        conn._has_emb_model_col = has_emb_model_col
+
+    if has_emb_model_col:
+        chunk_rows = [
             (
                 str(c["dosya_hash"]),
                 int(c.get("sayfa_no", 1)),
                 int(c.get("chunk_index", i)),
                 str(c.get("metin", "")),
                 int(c.get("char_count", len(c.get("metin", "")))),
-                emb_blob,
+                embeddings[i] if embeddings and i < len(embeddings) else None,
+                active_model,
             )
+            for i, c in enumerate(chunks)
+        ]
+        await conn.executemany(
+            """
+            INSERT INTO kitap_chunks (dosya_hash, sayfa_no, chunk_index, metin, char_count, embedding, embedding_model)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            chunk_rows,
         )
-
-    await conn.executemany(
-        """
-        INSERT INTO kitap_chunks (dosya_hash, sayfa_no, chunk_index, metin, char_count, embedding)
-        VALUES (?, ?, ?, ?, ?, ?)
-        """,
-        chunk_rows,
-    )
+    else:
+        chunk_rows_legacy = [
+            (
+                str(c["dosya_hash"]),
+                int(c.get("sayfa_no", 1)),
+                int(c.get("chunk_index", i)),
+                str(c.get("metin", "")),
+                int(c.get("char_count", len(c.get("metin", "")))),
+                embeddings[i] if embeddings and i < len(embeddings) else None,
+            )
+            for i, c in enumerate(chunks)
+        ]
+        await conn.executemany(
+            """
+            INSERT INTO kitap_chunks (dosya_hash, sayfa_no, chunk_index, metin, char_count, embedding)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            chunk_rows_legacy,
+        )
 
     # Populate FTS5 table
     fts_rows = [

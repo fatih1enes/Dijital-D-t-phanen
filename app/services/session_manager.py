@@ -7,6 +7,7 @@ during application runtime (cleared upon server restart).
 import asyncio
 import threading
 import time
+from collections.abc import Iterator
 from typing import Any
 
 try:
@@ -223,6 +224,35 @@ class BookSession:
         self.messages.append({"role": "model", "text": reply_text, "timestamp": time.time()})
 
         return reply_text
+
+    def send_user_message_stream(self, user_text: str, context_prefix: str = "") -> Iterator[str]:
+        """Stream response chunks from an active Gemini book chat session and record history."""
+        self.last_accessed = time.time()
+        if not self.chat_session:
+            raise RuntimeError("Sohbet oturumu başlatılmamış.")
+
+        wire_message = (
+            f"{context_prefix.strip()}\n\nKullanıcı Sorusu: {user_text}"
+            if context_prefix and context_prefix.strip()
+            else user_text
+        )
+
+        collected: list[str] = []
+        try:
+            stream = self.chat_session.send_message_stream(wire_message)
+            for chunk in stream:
+                piece = getattr(chunk, "text", None)
+                if piece:
+                    text_piece = str(piece)
+                    collected.append(text_piece)
+                    yield text_piece
+        finally:
+            full_reply = "".join(collected).strip()
+            if full_reply:
+                self.messages.append({"role": "user", "text": user_text, "timestamp": time.time()})
+                self.messages.append(
+                    {"role": "model", "text": full_reply, "timestamp": time.time()}
+                )
 
 
 class BookSessionManager:

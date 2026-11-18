@@ -1,8 +1,10 @@
 # cspell:disable
 """AI Service managing text generation and embedding generations from various AI providers."""
 
+import asyncio
 import logging
 import os
+from collections.abc import AsyncIterator
 from typing import Any
 
 from app.constants import DEFAULT_GEMINI_MODEL
@@ -301,3 +303,179 @@ class AIService:
 
             clean_err = mask_sensitive_data(str(e))
             return f"Error from {provider.capitalize()}: {clean_err}"
+
+    async def _stream_gemini(
+        self,
+        prompt: str,
+        api_key: str,
+        model: str | None,
+        system_instruction: str | None,
+        google_search_grounding: bool,
+        pdf_path: str | None,
+    ) -> AsyncIterator[str]:
+        """Stream tokens from Gemini with pre-first-token cascade failover and cloud file cleanup."""
+        if not HAS_GOOGLE_GENAI or genai is None:
+            yield "Hata: 'google-genai' kütüphanesi sisteminizde bulunamadı."
+            return
+
+        from app.config import load_config
+
+        cfg = load_config()
+        cascade_mode = bool(cfg.get("gemini_cascade_mode", True))
+        client = genai.Client(api_key=api_key)
+        uploaded_file = await asyncio.to_thread(self._upload_pdf, client, pdf_path)
+
+        try:
+            candidate_models = [model or DEFAULT_GEMINI_MODEL]
+            if cascade_mode:
+                from app.services.cascade_manager import cascade_manager
+
+                cfg_models = cfg.get("gemini_cascade_models")
+                if cfg_models and isinstance(cfg_models, list):
+                    cascade_manager.configure_chain(cfg_models)
+                candidate_models = cascade_manager.get_order()
+
+            last_err: Exception | None = None
+            for target_model in candidate_models:
+                emitted_any = False
+                try:
+                    cfg_kwargs: dict[str, Any] = {}
+                    if system_instruction:
+                        cfg_kwargs["system_instruction"] = system_instruction
+                    if google_search_grounding:
+                        cfg_kwargs["tools"] = [types.Tool(google_search=types.GoogleSearch())]
+                    cfg_content = types.GenerateContentConfig(**cfg_kwargs) if cfg_kwargs else None
+                    cnts = [uploaded_file, prompt] if uploaded_file else [prompt]
+
+                    stream = await client.aio.models.generate_content_stream(
+                        model=target_model,
+                        contents=cnts,
+                        config=cfg_content,
+                    )
+                    async for chunk in stream:
+                        piece = getattr(chunk, "text", None)
+                        if piece:
+                            emitted_any = True
+                            yield str(piece)
+                    if emitted_any:
+                        return
+                except asyncio.CancelledError:
+                    raise
+                except Exception as stream_err:
+                    last_err = stream_err
+                    err_low = str(stream_err).lower()
+                    _safe_log(
+                        "ai_analyze",
+                        "WARNING",
+                        f"Gemini stream denemesi uyarısı ({target_model}): {stream_err}",
+                        model=target_model,
+                    )
+                    if emitted_any or any(
+                        p in err_low for p in ("api_key_invalid", "api key not valid", "401", "403")
+                    ):
+                        break
+                    continue
+
+            if last_err is not None:
+                from app.utils import mask_sensitive_data
+
+                yield f"Error from Gemini: {mask_sensitive_data(str(last_err))}"
+        finally:
+            if uploaded_file and hasattr(uploaded_file, "name"):
+                try:
+                    await asyncio.to_thread(client.files.delete, name=uploaded_file.name)
+                except Exception as del_err:
+                    _safe_log("ai_analyze", "DEBUG", f"Bulut dosya temizleme uyarısı: {del_err}")
+
+    async def _stream_local(
+        self,
+        provider: str,
+        prompt: str,
+        model: str | None,
+        base_url: str | None,
+        system_instruction: str | None,
+    ) -> AsyncIterator[str]:
+        """Stream tokens from local OpenAI-compatible endpoints (Ollama / LM Studio)."""
+        try:
+            from openai import AsyncOpenAI  # type: ignore
+        except ImportError:
+            yield "Error: 'openai' library is not installed."
+            return
+
+        default_url = (
+            "http://localhost:11434/v1" if provider == "ollama" else "http://localhost:1234/v1"
+        )
+        url = (base_url or default_url).strip()
+        if not url.startswith(("http://", "https://")) or "169.254.169.254" in url:
+            yield "Error: Invalid or blocked AI base URL."
+            return
+
+        default_model = "gemma2" if provider == "ollama" else "model-identifier"
+        model_name = model or default_model
+        messages: list[dict[str, str]] = []
+        if system_instruction:
+            messages.append({"role": "system", "content": system_instruction})
+        messages.append({"role": "user", "content": prompt})
+
+        client = AsyncOpenAI(base_url=url, api_key="local", timeout=60.0)
+        try:
+            stream = await client.chat.completions.create(
+                model=model_name,
+                messages=messages,  # type: ignore[arg-type]
+                stream=True,
+                timeout=60.0,
+            )
+            async for chunk in stream:
+                choices = getattr(chunk, "choices", None)
+                if choices:
+                    delta = getattr(choices[0], "delta", None)
+                    piece = getattr(delta, "content", None) if delta else None
+                    if piece:
+                        yield str(piece)
+        finally:
+            await client.close()
+
+    async def generate_text_stream(
+        self,
+        prompt: str,
+        provider: str,
+        api_key: str,
+        model: str | None = None,
+        base_url: str | None = None,
+        system_instruction: str | None = None,
+        google_search_grounding: bool = False,
+        pdf_path: str | None = None,
+    ) -> AsyncIterator[str]:
+        """Stream text tokens asynchronously across Gemini, Ollama, and LM Studio."""
+        provider_norm = provider.lower()
+        resolved_key = self._resolve_api_key(provider_norm, api_key)
+
+        if not resolved_key and provider_norm not in ("ollama", "lmstudio"):
+            yield "Lütfen ayarlardan API anahtarınızı girin."
+            return
+
+        try:
+            if provider_norm == "gemini":
+                async for tok in self._stream_gemini(
+                    prompt,
+                    resolved_key,
+                    model,
+                    system_instruction,
+                    google_search_grounding,
+                    pdf_path,
+                ):
+                    yield tok
+                return
+            if provider_norm in ("ollama", "lmstudio"):
+                async for tok in self._stream_local(
+                    provider_norm, prompt, model, base_url, system_instruction
+                ):
+                    yield tok
+                return
+            yield f"Error: Unsupported provider '{provider_norm}'"
+        except asyncio.CancelledError:
+            raise
+        except Exception as err:
+            from app.utils import mask_sensitive_data
+
+            yield f"Error from {provider_norm.capitalize()}: {mask_sensitive_data(str(err))}"

@@ -58,10 +58,16 @@ from app.routers import (
     settings as settings_module,
 )
 from app.routers import (
+    srs as srs_module,
+)
+from app.routers import (
     tasks as tasks_module,
 )
 from app.routers import (
     telegram as telegram_module,
+)
+from app.routers import (
+    tts as tts_module,
 )
 from app.task_queue import TaskQueue
 from app.websocket import ConnectionManager
@@ -536,6 +542,8 @@ app.include_router(settings_module.router)
 app.include_router(telegram_module.router)
 app.include_router(opds_module.router)
 app.include_router(debate_module.router)
+app.include_router(tts_module.router)
+app.include_router(srs_module.router)
 
 
 def open_browser() -> None:

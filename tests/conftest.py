@@ -185,8 +185,64 @@ def init_test_db():
                 metin TEXT NOT NULL,
                 char_count INTEGER NOT NULL,
                 embedding BLOB,
+                embedding_model TEXT DEFAULT 'hash-v1',
                 olusturma_tarihi TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (dosya_hash) REFERENCES kitaplar(dosya_hash) ON DELETE CASCADE
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS kitap_ocr_sayfalar (
+                dosya_hash TEXT NOT NULL,
+                sayfa_no INTEGER NOT NULL,
+                img_w INTEGER NOT NULL DEFAULT 0,
+                img_h INTEGER NOT NULL DEFAULT 0,
+                words_json TEXT NOT NULL DEFAULT '[]',
+                full_text TEXT NOT NULL DEFAULT '',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (dosya_hash, sayfa_no)
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS kitap_yer_imleri (
+                dosya_hash TEXT NOT NULL,
+                sayfa_no INTEGER NOT NULL,
+                etiket TEXT DEFAULT '',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (dosya_hash, sayfa_no)
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS okuma_oturumlari (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                dosya_hash TEXT NOT NULL,
+                tarih_gun TEXT NOT NULL,
+                sure_saniye INTEGER NOT NULL DEFAULT 0,
+                okunan_sayfa_sayisi INTEGER NOT NULL DEFAULT 0,
+                baslangic_sayfa INTEGER DEFAULT 1,
+                bitis_sayfa INTEGER DEFAULT 1,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(dosya_hash, tarih_gun)
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS srs_kartlari (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                dosya_hash TEXT NOT NULL,
+                not_id TEXT,
+                sayfa_no INTEGER DEFAULT 1,
+                on_yuz TEXT NOT NULL,
+                arka_yuz TEXT NOT NULL,
+                baglam TEXT DEFAULT '',
+                durum INTEGER DEFAULT 0,
+                stability REAL DEFAULT 0.0,
+                difficulty REAL DEFAULT 5.0,
+                reps INTEGER DEFAULT 0,
+                lapses INTEGER DEFAULT 0,
+                scheduled_days INTEGER DEFAULT 0,
+                elapsed_days INTEGER DEFAULT 0,
+                last_review TEXT,
+                due_at TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
         conn.execute("""
@@ -268,6 +324,10 @@ def init_test_db():
     # Clean up test DB tables after each test to ensure isolation
     conn = sqlite3.connect(db_file)
     try:
+        conn.execute("DROP TABLE IF EXISTS kitap_ocr_sayfalar")
+        conn.execute("DROP TABLE IF EXISTS kitap_yer_imleri")
+        conn.execute("DROP TABLE IF EXISTS okuma_oturumlari")
+        conn.execute("DROP TABLE IF EXISTS srs_kartlari")
         conn.execute("DROP TABLE IF EXISTS kitap_toc")
         conn.execute("DROP TABLE IF EXISTS kg_relations")
         conn.execute("DROP TABLE IF EXISTS kg_entities")

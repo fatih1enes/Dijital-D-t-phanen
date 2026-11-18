@@ -297,3 +297,45 @@ class RelationCreateRequest(BaseModel):
     target_id: str = Field(..., min_length=1, max_length=255)
     weight: float = Field(default=1.0, ge=0.0, le=10.0)
     source_evidence: str = Field(default="", max_length=2000)
+
+
+class BookmarkToggleRequest(BaseModel):
+    """Request model for adding or toggling a page bookmark."""
+
+    sayfa_no: int = Field(..., ge=1, le=100000, description="Yer imi konulacak sayfa numarası.")
+    etiket: str = Field(default="", max_length=240, description="İsteğe bağlı yer imi etiketi.")
+    toggle: bool = Field(default=True, description="Zaten varsa kaldırılsın mı?")
+
+
+class TTSSynthesizeRequest(BaseModel):
+    """Request model for neural Turkish TTS synthesis with word boundary timestamps."""
+
+    text: str = Field(..., min_length=1, max_length=3500, description="Seslendirilecek Türkçe/çok dilli metin.")
+    voice: str = Field(default="tr-TR-EmelNeural", max_length=80, description="Sinirsel ses kimliği.")
+    rate: float = Field(default=1.0, ge=0.5, le=2.2, description="Konuşma hızı çarpanı.")
+
+
+class ReadingHeartbeatRequest(BaseModel):
+    """Request model for recording active focused reading duration and page progression."""
+
+    dosya_hash: str = Field(..., min_length=16, max_length=128)
+    delta_seconds: int = Field(..., ge=1, le=600)
+    current_page: int = Field(default=1, ge=1, le=100000)
+    pages_read_delta: int = Field(default=0, ge=0, le=500)
+
+
+class SRSCardCreateRequest(BaseModel):
+    """Request model for creating an FSRS v5 flashcard manually or from an annotation."""
+
+    dosya_hash: str = Field(..., min_length=16, max_length=128)
+    sayfa_no: int = Field(default=1, ge=1, le=100000)
+    not_id: str | None = Field(default=None, max_length=128)
+    on_yuz: str = Field(..., min_length=1, max_length=4000)
+    arka_yuz: str = Field(..., min_length=1, max_length=6000)
+    baglam: str = Field(default="", max_length=2000)
+
+
+class SRSReviewRequest(BaseModel):
+    """Request model for grading an FSRS v5 flashcard (1=Again, 2=Hard, 3=Good, 4=Easy)."""
+
+    rating: int = Field(..., ge=1, le=4)

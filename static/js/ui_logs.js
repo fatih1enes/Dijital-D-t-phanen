@@ -668,17 +668,28 @@
     }
 
     function handleCompletedTaskRefreshes(completedEntries) {
+      let needsReload = false;
       completedEntries.forEach(t => {
         if (t.status === 'success' && !window.completedTasks.has(t.id)) {
           window.completedTasks.add(t.id);
-          if (typeof loadBooksFromAPI === 'function') {
-            loadBooksFromAPI(1, false).catch(err => console.error("Book reload failed:", err));
-          }
+          needsReload = true;
           if (typeof addChatMessage === 'function') {
-            addChatMessage('ai', `${t.filename} başarıyla analiz edildi ve kütüphanenize eklendi.`);
+            const ozet = String(t.task_data?.ozet || t.data?.ozet || '');
+            const aiFailed = ozet.includes('Analiz başarısız');
+            const chatNote = aiFailed
+              ? `${t.filename} kütüphanenize eklendi. (Otomatik özet için Ayarlar'dan API anahtarı girebilirsiniz.)`
+              : `${t.filename} başarıyla analiz edildi ve kütüphanenize eklendi.`;
+            addChatMessage('ai', chatNote);
           }
         }
       });
+      if (needsReload) {
+        if (typeof debouncedLoadBooksWs === 'function') {
+          debouncedLoadBooksWs(1, false);
+        } else if (typeof loadBooksFromAPI === 'function') {
+          loadBooksFromAPI(1, false).catch(err => console.error("Book reload failed:", err));
+        }
+      }
     }
 
     const OPS_RING_CIRCUMFERENCE = 56.55;
