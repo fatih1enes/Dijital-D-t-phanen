@@ -395,11 +395,31 @@ async def sync_library(
             detail="AI API Key is required to scan/process files.",
         )
 
+    watch_dir = str(cfg.get("watchfolder_path", "")).strip()
+    watch_dir_valid = bool(watch_dir and os.path.isdir(watch_dir))
+
     def _scan_library_files() -> list[str]:
-        scanned = []
+        from app.services.watchfolder_service import _get_scan_candidates, _is_file_readable
+
+        scanned: list[str] = []
+        seen_norm: set[str] = set()
         for ext in ("*.pdf", "*.epub", "*.txt"):
             pattern = os.path.join(LIBRARY_ROOT, "**", ext)
-            scanned.extend(glob.glob(pattern, recursive=True))
+            for candidate in glob.glob(pattern, recursive=True):
+                norm_p = os.path.normcase(os.path.realpath(os.path.abspath(candidate)))
+                if norm_p not in seen_norm:
+                    seen_norm.add(norm_p)
+                    scanned.append(candidate)
+
+        if watch_dir_valid and not is_path_within(LIBRARY_ROOT, watch_dir):
+            for candidate in _get_scan_candidates(watch_dir):
+                if not _is_file_readable(candidate):
+                    continue
+                norm_p = os.path.normcase(os.path.realpath(os.path.abspath(candidate)))
+                if norm_p not in seen_norm:
+                    seen_norm.add(norm_p)
+                    scanned.append(candidate)
+
         return scanned
 
     scanned_files = await asyncio.to_thread(_scan_library_files)
@@ -417,6 +437,7 @@ async def sync_library(
         if r[0]
     }
 
+    from app.services.watchfolder_service import watchfolder_service
     from app.tasks import register_task
 
     enqueued_count = 0
@@ -471,6 +492,7 @@ async def sync_library(
                     "base_url": base_url,
                 }
             )
+            watchfolder_service._processed_hashes.add(file_hash)
             enqueued_count += 1
         except Exception as e:
             log_event(
@@ -479,7 +501,12 @@ async def sync_library(
                 f"Taranan belge dosyası '{file_path}' işlenirken hata: {e}",
             )
 
-    return {"status": "success", "enqueued_count": enqueued_count}
+    return {
+        "status": "success",
+        "enqueued_count": enqueued_count,
+        "watchfolder_scanned": watch_dir_valid,
+        "watchfolder_path": watch_dir if watch_dir_valid else "",
+    }
 
 
 @router.delete(

@@ -1161,8 +1161,34 @@
       const icon = document.getElementById('sync-icon');
       if (btn) btn.disabled = true;
       if (icon) icon.className = 'fas fa-sync-alt fa-spin';
-      
+
       try {
+        const wfPathEl = document.getElementById('set-watchfolder-path');
+        const wfEnabledEl = document.getElementById('set-watchfolder-enabled');
+        if (wfPathEl) {
+          const curPath = wfPathEl.value.trim();
+          const savedPath = String(window.appSettings?.watchfolder_path || '').trim();
+          const curEnabled = Boolean(wfEnabledEl?.checked);
+          const savedEnabled = Boolean(window.appSettings?.watchfolder_enabled);
+          if ((curPath !== savedPath || curEnabled !== savedEnabled) && (curPath !== '' || savedPath !== '')) {
+            const saveRes = await apiFetch('/api/settings', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                watchfolder_path: curPath,
+                watchfolder_enabled: curEnabled,
+              }),
+            });
+            if (saveRes?.ok) {
+              window.appSettings = {
+                ...(window.appSettings || {}),
+                watchfolder_path: curPath,
+                watchfolder_enabled: curEnabled,
+              };
+            }
+          }
+        }
+
         const response = await apiFetch('/api/books/sync', {
           method: 'POST'
         });
@@ -1171,7 +1197,7 @@
         }
         const result = await response.json();
         const count = result.enqueued_count || 0;
-        
+
         await loadBooksFromAPI(1, false);
 
         if (count > 0) {
@@ -1183,11 +1209,12 @@
             opsCenter.classList.add('active');
             if (typeof flushOpsBodyIfDirty === 'function') flushOpsBodyIfDirty();
           }
-          
-          showToast(`Kütüphane dizininde ${count} yeni kitap bulundu ve analiz kuyruğuna eklendi!`, 'info', 5000);
+
+          showToast(`Klasörler tarandı: ${count} yeni kitap analiz kuyruğuna eklendi!`, 'info', 5000);
+        } else if (result.watchfolder_path) {
+          showToast(`İzleme klasörü (${result.watchfolder_path}) ve kütüphane dizini kontrol edildi. Yeni dosya bulunamadı.`, 'info', 4500);
         } else {
-          const syncPath = document.getElementById('sync-folder-path')?.dataset?.path || 'veriler/Dijital_Kutuphane';
-          showToast(`Yeni dosya bulunamadı. Belgelerinizi "${syncPath}" klasörüne atıp tekrar eşitleyebilirsiniz.`, 'info', 4500);
+          showToast("Kütüphane dizini kontrol edildi. Özel bir klasörü eşitlemek için Ayarlar > İzlenecek Klasör Yolu'nu belirleyebilirsiniz.", 'info', 5000);
         }
       } catch (err) {
         console.error("Eşitleme hatası:", err);
@@ -1199,29 +1226,6 @@
     }
 
     window.syncLibrary = syncLibrary;
-
-    window.copySyncFolderPath = async function(btnEl) {
-      const targetPath = btnEl?.dataset?.path || btnEl?.textContent?.trim();
-      if (!targetPath) return;
-      try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(targetPath);
-        } else {
-          const ta = document.createElement('textarea');
-          ta.value = targetPath;
-          ta.style.position = 'fixed';
-          ta.style.opacity = '0';
-          document.body.appendChild(ta);
-          ta.select();
-          document.execCommand('copy');
-          document.body.removeChild(ta);
-        }
-        showToast("Eşitleme klasörü yolu panoya kopyalandı. Dosyalarınızı bu klasöre atıp 'Klasörü eşitle'ye basabilirsiniz.", 'success', 4500);
-      } catch (err) {
-        console.warn('Klasör yolu kopyalanamadı:', err);
-        showToast(`Eşitleme klasörü: ${targetPath}`, 'info', 5000);
-      }
-    };
 
     // --- TELEGRAM INTEGRATION API HELPERS ---
     async function apiTelegramStatus() {
