@@ -38,6 +38,7 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
   <link
     href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap"
     rel="stylesheet">
@@ -47,15 +48,9 @@
   <link rel="stylesheet" href="{{ url_for('static', path='/css/tokens.css') }}?v=2026111805">
   <link rel="stylesheet" href="{{ url_for('static', path='/css/design.css') }}?v=2026111805">
   <link rel="stylesheet" href="{{ url_for('static', path='/css/motion.css') }}?v=2026111805">
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha512-q+4liFwdPC/bNdhUpZx6aXDx/h77yEQtn4I1slHydcbZK34nLaR3cAeYSJshoxIOq3mjEf7xJE8YWIUHMn+oCQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js" integrity="sha512-tjg8I2d6Fi0OBGz1csmr7RfI4uupYaCfL/RqhVRTS42RMGwfBsjwBGmhzhI+e2dPmyew8cFkoxnVkGvADDLvbg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js" integrity="sha512-9+ilAOeXY8qy2bw/h51MmliNNHvdyhTpLIlqDmVpD26z8VjVJsUJtk5rhbDIUvYiD+EpGoAu0xTa7MhZohFQjA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script>
-    if (window.pdfjsLib) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    }
-  </script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha512-q+4liFwdPC/bNdhUpZx6aXDx/h77yEQtn4I1slHydcbZK34nLaR3cAeYSJshoxIOq3mjEf7xJE8YWIUHMn+oCQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js" integrity="sha512-tjg8I2d6Fi0OBGz1csmr7RfI4uupYaCfL/RqhVRTS42RMGwfBsjwBGmhzhI+e2dPmyew8cFkoxnVkGvADDLvbg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js" integrity="sha512-9+ilAOeXY8qy2bw/h51MmliNNHvdyhTpLIlqDmVpD26z8VjVJsUJtk5rhbDIUvYiD+EpGoAu0xTa7MhZohFQjA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 
 <body>
@@ -1748,24 +1743,24 @@
   <div id="citation-preview-popover" class="citation-preview-popover" role="tooltip" aria-hidden="true"></div>
   <div id="epub-footnote-popover" class="citation-preview-popover epub-footnote-popover" role="tooltip" aria-hidden="true"></div>
 
-  <script src="{{ url_for('static', path='/js/state.js') }}?v=2026111805"></script>
-  <script src="{{ url_for('static', path='/js/motion.js') }}?v=2026111805"></script>
-  <script src="{{ url_for('static', path='/js/api.js') }}?v=2026111805"></script>
-  <script src="{{ url_for('static', path='/js/offline_vault.js') }}?v=2026111805"></script>
-  <script src="{{ url_for('static', path='/js/ui_core.js') }}?v=2026111805"></script>
-  <script src="{{ url_for('static', path='/js/ui_logs.js') }}?v=2026111805"></script>
-  <script src="{{ url_for('static', path='/js/ui_chat_settings.js') }}?v=2026111805"></script>
-  <script src="{{ url_for('static', path='/js/ui_srs.js') }}?v=2026111805"></script>
-  <script src="{{ url_for('static', path='/js/ui_telegram.js') }}?v=2026111805"></script>
-  <script src="{{ url_for('static', path='/js/workspace_state.js') }}?v=2026111805"></script>
-  <script src="{{ url_for('static', path='/js/workspace_selection.js') }}?v=2026111805"></script>
-  <script src="{{ url_for('static', path='/js/workspace_renderer.js') }}?v=2026111805"></script>
-  <script src="{{ url_for('static', path='/js/workspace_search.js') }}?v=2026111805"></script>
-  <script src="{{ url_for('static', path='/js/workspace_tts.js') }}?v=2026111805"></script>
-  <script src="{{ url_for('static', path='/js/workspace_chat.js') }}?v=2026111805"></script>
-  <script src="{{ url_for('static', path='/js/ui_workspace.js') }}?v=2026111805"></script>
-  <script src="{{ url_for('static', path='/js/websocket.js') }}?v=2026111805"></script>
-  <script src="{{ url_for('static', path='/js/app.js') }}?v=2026111805"></script>
+  <script defer src="{{ url_for('static', path='/js/state.js') }}?v=2026111806"></script>
+  <script defer src="{{ url_for('static', path='/js/motion.js') }}?v=2026111806"></script>
+  <script defer src="{{ url_for('static', path='/js/api.js') }}?v=2026111806"></script>
+  <script defer src="{{ url_for('static', path='/js/offline_vault.js') }}?v=2026111806"></script>
+  <script defer src="{{ url_for('static', path='/js/ui_core.js') }}?v=2026111806"></script>
+  <script defer src="{{ url_for('static', path='/js/ui_logs.js') }}?v=2026111806"></script>
+  <script defer src="{{ url_for('static', path='/js/ui_chat_settings.js') }}?v=2026111806"></script>
+  <script defer src="{{ url_for('static', path='/js/ui_srs.js') }}?v=2026111806"></script>
+  <script defer src="{{ url_for('static', path='/js/ui_telegram.js') }}?v=2026111806"></script>
+  <script defer src="{{ url_for('static', path='/js/workspace_state.js') }}?v=2026111806"></script>
+  <script defer src="{{ url_for('static', path='/js/workspace_selection.js') }}?v=2026111806"></script>
+  <script defer src="{{ url_for('static', path='/js/workspace_renderer.js') }}?v=2026111806"></script>
+  <script defer src="{{ url_for('static', path='/js/workspace_search.js') }}?v=2026111806"></script>
+  <script defer src="{{ url_for('static', path='/js/workspace_tts.js') }}?v=2026111806"></script>
+  <script defer src="{{ url_for('static', path='/js/workspace_chat.js') }}?v=2026111806"></script>
+  <script defer src="{{ url_for('static', path='/js/ui_workspace.js') }}?v=2026111806"></script>
+  <script defer src="{{ url_for('static', path='/js/websocket.js') }}?v=2026111806"></script>
+  <script defer src="{{ url_for('static', path='/js/app.js') }}?v=2026111806"></script>
 </body>
 
 </html>

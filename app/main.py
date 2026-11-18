@@ -11,6 +11,7 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -223,8 +224,40 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 FastAPICache.init(InMemoryBackend(), prefix="fastapi-cache")
 
 
+class SelectiveGZipASGIMiddleware:
+    """Pure-ASGI GZip middleware that bypasses byte-range, binary media, and SSE streams."""
+
+    _BYPASS_PREFIXES = (
+        "/api/download/",
+        "/api/chat/stream",
+        "/api/tts/audio/",
+        "/api/database/export-full-zip",
+    )
+
+    def __init__(self, app: Any, minimum_size: int = 500) -> None:
+        self.app = app
+        self._gzip_app = GZipMiddleware(app, minimum_size=minimum_size)
+
+    async def __call__(self, scope: dict, receive: Callable, send: Callable) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        path = scope.get("path") or ""
+        if path.startswith(self._BYPASS_PREFIXES):
+            await self.app(scope, receive, send)
+            return
+
+        for header_name, _ in scope.get("headers") or ():
+            if header_name.lower() == b"range":
+                await self.app(scope, receive, send)
+                return
+
+        await self._gzip_app(scope, receive, send)
+
+
 class SecurityHeadersASGIMiddleware:
-    """Pure-ASGI security headers middleware (zero response body buffering for Range streaming)."""
+    """Pure-ASGI security headers and static cache middleware (zero response body buffering)."""
 
     def __init__(self, app: Any) -> None:
         self.app = app
@@ -233,6 +266,9 @@ class SecurityHeadersASGIMiddleware:
         if scope["type"] != "http":
             await self.app(scope, receive, send)
             return
+
+        path = scope.get("path") or ""
+        query_bytes = scope.get("query_string") or b""
 
         async def send_with_headers(message: dict) -> None:
             if message["type"] == "http.response.start":
@@ -244,6 +280,16 @@ class SecurityHeadersASGIMiddleware:
                     raw_headers.append((b"x-frame-options", b"SAMEORIGIN"))
                 if b"referrer-policy" not in existing:
                     raw_headers.append((b"referrer-policy", b"strict-origin-when-cross-origin"))
+                if message.get("status") == 200 and b"cache-control" not in existing:
+                    if path.startswith("/static/"):
+                        cc = (
+                            b"public, max-age=31536000, immutable"
+                            if b"v=" in query_bytes
+                            else b"public, max-age=3600"
+                        )
+                        raw_headers.append((b"cache-control", cc))
+                    elif path.startswith("/thumbnails/"):
+                        raw_headers.append((b"cache-control", b"public, max-age=86400"))
                 message = {**message, "headers": raw_headers}
             await send(message)
 
@@ -285,7 +331,8 @@ class PasswordGateASGIMiddleware:
 
 
 # Middleware registration (innermost -> outermost):
-# CORSMiddleware -> SecurityHeaders -> SessionMiddleware -> PasswordGate -> Router
+# CORSMiddleware -> SecurityHeaders -> SessionMiddleware -> PasswordGate -> SelectiveGZip -> Router
+app.add_middleware(SelectiveGZipASGIMiddleware, minimum_size=500)
 app.add_middleware(PasswordGateASGIMiddleware)
 app.add_middleware(
     SessionMiddleware,

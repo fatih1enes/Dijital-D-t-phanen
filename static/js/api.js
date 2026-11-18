@@ -381,6 +381,9 @@
       const compactAddBtn = document.getElementById('compact-add-book-btn');
       const compactNav = document.getElementById('compact-nav');
 
+      document.body.classList.toggle('is-library-empty', !hasItems);
+      _safeLsSet('kutuphane_has_books', hasItems ? '1' : '0');
+
       if (hasItems) {
         if (importZone) importZone.style.display = 'none';
         if (mainContent) mainContent.style.display = 'block';
@@ -458,8 +461,16 @@
       }
       window.isLoadingMore = true;
 
-      // Initial load: show skeleton cards if grid is empty
+      // Initial load: show skeleton cards cleanly without flashing empty-state hero if user has books
       if (page === 1 && !append && (!window.allBooks || window.allBooks.length === 0)) {
+        if (_safeLsGet('kutuphane_has_books') === '1') {
+          const importZone = document.getElementById('import-zone');
+          const mainContent = document.getElementById('main-content');
+          const controlsPanel = document.querySelector('.controls-panel');
+          if (importZone) importZone.style.display = 'none';
+          if (mainContent) mainContent.style.display = 'block';
+          if (controlsPanel) controlsPanel.style.display = 'flex';
+        }
         if (typeof renderGridSkeletons === 'function') {
           renderGridSkeletons(8);
         }
@@ -490,6 +501,9 @@
             }
             return;
           }
+        }
+        if (!window.allBooks || window.allBooks.length === 0) {
+          updateLibraryZoneVisibility(uploadingCards.size > 0);
         }
         if (typeof showToast === 'function') {
           showToast("Kitaplar yüklenemedi: Sunucu bağlantısını kontrol edin.", "error");

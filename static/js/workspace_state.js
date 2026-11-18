@@ -76,6 +76,9 @@
 
     // Prefetch, Zoom & Scroll State
     const PDFJS_CDN_BASE = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+    if (window.pdfjsLib && !window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = `${PDFJS_CDN_BASE}pdf.worker.min.js`;
+    }
     const pdfPrefetchCache = new Map();
     let zoomWillChangeTimer = null;
     let wheelZoomCommitTimer = null;

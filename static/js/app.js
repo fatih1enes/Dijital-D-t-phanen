@@ -9,8 +9,10 @@
     // ── API ENTEGRASYONU ──────────────────────────────────────
     async function bootstrap() {
       try {
-        await loadSettings();
-        await loadBooksFromAPI(1, false);
+        await Promise.all([
+          loadSettings(),
+          loadBooksFromAPI(1, false)
+        ]);
       } catch (err) {
         console.error("Bootstrap data load failed:", err);
       }

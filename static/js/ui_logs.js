@@ -1235,9 +1235,36 @@
       }
     }
 
-    function exportToExcel() {
+    let _xlsxLoadPromise = null;
+    function ensureXlsxLoaded() {
+      if (window.XLSX) return Promise.resolve(window.XLSX);
+      if (_xlsxLoadPromise) return _xlsxLoadPromise;
+      _xlsxLoadPromise = new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        script.integrity = 'sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA==';
+        script.crossOrigin = 'anonymous';
+        script.referrerPolicy = 'no-referrer';
+        script.onload = () => resolve(window.XLSX);
+        script.onerror = () => {
+          _xlsxLoadPromise = null;
+          reject(new Error('Excel kütüphanesi yüklenemedi.'));
+        };
+        document.head.appendChild(script);
+      });
+      return _xlsxLoadPromise;
+    }
+
+    async function exportToExcel() {
       if (!allBooks || allBooks.length === 0) {
         showToast("Dışa aktarılacak kitap bulunamadı.", "warning");
+        return;
+      }
+
+      try {
+        await ensureXlsxLoaded();
+      } catch (err) {
+        showToast(err?.message || "Excel dışa aktarma kütüphanesi yüklenemedi.", "error");
         return;
       }
 
