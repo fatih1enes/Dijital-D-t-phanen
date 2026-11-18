@@ -26,33 +26,65 @@ PDF, EPUB ve TXT arşivlerinizi kendi bilgisayarınızda veya sunucunuzda saklar
 
 ### Öne Çıkan Özellikler
 
-#### Okuma ve Araştırma Çalışma Alanı
-- **ChromaGuard™ Akıllı Okuma Yüzeyi:** Gündüz, Sepya, E-Ink ve Gece modlarıyla göz yorgunluğunu azaltan kontrast dengesi ve duyarlı tipografi.
-- **Akıllı Çalışma Alanı (Workspace):** Metin seçerek not ve renkli vurgu alma, otomatik PDF İçindekiler (TOC) çıkarımı ve sayfa sapması (offset) çözümleme.
+#### Okuma, Tipografi ve Araştırma Çalışma Alanı
+- **ChromaGuard™ Akıllı Okuma Yüzeyi:** Gündüz, Sepya, E-Ink ve Gece (OLED anti-ghosting) modlarıyla göz yorgunluğunu azaltan kontrast dengesi ve duyarlı tipografi.
+- **Doğal Sinirsel Seslendirme (Neural TTS + 60 FPS Karaoke):** Microsoft `edge-tts` (Türkçe doğal Ahmet/Emel sesleri) ile kitapları dinleme; sesle eşzamanlı kelime ve cümle bazlı akıcı karaoke takibi.
+- **Taranmış PDF'ler İçin Görünmez OCR Katmanı:** Taranmış (salt resim) PDF'leri Tesseract ile işleyerek piksel hizalı, seçilebilir ve kopyalanabilir görünmez metin katmanı üretimi.
+- **Küçük Sayfa Önizleme Şeridi (Filmstrip) & Yer İmleri:** Sayfalar arasında hızlı gezinme sağlayan görsel şerit çekmecesi, yer imleri ve otomatik PDF İçindekiler (TOC) haritası.
+- **Zengin EPUB Tipografisi & Etkileşimli Dipnotlar:** EPUB içi resim büyütme, editoryal `Aa` tipografi ayarları ve sayfadan koparmayan interaktif dipnot önizleme balonları.
+- **Akıllı Çalışma Alanı (Workspace):** Metin seçerek anında not/renkli vurgu alma ve PDF sayfa sapması (offset) çözümleme.
 - **Mobil Handoff:** Masaüstünde açık olan kitabın tam sayfa konumunu dinamik QR kod ile telefonunuza aktarıp kesintisiz devam etme.
-- **OPDS 1.2 Kablosuz Katalog (`/opds`):** KOReader, Moon+ Reader, Apple Books ve uyumlu e-okuyucular için standart katalog akışı.
+- **OPDS 1.2 Kablosuz Katalog (`/opds`):** KOReader, Moon+ Reader, Apple Books ve uyumlu e-okuyucular için standart kablosuz katalog akışı.
 
-#### Hibrit Yapay Zeka, Arama ve Keşif
+#### Hibrit Yapay Zeka, Vektör RAG & Bilişsel Hafıza
+- **Gerçek Anlamsal Vektör Gömme (Hybrid RAG):** SQLite **FTS5** tam metin araması ile 3 katmanlı semantik vektör gömme (`ONNX` yerel model, `Gemini Text-Embedding-004` ve deterministik hash) ve hibrit yeniden sıralama (Rerank).
+- **Gerçek SSE Token Akışı & Doğrulanabilir Kanıt Balonları:** AI kitap sohbetinde kelime kelime akıcı token akışı (True Streaming) ve cevabın hangi sayfadan alındığını gösteren tıklanabilir sayfa kanıt balonları.
+- **FSRS v5 Aktif Hatırlama & Aralıklı Tekrar:** Kitap notları ve vurgularından FSRS (Free Spaced Repetition Scheduler v5) algoritmasıyla kişiselleştirilmiş hafıza kartları ve günlük çalışma stüdyosu.
 - **Gemini Cascade Motoru:** Modeller (`gemini-3.8-flash` → `gemini-3.5-flash-lite`) arasında otomatik yedekleme zinciri ve HTTP 429 kota aşımlarına karşı üstel geri çekilmeli yeniden deneme.
-- **Derin Kitap Sohbeti (RAG) & Hibrit Arama:** SQLite **FTS5** sayfa içi tam metin araması, metin parçalama/vektör gömme (`chunking_service`, `embedding_service`, `hybrid_search`) ve Gemini File API bağlam desteği.
 - **Bilgi Grafiği, Çoklu Ajan Münazarası & Keşif:** Kavram ilişkileri (`knowledge_graph`), çoklu ajan tartışma akışı (`multi_agent_debate`) ve tesadüfi keşif motoru (`serendipity_engine`).
-- **Otomatik Analiz:** Yüklenen eserlerden başlık, yazar, kategori, etiket ve kapsamlı özet üretimi.
+- **Otomatik Analiz:** Yüklenen eserlerden başlık, yazar, kategori, etiket ve editoryal özet üretimi.
 
 #### İçe Aktarma, Otomasyon ve Bakım
 - **Çoklu Format & OCR:** `pypdfium2`, `pdfplumber` ve Poppler ile PDF, EPUB ve TXT işleme; taranmış PDF'ler için **Tesseract OCR**.
-- **Canlı İşlem Merkezi:** WebSocket (`/ws`) üzerinden anlık görev kuyruğu, ilerleme yüzdesi ve terminal log akışı; çökme sonrası kurtarma destekli dayanıklı kuyruk (`durable_queue`).
-- **Gölge Kütüphaneci (Watchfolder):** Belirlenen klasöre düşen yeni PDF/EPUB dosyalarını otomatik algılayıp kuyruğa alma.
+- **Canlı İşlem Merkezi:** WebSocket (`/ws`) üzerinden anlık görev kuyruğu, canlı ilerleme yüzdesi ve terminal log akışı; çökme sonrası kurtarma destekli dayanıklı kuyruk (`durable_queue`).
+- **Gölge Kütüphaneci (Watchfolder):** Belirlenen klasöre düşen yeni PDF/EPUB dosyalarını otomatik algılayıp analiz kuyruğuna alma.
 - **Telegram Senkronizasyonu:** Telethon aracılığıyla Telegram mesaj/kanallarından doğrudan kitap aktarımı.
 - **Mükerrer Eser Avcısı & PDF Optimize Edici:** SHA-256 hash ve başlık/yazar benzerliği ile çift kopya tespiti; yerel PDF boyut sıkıştırma.
 - **Taşınabilir Yedekleme & PKM Dışa Aktarma:** Veritabanı, ayarlar ve kitaplar için tek tıkla ZIP yedeği; notları **Obsidian** (`.md`), **Anki** (`.tsv`) ve **BibTeX** (`.bib`) olarak dışa aktarma.
 
-#### Güvenlik, Masaüstü ve PWA
+#### Güvenlik, Çevrimdışı Kasa ve Platform Desteği
+- **Çevrimdışı Okuma Kasası (IndexedDB Offline Vault):** Kitapları tarayıcının yerel hafızasına güvenle mühürleyerek internet bağlantısı yokken bile kesintisiz okuma ve yerel ilerleme kaydı.
+- **Çapraz Platform:** Windows, macOS (Apple Silicon M1/M2/M3/M4 ve Intel) ile Linux üzerinde %100 yerel ve optimize çalışma.
 - **Yerel ve Uzak Erişim Güvenliği:** SQLite WAL modu, parola kapısı (`ACCESS_PASSWORD`), imzalı oturum çerezleri (`SESSION_SECRET`), brute-force hız sınırlama ve CORS/Origin doğrulaması.
 - **Çevrimdışı Hazır PWA & Masaüstü Kabuğu:** Service Worker (`static/sw.js`) ile PWA desteği ve isteğe bağlı **PyWebView + Pystray** masaüstü uygulaması (`desktop_shell.py`).
 
 ### Hızlı Başlangıç
 
-#### Seçenek 1: Docker / Docker Compose (Önerilen)
+#### Seçenek 1: Windows Tek Tıkla Kurulum (`BASLAT.bat`)
+1. Python 3.10+ kurulumunda **`Add python.exe to PATH`** seçeneğini işaretleyin.
+2. Proje ana dizinindeki **`BASLAT.bat`** dosyasına çift tıklayın.
+   - Sanal ortamı (`.venv` veya `%USERPROFILE%\.dijital_kutuphane_venv`) kurar,
+   - `requirements.txt` bağımlılıklarını yükler,
+   - `.env` dosyasını otomatik hazırlar ve `http://localhost:8000` adresini tarayıcıda açar.
+
+#### Seçenek 2: macOS ve Linux Tek Komutla Kurulum (`baslat.sh`)
+Mac (Apple Silicon & Intel) ve Linux kullanıcıları için tek tıkla / tek komutla başlatma:
+
+```bash
+chmod +x baslat.sh
+./baslat.sh
+```
+*Bu betik Python 3 ortamını denetler, `.venv` sanal ortamını kurar, kütüphaneleri yükler, güvenli `.env` oluşturur ve kütüphaneyi tarayıcınızda otomatik başlatır.*
+
+> [!TIP]
+> **macOS Kullanıcıları İçin OCR Desteği (Tesseract & Poppler):**  
+> Taranmış görsel PDF'lerde görünmez metin katmanı çıkarmak için Mac terminalinde Homebrew ile tek satırda kurulum yapabilirsiniz:
+> ```bash
+> brew install tesseract tesseract-lang poppler
+> ```
+> *Dijital Kütüphane, Homebrew'in kurduğu Tesseract yolunu (`/opt/homebrew/bin/tesseract` veya `/usr/local/bin/tesseract`) otomatik olarak tanır.*
+
+#### Seçenek 3: Docker / Docker Compose
 Poppler, Tesseract OCR (`tur` + `eng`) ve tüm Python bağımlılıkları hazır gelir.
 
 ```bash
@@ -62,22 +94,7 @@ docker compose up -d --build
 ```
 Sunucu hazır olduğunda `http://localhost:8000` adresinden erişebilirsiniz (`/health` uç noktası konteyner sağlık kontrolünü sağlar; kalıcı veriler `./veriler` klasöründe tutulur).
 
-#### Seçenek 2: Windows Tek Tıkla Kurulum (`BASLAT.bat`)
-1. Python 3.10+ kurulumunda **`Add python.exe to PATH`** seçeneğini işaretleyin.
-2. Proje ana dizinindeki **`BASLAT.bat`** dosyasına çift tıklayın.
-   - Sanal ortamı (`.venv` veya `%USERPROFILE%\.dijital_kutuphane_venv`) oluşturur,
-   - `requirements.txt` bağımlılıklarını kurar,
-   - `.env` dosyasını otomatik hazırlar ve `http://localhost:8000` adresini tarayıcıda açar.
-
-#### Seçenek 3: Linux / macOS Kurulumu
-Otomatik kurulum betiğini kullanabilir veya manuel kurabilirsiniz:
-```bash
-chmod +x docs/alternatif_kurulum/install.sh
-./docs/alternatif_kurulum/install.sh
-```
-<details>
-<summary>Manuel Python kurulum adımları (Linux / macOS / Windows)</summary>
-
+#### Seçenek 4: Standart Manuel Python Kurulumu
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
@@ -86,9 +103,7 @@ cp .env.example .env
 python main.py
 ```
 
-</details>
-
-#### Seçenek 4: Masaüstü Uygulaması Modu (PyWebView + Sistem Tepsisi)
+#### Seçenek 5: Masaüstü Uygulaması Modu (PyWebView + Sistem Tepsisi)
 ```bash
 pip install -e ".[desktop]"
 python desktop_shell.py
@@ -276,27 +291,31 @@ pytest -v tests/
 ### Core Capabilities
 
 - **ChromaGuard™ Reading Surface & Workspace**: Day, Sepia, E-Ink, and Night reading themes; in-book annotations & highlights; automatic PDF TOC extraction and page-offset resolution.
-- **Hybrid AI & Cascade Engine**: Supports **Google Gemini** (with multi-tier model fallback and HTTP 429 exponential-backoff tolerance) as well as **Ollama / LM Studio** and OpenAI-compatible local endpoints.
-- **Deep Book Chat & Hybrid RAG**: SQLite **FTS5** page-level full-text search combined with chunking, vector embeddings, Knowledge Graph extraction, Multi-Agent Debate, and Gemini File API context.
-- **Multi-Format Processing & OCR**: PDF, EPUB, and TXT ingestion via `pypdfium2`, `pdfplumber`, Poppler, and **Tesseract OCR** for scanned documents.
+- **Natural Neural TTS + 60 FPS Karaoke**: Built-in Microsoft `edge-tts` narration with word- and sentence-synchronized live karaoke highlighting.
+- **Invisible OCR Text Layer**: Automatic Tesseract OCR text layer generation for scanned/image-only PDFs, making them fully searchable and selectable.
+- **Interactive EPUB Typography & Filmstrip**: Rich EPUB footnotes with non-intrusive preview popovers, embedded image zoom, visual thumbnail filmstrip, and bookmarks drawer.
+- **Hybrid Vector RAG & Verifiable Citations**: Combines SQLite **FTS5** with 3-tier semantic embeddings (`ONNX` local, `Gemini Text-Embedding-004`, and deterministic hash), true SSE token streaming, and clickable citation badges linking directly to referenced book pages.
+- **FSRS v5 Active Recall Studio**: Intelligent spaced repetition flashcards generated from in-book highlights and notes using the Free Spaced Repetition Scheduler (FSRS v5) algorithm.
+- **Offline Vault (IndexedDB)**: Cryptographically seals books into browser local storage for offline reading and local progress tracking without internet.
+- **Cross-Platform**: 100% native compatibility across Windows, macOS (Apple Silicon M1/M2/M3/M4 & Intel), and Linux.
 - **OPDS 1.2 & Mobile Handoff**: Wireless `/opds` catalog feed for KOReader, Moon+ Reader, and Apple Books, plus instant QR-code handoff to continue reading on mobile at the exact page.
 - **Automation & Maintenance**: Live WebSocket task & log center (`durable_queue`), automated Watchfolder monitoring, Telethon Telegram sync, SHA-256 duplicate book hunter, local PDF compression, one-click ZIP backups, and **Obsidian / Anki / BibTeX** PKM exports.
-- **Desktop & PWA Ready**: Offline-capable PWA (`static/sw.js`) and optional **PyWebView + Pystray** native desktop shell (`desktop_shell.py`).
 
 ### Quick Start
 
-1. **Docker (Recommended)**
+1. **Windows (One-Click)**
+   - Double-click **`BASLAT.bat`** (creates `.venv`, installs requirements, sets up `.env`, and launches `http://localhost:8000`).
+2. **macOS & Linux (One-Command)**
+   ```bash
+   chmod +x baslat.sh
+   ./baslat.sh
+   ```
+   *For scanned PDF OCR on macOS: `brew install tesseract tesseract-lang poppler`*
+3. **Docker (Recommended for Servers)**
    ```bash
    cp .env.example .env
    # Set a strong ACCESS_PASSWORD in .env for non-localhost deployments
    docker compose up -d --build
-   ```
-2. **Windows (One-Click)**
-   - Ensure Python 3.10+ is installed with **Add python.exe to PATH** checked, then double-click **`BASLAT.bat`**.
-3. **Linux / macOS**
-   ```bash
-   chmod +x docs/alternatif_kurulum/install.sh
-   ./docs/alternatif_kurulum/install.sh
    ```
 4. **Desktop Shell (Optional)**
    ```bash

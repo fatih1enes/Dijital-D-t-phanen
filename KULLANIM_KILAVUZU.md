@@ -53,7 +53,16 @@ Uygulama, sıfır bir bilgisayarda (daha önce hiç çalıştırılmamış siste
 ---
 
 ### Linux veya macOS'ta Kurulum
-Terminali açarak proje dizinine gidin ve şu komutları sırasıyla çalıştırın:
+
+#### Yöntem 1: Tek Komutla Otomatik Kurulum (Önerilen)
+Terminali açarak proje dizinine gidin ve tek komutla başlatın:
+```bash
+chmod +x baslat.sh
+./baslat.sh
+```
+*Bu betik Python ortamınızı denetler, `.venv` sanal ortamını oluşturur, bağımlılıkları yükler, `.env` dosyasını hazırlar ve tarayıcınızda `http://localhost:8000` adresini otomatik açar.*
+
+#### Yöntem 2: Manuel Kurulum
 ```bash
 # 1. Sanal ortam oluşturun ve aktif edin
 python3 -m venv .venv
@@ -70,8 +79,17 @@ Sunucu başladığında tarayıcınızdan **`http://localhost:8000`** adresine g
 ---
 
 ### İsteğe Bağlı Ek Bileşenler
-* **Tesseract OCR (Taranmış / Resim Halindeki PDF'ler İçin):** Metin tabakası olmayan, sadece taranmış fotoğraf sayfalarından oluşan eski kitapları yapay zekanın okuyabilmesi için sisteminizde Tesseract OCR yüklü olması önerilir.
-  - Windows için: [Tesseract-OCR Windows Installer](https://github.com/UB-Mannheim/tesseract/wiki) indirip kurun. Kurulum yolunu kütüphanenin **Ayarlar** menüsündeki "Tesseract Yolu" alanına yazabilirsiniz (örn: `C:\Program Files\Tesseract-OCR\tesseract.exe`).
+* **Tesseract OCR (Taranmış / Resim Halindeki PDF'ler İçin):** Metin tabakası olmayan, sadece taranmış fotoğraf sayfalarından oluşan eski kitaplarda görünmez metin katmanı çıkarmak ve yapay zekanın sayfaları okuyabilmesi için sisteminizde Tesseract OCR yüklü olması önerilir:
+  - **macOS (Apple Silicon & Intel):** Terminalde Homebrew ile tek satırda kurabilirsiniz:
+    ```bash
+    brew install tesseract tesseract-lang poppler
+    ```
+    *(macOS üzerinde Homebrew `/opt/homebrew/bin/tesseract` veya `/usr/local/bin/tesseract` yolunu otomatik ekler; Ayarlar menüsünden manuel yol belirtmenize gerek kalmaz.)*
+  - **Windows için:** [Tesseract-OCR Windows Installer](https://github.com/UB-Mannheim/tesseract/wiki) indirip kurun. Kurulum yolunu kütüphanenin **Ayarlar** menüsündeki "Tesseract Yolu" alanına yazabilirsiniz (örn: `C:\Program Files\Tesseract-OCR\tesseract.exe`).
+  - **Linux (Debian/Ubuntu):**
+    ```bash
+    sudo apt update && sudo apt install -y tesseract-ocr tesseract-ocr-tur tesseract-ocr-eng poppler-utils
+    ```
 
 ---
 
