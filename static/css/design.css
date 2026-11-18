@@ -155,12 +155,6 @@ html {
   color-scheme: light dark;
 }
 
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: var(--t-ui);
-  animation-timing-function: var(--ease-out);
-}
-
 .theme-icon-spin {
   display: inline-block;
   animation: themeIconSpin var(--t-ui) var(--ease-out) both;
@@ -412,7 +406,7 @@ button:disabled,
 header {
   position: relative;
   z-index: 1500;
-  padding: var(--sp-6) 4rem var(--sp-5);
+  padding: var(--sp-6) 0 var(--sp-5);
   background: transparent;
   border-bottom: 1px solid var(--line);
 }
@@ -1880,16 +1874,16 @@ i[class*="fa-heart"] {
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
-  padding: clamp(3rem, 10vh, 7rem) var(--sp-6);
+  padding: clamp(3rem, 10vh, 7rem) clamp(1rem, 4.5vw, 4rem);
   box-sizing: border-box;
 }
 
 .zero-state-hero {
-  max-width: 880px;
+  max-width: 100%;
   margin: 0;
-  padding: var(--sp-6) 0;
-  background: transparent;
-  border: 1px solid transparent;
+  padding: clamp(2.25rem, 5vw, 4rem);
+  background: color-mix(in srgb, var(--surface) 60%, var(--paper));
+  border: 1px dashed var(--line-strong);
   border-radius: var(--r-lg);
   box-shadow: none;
   text-align: left;
@@ -2397,15 +2391,6 @@ button:active:not(:disabled),
   transition: opacity var(--t-ui) var(--ease-out), transform var(--t-page) var(--ease-out);
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .book-card:hover {
-    transform: translateY(-4px);
-  }
-
-  .book-card:hover .card-cover img {
-    transform: scale(1.025);
-  }
-}
 
 /* ═══════════════ 15. ÇALIŞMA ALANI & ODAKLI OKUYUCU (WORKSPACE) ═══════════════ */
 .workspace-reader {
@@ -2611,7 +2596,7 @@ button:active:not(:disabled),
     gap: 1rem;
   }
   .zero-state-hero {
-    padding: var(--sp-4) 0;
+    padding: var(--sp-5) var(--sp-4);
     margin: 0;
   }
   .hero-title {
@@ -4103,11 +4088,6 @@ button:active:not(:disabled),
   animation: workspaceSlideUp var(--t-morph) var(--ease-editorial) both;
 }
 
-::view-transition-old(book-cover),
-::view-transition-new(book-cover) {
-  animation-duration: var(--t-morph);
-  animation-timing-function: var(--ease-morph);
-}
 
 .workspace-resize-handle {
   width: 10px;
@@ -4138,11 +4118,6 @@ button:active:not(:disabled),
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .book-card:hover .card-cover img,
-  .book-card:hover .card-cover-placeholder {
-    transform: scale(1.03);
-  }
-
   .book-card:hover .card-cat-badge {
     transition-delay: 0ms;
   }
@@ -4363,8 +4338,13 @@ button:active:not(:disabled),
 #ops-center,
 .logs-header,
 .workspace-header,
+.workspace-chat-input-area,
 .pdf-toolbar,
 .pdf-search-bar,
+.pdf-floating-bar,
+[data-theme="dark"] .pdf-floating-bar,
+[data-theme="dark"] .pdf-toolbar,
+#telegram-toast,
 .toast-item {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
@@ -5745,5 +5725,86 @@ body.modal-open {
 
 .bar-fill {
   max-width: 48px;
+}
+
+/* ═══════════════ 22. EDİTORYAL HİZALAMA, CSS CONTAINMENT & MOBİL RAFİNE ═══════════════ */
+header {
+  padding-inline: 0;
+}
+
+.header-inner,
+.controls-panel,
+.import-zone,
+main {
+  width: 100%;
+  max-width: 1400px;
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 4.5vw, 4rem);
+  box-sizing: border-box;
+}
+
+.controls-panel {
+  margin-block: 1.25rem 0.25rem;
+}
+
+body.is-library-empty #ops-toggle:not(.is-processing):not(.is-open),
+body.is-library-empty #chat-panel:not(.active) {
+  opacity: 0.62;
+  transition: opacity var(--t-ui) var(--ease-out);
+}
+
+body.is-library-empty #ops-toggle:not(.is-processing):not(.is-open):hover,
+body.is-library-empty #ops-toggle:not(.is-processing):not(.is-open):focus-visible,
+body.is-library-empty #chat-panel:not(.active):hover,
+body.is-library-empty #chat-panel:not(.active):focus-within {
+  opacity: 1;
+}
+
+.workspace-status-badge:not(.offline)::before,
+.logs-status-pill.status-online .status-dot {
+  animation: none;
+}
+
+.book-card {
+  contain: layout style;
+}
+
+.card-cover {
+  contain: layout style paint;
+}
+
+.pdf-page-wrapper {
+  contain: layout style;
+}
+
+.pdf-page-wrapper > .textLayer:not(.doc-text-layer),
+.pdf-tts-layer,
+.pdf-highlight-layer {
+  contain: strict;
+}
+
+.log-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 76px;
+}
+
+@media (max-width: 480px) {
+  #ops-toggle {
+    left: 10px;
+    padding: 0.45rem 0.62rem;
+    font-size: 0.74rem;
+    gap: 0.3rem;
+  }
+
+  #chat-panel:not(.active) {
+    right: 10px;
+  }
+
+  #chat-panel:not(.active) .chat-header,
+  #chat-panel:not(.active) #chat-toggle {
+    padding: 0.45rem 0.68rem;
+    font-size: 0.74rem;
+    gap: 0.32rem;
+  }
 }
 }

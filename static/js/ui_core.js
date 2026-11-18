@@ -271,7 +271,7 @@
         return;
       }
 
-      if (e.key === 'Enter') {
+      if (e.key === 'Enter' || e.key === ' ') {
         if (document.activeElement && items.includes(document.activeElement)) {
           e.preventDefault();
           document.activeElement.click();

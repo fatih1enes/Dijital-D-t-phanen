@@ -44,10 +44,10 @@
     rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uo0qcPxh4Plq7G5tGm0rU+1SPhVotteLpBERwTkw==" crossorigin="anonymous" referrerpolicy="no-referrer">
   <style>@layer a11y, legacy, tokens, design, motion;</style>
-  <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}?v=2026111805">
-  <link rel="stylesheet" href="{{ url_for('static', path='/css/tokens.css') }}?v=2026111805">
-  <link rel="stylesheet" href="{{ url_for('static', path='/css/design.css') }}?v=2026111805">
-  <link rel="stylesheet" href="{{ url_for('static', path='/css/motion.css') }}?v=2026111805">
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}?v=2026111806">
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/tokens.css') }}?v=2026111806">
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/design.css') }}?v=2026111806">
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/motion.css') }}?v=2026111806">
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha512-q+4liFwdPC/bNdhUpZx6aXDx/h77yEQtn4I1slHydcbZK34nLaR3cAeYSJshoxIOq3mjEf7xJE8YWIUHMn+oCQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js" integrity="sha512-tjg8I2d6Fi0OBGz1csmr7RfI4uupYaCfL/RqhVRTS42RMGwfBsjwBGmhzhI+e2dPmyew8cFkoxnVkGvADDLvbg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js" integrity="sha512-9+ilAOeXY8qy2bw/h51MmliNNHvdyhTpLIlqDmVpD26z8VjVJsUJtk5rhbDIUvYiD+EpGoAu0xTa7MhZohFQjA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -926,9 +926,9 @@
         <div class="mobile-sheet-section">
           <span class="mobile-sheet-label">Sayfa Ölçeği</span>
           <div class="mobile-zoom-pill-group">
-            <button type="button" class="mobile-pill-btn" onclick="pdfZoomOut()"><i class="fas fa-minus"></i></button>
+            <button type="button" class="mobile-pill-btn" onclick="pdfZoomOut()" aria-label="Uzaklaştır" title="Uzaklaştır"><i class="fas fa-minus"></i></button>
             <button type="button" class="mobile-pill-btn active" id="mob-fit-width-btn" onclick="pdfFitWidth()"><i class="fas fa-arrows-left-right"></i> Genişliğe Sığdır</button>
-            <button type="button" class="mobile-pill-btn" onclick="pdfZoomIn()"><i class="fas fa-plus"></i></button>
+            <button type="button" class="mobile-pill-btn" onclick="pdfZoomIn()" aria-label="Yakınlaştır" title="Yakınlaştır"><i class="fas fa-plus"></i></button>
           </div>
         </div>
         <div class="mobile-sheet-section">
