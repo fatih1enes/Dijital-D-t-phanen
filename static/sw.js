@@ -1,6 +1,6 @@
 /* ═══════════ sw.js — Dijital Kütüphane PWA Service Worker ═══════════ */
-const CACHE_NAME = 'dijital-kutuphane-v2026111806';
-const CDN_CACHE_NAME = 'dijital-kutuphane-cdn-v1';
+const CACHE_NAME = 'dijital-kutuphane-v2026111807';
+const CDN_CACHE_NAME = 'dijital-kutuphane-cdn-v2';
 const PERSISTENT_CACHES = new Set([
   CACHE_NAME,
   'dijital-kutuphane-vault-v1',
@@ -81,10 +81,18 @@ async function handleNavigationFetch(request) {
 async function handleCdnAssetFetch(request) {
   const cache = await caches.open(CDN_CACHE_NAME);
   const cached = await cache.match(request);
-  if (cached) return cached;
+  if (cached) {
+    if (cached.type === 'opaque' && request.mode === 'cors') {
+      try {
+        await cache.delete(request);
+      } catch (_delErr) {}
+    } else {
+      return cached;
+    }
+  }
   try {
     const resp = await fetch(request);
-    if (resp && (resp.status === 200 || resp.type === 'opaque')) {
+    if (resp && resp.status === 200 && resp.type !== 'opaque') {
       try {
         await cache.put(request, resp.clone());
       } catch (_putErr) {}

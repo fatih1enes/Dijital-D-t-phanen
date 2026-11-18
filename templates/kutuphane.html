@@ -28,9 +28,14 @@
   <link rel="manifest" href="{{ url_for('static', path='/manifest.json') }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', path='/favicon.svg') }}">
   <script>
+    if ('caches' in window) {
+      caches.delete('dijital-kutuphane-cdn-v1').catch(function() {});
+    }
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function(err) {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(function(reg) {
+          if (reg && typeof reg.update === 'function') reg.update().catch(function() {});
+        }).catch(function(err) {
           console.debug('PWA ServiceWorker note:', err);
         });
       });
@@ -42,12 +47,12 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uo0qcPxh4Plq7G5tGm0rU+1SPhVotteLpBERwTkw==" crossorigin="anonymous" referrerpolicy="no-referrer">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css?v=6.5.0" referrerpolicy="no-referrer">
   <style>@layer a11y, legacy, tokens, design, motion;</style>
-  <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}?v=2026111806">
-  <link rel="stylesheet" href="{{ url_for('static', path='/css/tokens.css') }}?v=2026111806">
-  <link rel="stylesheet" href="{{ url_for('static', path='/css/design.css') }}?v=2026111806">
-  <link rel="stylesheet" href="{{ url_for('static', path='/css/motion.css') }}?v=2026111806">
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}?v=2026111807">
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/tokens.css') }}?v=2026111807">
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/design.css') }}?v=2026111807">
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/motion.css') }}?v=2026111807">
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha512-q+4liFwdPC/bNdhUpZx6aXDx/h77yEQtn4I1slHydcbZK34nLaR3cAeYSJshoxIOq3mjEf7xJE8YWIUHMn+oCQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js" integrity="sha512-tjg8I2d6Fi0OBGz1csmr7RfI4uupYaCfL/RqhVRTS42RMGwfBsjwBGmhzhI+e2dPmyew8cFkoxnVkGvADDLvbg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js" integrity="sha512-9+ilAOeXY8qy2bw/h51MmliNNHvdyhTpLIlqDmVpD26z8VjVJsUJtk5rhbDIUvYiD+EpGoAu0xTa7MhZohFQjA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -184,22 +189,30 @@
 
   <div class="import-zone" id="import-zone">
     <div class="zero-state-hero" id="drop-box">
-      <div class="hero-kicker">KİŞİSEL ARŞİV &amp; OKUMA ALANI</div>
-      <h2 class="hero-title">Kişisel dijital <em>arşiviniz</em>.</h2>
+      <h2 class="hero-title">Kişisel dijital <em>arşiviniz</em></h2>
       <p class="hero-subtitle">PDF, EPUB ve TXT belgelerinizi bu alana sürükleyip bırakın ya da cihazınızdan seçin.</p>
       
       <div class="hero-primary-actions">
         <button type="button" class="btn btn--primary btn--lg btn-hero-primary" onclick="document.getElementById('file-input').click()">
           <i class="fas fa-plus"></i>
-          <span>Kitap Dosyası Seç</span>
+          <span>Dosya Seç</span>
         </button>
       </div>
 
       <div class="hero-secondary-links">
         <button type="button" class="hero-text-link" id="btn-telegram" onclick="openTelegramModal()">Telegram'dan aktar</button>
         <span class="hero-link-sep" aria-hidden="true">·</span>
-        <button type="button" class="hero-text-link" id="btn-sync" onclick="syncLibrary()">
+        <button type="button" class="hero-text-link" id="btn-sync" onclick="syncLibrary()" title="Belirtilen eşitleme klasörüne attığınız PDF, EPUB ve TXT dosyalarını tarayıp kütüphaneye ekler">
           <i class="fas fa-sync-alt" id="sync-icon" style="font-size:0.75em; margin-right:4px;"></i>Klasörü eşitle
+        </button>
+      </div>
+
+      <div class="hero-folder-hint" id="hero-folder-hint">
+        <i class="fas fa-folder-open" aria-hidden="true"></i>
+        <span>Eşitleme klasörü:</span>
+        <button type="button" class="hero-folder-path-btn" id="sync-folder-path" data-path="{{ library_root or 'veriler/Dijital_Kutuphane' }}" onclick="copySyncFolderPath(this)" title="Klasör yolunu kopyalamak için tıklayın. PDF, EPUB ve TXT dosyalarınızı bu klasöre atıp 'Klasörü eşitle'ye basabilirsiniz.">
+          <code>{{ library_root or 'veriler/Dijital_Kutuphane' }}</code>
+          <i class="fas fa-copy hero-copy-icon" aria-hidden="true"></i>
         </button>
       </div>
 
@@ -1743,24 +1756,24 @@
   <div id="citation-preview-popover" class="citation-preview-popover" role="tooltip" aria-hidden="true"></div>
   <div id="epub-footnote-popover" class="citation-preview-popover epub-footnote-popover" role="tooltip" aria-hidden="true"></div>
 
-  <script defer src="{{ url_for('static', path='/js/state.js') }}?v=2026111806"></script>
-  <script defer src="{{ url_for('static', path='/js/motion.js') }}?v=2026111806"></script>
-  <script defer src="{{ url_for('static', path='/js/api.js') }}?v=2026111806"></script>
-  <script defer src="{{ url_for('static', path='/js/offline_vault.js') }}?v=2026111806"></script>
-  <script defer src="{{ url_for('static', path='/js/ui_core.js') }}?v=2026111806"></script>
-  <script defer src="{{ url_for('static', path='/js/ui_logs.js') }}?v=2026111806"></script>
-  <script defer src="{{ url_for('static', path='/js/ui_chat_settings.js') }}?v=2026111806"></script>
-  <script defer src="{{ url_for('static', path='/js/ui_srs.js') }}?v=2026111806"></script>
-  <script defer src="{{ url_for('static', path='/js/ui_telegram.js') }}?v=2026111806"></script>
-  <script defer src="{{ url_for('static', path='/js/workspace_state.js') }}?v=2026111806"></script>
-  <script defer src="{{ url_for('static', path='/js/workspace_selection.js') }}?v=2026111806"></script>
-  <script defer src="{{ url_for('static', path='/js/workspace_renderer.js') }}?v=2026111806"></script>
-  <script defer src="{{ url_for('static', path='/js/workspace_search.js') }}?v=2026111806"></script>
-  <script defer src="{{ url_for('static', path='/js/workspace_tts.js') }}?v=2026111806"></script>
-  <script defer src="{{ url_for('static', path='/js/workspace_chat.js') }}?v=2026111806"></script>
-  <script defer src="{{ url_for('static', path='/js/ui_workspace.js') }}?v=2026111806"></script>
-  <script defer src="{{ url_for('static', path='/js/websocket.js') }}?v=2026111806"></script>
-  <script defer src="{{ url_for('static', path='/js/app.js') }}?v=2026111806"></script>
+  <script defer src="{{ url_for('static', path='/js/state.js') }}?v=2026111807"></script>
+  <script defer src="{{ url_for('static', path='/js/motion.js') }}?v=2026111807"></script>
+  <script defer src="{{ url_for('static', path='/js/api.js') }}?v=2026111807"></script>
+  <script defer src="{{ url_for('static', path='/js/offline_vault.js') }}?v=2026111807"></script>
+  <script defer src="{{ url_for('static', path='/js/ui_core.js') }}?v=2026111807"></script>
+  <script defer src="{{ url_for('static', path='/js/ui_logs.js') }}?v=2026111807"></script>
+  <script defer src="{{ url_for('static', path='/js/ui_chat_settings.js') }}?v=2026111807"></script>
+  <script defer src="{{ url_for('static', path='/js/ui_srs.js') }}?v=2026111807"></script>
+  <script defer src="{{ url_for('static', path='/js/ui_telegram.js') }}?v=2026111807"></script>
+  <script defer src="{{ url_for('static', path='/js/workspace_state.js') }}?v=2026111807"></script>
+  <script defer src="{{ url_for('static', path='/js/workspace_selection.js') }}?v=2026111807"></script>
+  <script defer src="{{ url_for('static', path='/js/workspace_renderer.js') }}?v=2026111807"></script>
+  <script defer src="{{ url_for('static', path='/js/workspace_search.js') }}?v=2026111807"></script>
+  <script defer src="{{ url_for('static', path='/js/workspace_tts.js') }}?v=2026111807"></script>
+  <script defer src="{{ url_for('static', path='/js/workspace_chat.js') }}?v=2026111807"></script>
+  <script defer src="{{ url_for('static', path='/js/ui_workspace.js') }}?v=2026111807"></script>
+  <script defer src="{{ url_for('static', path='/js/websocket.js') }}?v=2026111807"></script>
+  <script defer src="{{ url_for('static', path='/js/app.js') }}?v=2026111807"></script>
 </body>
 
 </html>

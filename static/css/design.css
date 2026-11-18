@@ -2018,6 +2018,51 @@ i[class*="fa-heart"] {
   transform: scale(0.97);
 }
 
+.hero-folder-hint {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: var(--sp-3);
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.hero-folder-path-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.55rem;
+  background: var(--paper-dark);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xs);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background-color var(--t-micro) var(--ease-out),
+              border-color var(--t-micro) var(--ease-out),
+              color var(--t-micro) var(--ease-out);
+}
+
+.hero-folder-path-btn:hover {
+  background: var(--surface);
+  border-color: var(--line-strong);
+  color: var(--accent);
+}
+
+.hero-folder-path-btn code {
+  font-family: inherit;
+  font-size: inherit;
+  word-break: break-all;
+}
+
+.hero-copy-icon {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
 .hero-link-sep {
   color: var(--muted-light);
   user-select: none;

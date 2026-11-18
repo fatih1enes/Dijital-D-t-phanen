@@ -1186,7 +1186,8 @@
           
           showToast(`Kütüphane dizininde ${count} yeni kitap bulundu ve analiz kuyruğuna eklendi!`, 'info', 5000);
         } else {
-          showToast('Kütüphane dizini kontrol edildi ve eşitlendi. Tüm kitaplar güncel.', 'success');
+          const syncPath = document.getElementById('sync-folder-path')?.dataset?.path || 'veriler/Dijital_Kutuphane';
+          showToast(`Yeni dosya bulunamadı. Belgelerinizi "${syncPath}" klasörüne atıp tekrar eşitleyebilirsiniz.`, 'info', 4500);
         }
       } catch (err) {
         console.error("Eşitleme hatası:", err);
@@ -1198,6 +1199,29 @@
     }
 
     window.syncLibrary = syncLibrary;
+
+    window.copySyncFolderPath = async function(btnEl) {
+      const targetPath = btnEl?.dataset?.path || btnEl?.textContent?.trim();
+      if (!targetPath) return;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(targetPath);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = targetPath;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        }
+        showToast("Eşitleme klasörü yolu panoya kopyalandı. Dosyalarınızı bu klasöre atıp 'Klasörü eşitle'ye basabilirsiniz.", 'success', 4500);
+      } catch (err) {
+        console.warn('Klasör yolu kopyalanamadı:', err);
+        showToast(`Eşitleme klasörü: ${targetPath}`, 'info', 5000);
+      }
+    };
 
     // --- TELEGRAM INTEGRATION API HELPERS ---
     async function apiTelegramStatus() {

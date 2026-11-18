@@ -385,7 +385,13 @@ async def service_worker_root() -> Response:
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request) -> HTMLResponse:
     """Render the main library page."""
-    return templates.TemplateResponse(request, "kutuphane.html")
+    import app.constants as app_constants
+
+    return templates.TemplateResponse(
+        request,
+        "kutuphane.html",
+        {"library_root": app_constants.LIBRARY_ROOT},
+    )
 
 
 @app.get("/login", response_class=HTMLResponse)
