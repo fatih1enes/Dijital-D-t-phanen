@@ -923,51 +923,89 @@
       scheduleSaveReadingProgress(pdfPageNum);
     }
 
-    // Dynamic virtual scroll renderer
+    // Dynamic virtual scroll renderer (O(log N) binary search + early exit)
     function checkVisiblePagesAndRender() {
       if (!pdfDoc && !isDocReaderMode) return;
-      
+      if (pdfPageCount <= 0) return;
+
       const container = document.getElementById('pdf-canvas-container');
       if (!container) return;
-      
+
       if (pdfDoc && pdfPageNum && !Number.isNaN(pdfPageNum) && pdfPageNum >= 1 && !pdfRenderedPages[pdfPageNum]) {
         void renderPdfPageVirtual(pdfPageNum);
       }
-      
+
       const containerRect = container.getBoundingClientRect();
-      const wrappers = container.querySelectorAll('.pdf-page-wrapper');
-      
+      const samplePage = Math.min(pdfPageCount, Math.max(1, Number.parseInt(pdfPageNum, 10) || 1));
+      const sampleWrap = document.getElementById(`pdf-page-wrapper-${samplePage}`)
+        || container.querySelector('.pdf-page-wrapper');
+      if (!sampleWrap) return;
+
+      const sampleH = sampleWrap.offsetHeight || containerRect.height || 800;
+      const preloadBuffer = Math.max(sampleH * 1.5, containerRect.height * 0.9);
+      const minVisibleTop = containerRect.top - preloadBuffer;
+      const maxVisibleBottom = containerRect.bottom + preloadBuffer;
+
+      let low = 1;
+      let high = pdfPageCount;
+      while (low < high) {
+        const mid = (low + high) >> 1;
+        const w = document.getElementById(`pdf-page-wrapper-${mid}`);
+        if (!w) {
+          high = mid;
+          continue;
+        }
+        const row = pdfIsSpreadMode ? w.closest('.pdf-spread-row') : null;
+        const r = (row || w).getBoundingClientRect();
+        if (r.bottom < minVisibleTop) {
+          low = mid + 1;
+        } else {
+          high = mid;
+        }
+      }
+
+      const startPage = Math.max(1, low - 2);
       let mostVisiblePage = (!Number.isNaN(pdfPageNum) && pdfPageNum >= 1) ? pdfPageNum : 1;
       let maxVisibleHeight = 0;
-      
-      for (let i = 0; i < wrappers.length; i++) {
-        const wrapper = wrappers[i];
-        const pNum = Number.parseInt(wrapper.dataset.pageNum || wrapper.dataset.pageNumber || wrapper.id.replace('pdf-page-wrapper-', ''), 10);
-        if (Number.isNaN(pNum) || pNum < 1) continue;
+      const nearPages = new Set();
+
+      for (let p = startPage; p <= pdfPageCount; p++) {
+        const wrapper = document.getElementById(`pdf-page-wrapper-${p}`);
+        if (!wrapper) continue;
         const rect = wrapper.getBoundingClientRect();
-        
+
         const visibleTop = Math.max(rect.top, containerRect.top);
         const visibleBottom = Math.min(rect.bottom, containerRect.bottom);
         const visibleHeight = Math.max(0, visibleBottom - visibleTop);
-        
+
         if (visibleHeight > maxVisibleHeight) {
           maxVisibleHeight = visibleHeight;
-          mostVisiblePage = pNum;
+          mostVisiblePage = p;
         }
-        
-        if (pdfDoc) {
-          const preloadBuffer = Math.max(rect.height * 1.5, containerRect.height * 0.9);
-          const isNearViewport = (rect.bottom >= containerRect.top - preloadBuffer && rect.top <= containerRect.bottom + preloadBuffer);
-          if (isNearViewport) {
-            if (!pdfRenderedPages[pNum]) {
-              void renderPdfPageVirtual(pNum);
-            }
-          } else if (pdfRenderedPages[pNum] === 'done' && !isUserSelectingText) {
+
+        const isNearViewport = (rect.bottom >= minVisibleTop && rect.top <= maxVisibleBottom);
+        if (isNearViewport) {
+          nearPages.add(p);
+          if (pdfDoc && !pdfRenderedPages[p]) {
+            void renderPdfPageVirtual(p);
+          }
+        } else if (rect.top > maxVisibleBottom) {
+          if (!pdfIsSpreadMode || p === 1 || (p % 2 === 1)) {
+            break;
+          }
+        }
+      }
+
+      if (pdfDoc && !isUserSelectingText) {
+        const renderedKeys = Object.keys(pdfRenderedPages);
+        for (let i = 0; i < renderedKeys.length; i++) {
+          const pNum = Number.parseInt(renderedKeys[i], 10);
+          if (!nearPages.has(pNum) && pdfRenderedPages[pNum] === 'done') {
             cleanupOffscreenPage(pNum);
           }
         }
       }
-      
+
       updateVisiblePageProgress(mostVisiblePage);
     }
 

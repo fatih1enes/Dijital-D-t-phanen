@@ -67,6 +67,16 @@
 
       // Open overlay & establish exact layout geometry BEFORE initializing viewer (ensures accurate Fit-Width measurement)
       const readerEl = document.getElementById('workspace-reader');
+      if (readerEl && !readerEl.classList.contains('open')) {
+        window._preWorkspaceScrollY = window.scrollY || window.pageYOffset || 0;
+      }
+      if (!opts.fromPopState && window.history && typeof window.history.pushState === 'function') {
+        if (window.history.state?.workspaceBook !== book.hash) {
+          try {
+            window.history.pushState({ workspaceBook: book.hash }, '', window.location.pathname);
+          } catch (_) {}
+        }
+      }
       const isMobileDevice = isMobileReaderViewport();
       readerEl.classList.add('open');
       readerEl.classList.remove('controls-hidden');
@@ -218,11 +228,13 @@
     }
     window.openBookWithMorph = openBookWithMorph;
 
-    function closeWorkspace() {
+    function closeWorkspace(opts = {}) {
       ++workspaceSessionToken;
       const readerEl = document.getElementById('workspace-reader');
       const currentBook = activeWorkspaceBook;
       const returnEl = readerEl?._returnFocusEl || null;
+      const savedScrollY = typeof window._preWorkspaceScrollY === 'number' ? window._preWorkspaceScrollY : null;
+      window._preWorkspaceScrollY = null;
 
       const doClose = () => {
         if (readerEl) readerEl.classList.remove('open', 'workspace-entering', 'controls-hidden');
@@ -253,6 +265,17 @@
 
         activeWorkspaceBook = null;
         isFullBookLoaded = false;
+
+        if (!opts.fromPopState && window.history && typeof window.history.replaceState === 'function') {
+          if (window.history.state?.workspaceBook || window.location.search.includes('open_book=')) {
+            try {
+              window.history.replaceState(null, '', window.location.pathname);
+            } catch (_) {}
+          }
+        }
+        if (savedScrollY !== null && savedScrollY > 0) {
+          window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+        }
       };
 
       const restoreFocus = () => {
@@ -270,6 +293,13 @@
       restoreFocus();
     }
 
+    window.addEventListener('popstate', () => {
+      const readerEl = document.getElementById('workspace-reader');
+      if (readerEl && readerEl.classList.contains('open')) {
+        closeWorkspace({ fromPopState: true });
+      }
+    });
+
     document.addEventListener('DOMContentLoaded', () => {
       const handle = document.getElementById('workspace-resize-handle');
       const pdfPane = document.getElementById('workspace-pdf-pane');
@@ -279,33 +309,18 @@
       if (!handle || !pdfPane || !chatPane) return;
       
       let isDragging = false;
-      
-      const onMouseDown = (e) => {
-        isDragging = true;
-        handle.classList.add('active');
-        if (reader) reader.classList.add('is-resizing');
-        document.body.style.cursor = 'col-resize';
-        // Add a temporary overlay over iframe so mouse events don't get swallowed by pdf
-        const iframeMask = document.createElement('div');
-        iframeMask.id = 'iframe-drag-mask';
-        iframeMask.style.position = 'absolute';
-        iframeMask.style.inset = '0';
-        iframeMask.style.zIndex = '9999';
-        pdfPane.appendChild(iframeMask);
-      };
-      
-      const onMouseMove = (e) => {
-        if (!isDragging) return;
-        
-        const clientX = e.clientX || e.touches?.[0]?.clientX;
-        if (!clientX) return;
-        
+      let resizeRaf = 0;
+      let pendingClientX = null;
+
+      const applyResizeFrame = () => {
+        resizeRaf = 0;
+        if (!isDragging || pendingClientX === null) return;
         const totalWidth = window.innerWidth;
         // Limit: PDF pane minimum 380px or 28%, Chat pane min 280px or 20%
         const minPdfPercent = Math.max(25, (380 / totalWidth) * 100);
         const maxPdfPercent = Math.min(80, ((totalWidth - 300) / totalWidth) * 100);
-        const leftWidthPercent = Math.max(minPdfPercent, Math.min(maxPdfPercent, (clientX / totalWidth) * 100));
-        
+        const leftWidthPercent = Math.max(minPdfPercent, Math.min(maxPdfPercent, (pendingClientX / totalWidth) * 100));
+
         const pdfF = leftWidthPercent / 100;
         const chatF = (100 - leftWidthPercent) / 100;
         pdfPane.style.flex = `${pdfF} 1 0px`;
@@ -316,12 +331,47 @@
         lastChatFlex = chatPane.style.flex;
       };
       
+      const onMouseDown = (e) => {
+        isDragging = true;
+        handle.classList.add('active');
+        if (reader) reader.classList.add('is-resizing');
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        if (!document.getElementById('iframe-drag-mask')) {
+          const iframeMask = document.createElement('div');
+          iframeMask.id = 'iframe-drag-mask';
+          iframeMask.style.position = 'absolute';
+          iframeMask.style.inset = '0';
+          iframeMask.style.zIndex = '9999';
+          pdfPane.appendChild(iframeMask);
+        }
+      };
+      
+      const onMouseMove = (e) => {
+        if (!isDragging) return;
+        const clientX = e.clientX || e.touches?.[0]?.clientX;
+        if (!clientX) return;
+        pendingClientX = clientX;
+        if (!resizeRaf) {
+          resizeRaf = requestAnimationFrame(applyResizeFrame);
+        }
+      };
+      
       const onMouseUp = () => {
         if (!isDragging) return;
+        if (resizeRaf) {
+          cancelAnimationFrame(resizeRaf);
+          resizeRaf = 0;
+        }
+        if (pendingClientX !== null) {
+          applyResizeFrame();
+          pendingClientX = null;
+        }
         isDragging = false;
         handle.classList.remove('active');
         if (reader) reader.classList.remove('is-resizing');
         document.body.style.cursor = '';
+        document.body.style.userSelect = '';
         document.getElementById('iframe-drag-mask')?.remove();
         if (pdfDoc && (pdfIsFitWidth || pdfIsFitHeight) && typeof resizeAllPagesForZoom === 'function') {
           resizeAllPagesForZoom();

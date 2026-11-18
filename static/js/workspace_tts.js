@@ -14,6 +14,8 @@
     let _ttsCurrentSpoken = '';
     let _ttsVoice = 'tr-TR-EmelNeural';
     let _ttsRate = 1.0;
+    let _ttsLastRenderedWordIdx = -2;
+    let _ttsLastRenderedPage = -1;
 
     try {
       _ttsVoice = localStorage.getItem('kutuphane_tts_voice') || 'tr-TR-EmelNeural';
@@ -58,6 +60,8 @@
     }
 
     function _clearAllTtsKaraokeLayers() {
+      _ttsLastRenderedWordIdx = -2;
+      _ttsLastRenderedPage = -1;
       document.querySelectorAll('.pdf-tts-layer').forEach(layer => {
         layer.innerHTML = '';
       });
@@ -131,7 +135,8 @@
       const capEl = document.getElementById('tts-live-caption');
       if (!capEl) return;
       if (!Array.isArray(words) || words.length === 0) {
-        capEl.textContent = spokenText || '';
+        const plain = spokenText || '';
+        if (capEl.textContent !== plain) capEl.textContent = plain;
         return;
       }
 
@@ -145,6 +150,12 @@
           activeIdx = i;
         }
       }
+
+      if (activeIdx === _ttsLastRenderedWordIdx && _ttsActivePage === _ttsLastRenderedPage) {
+        return;
+      }
+      _ttsLastRenderedWordIdx = activeIdx;
+      _ttsLastRenderedPage = _ttsActivePage;
 
       const htmlParts = words.map((w, idx) => {
         const safeW = esc(w.t || '');
@@ -289,6 +300,8 @@
       const sentence = _ttsSentences[_ttsSentenceIdx];
       _ttsCurrentSpoken = sentence;
       _ttsCurrentWords = [];
+      _ttsLastRenderedWordIdx = -2;
+      _ttsLastRenderedPage = -1;
       const capEl = document.getElementById('tts-live-caption');
       if (capEl) capEl.textContent = sentence;
       _highlightSentenceOnPageDom(_ttsActivePage, sentence);

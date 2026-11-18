@@ -252,18 +252,50 @@
       const container = document.getElementById('pdf-canvas-container');
       if (!container) return null;
 
+      const cached = selectionDragState?.lastPageWrapper || selectionDragState?.anchorPageWrapper;
+      if (cached && cached.isConnected && typeof pdfIsSpreadMode !== 'undefined' && !pdfIsSpreadMode) {
+        const cr = cached.getBoundingClientRect();
+        if (clientY >= cr.top && clientY <= cr.bottom) {
+          return cached;
+        }
+      }
+
       const elements = document.elementsFromPoint(clientX, clientY);
       for (const el of elements) {
         const wrapper = el.closest('.pdf-page-wrapper');
         if (wrapper) return wrapper;
       }
 
-      // If clicked in margin outside the page wrapper horizontally, match by vertical range
-      const wrappers = Array.from(container.querySelectorAll('.pdf-page-wrapper'));
-      for (const w of wrappers) {
-        const r = w.getBoundingClientRect();
-        if (clientY >= r.top && clientY <= r.bottom) {
-          return w;
+      // Binary search fallback when clicked/dragged horizontally in margins outside the page wrapper
+      if (typeof pdfPageCount === 'number' && pdfPageCount > 0) {
+        let low = 1;
+        let high = pdfPageCount;
+        while (low <= high) {
+          const mid = (low + high) >> 1;
+          const w = document.getElementById(`pdf-page-wrapper-${mid}`);
+          if (!w) break;
+          const row = (typeof pdfIsSpreadMode !== 'undefined' && pdfIsSpreadMode) ? w.closest('.pdf-spread-row') : null;
+          const r = (row || w).getBoundingClientRect();
+          if (clientY < r.top) {
+            high = mid - 1;
+          } else if (clientY > r.bottom) {
+            low = mid + 1;
+          } else {
+            if (!row) return w;
+            const rowWrappers = row.querySelectorAll('.pdf-page-wrapper');
+            let closest = w;
+            let bestDist = Infinity;
+            for (let i = 0; i < rowWrappers.length; i++) {
+              const rw = rowWrappers[i];
+              const rr = rw.getBoundingClientRect();
+              const dist = clientX < rr.left ? (rr.left - clientX) : (clientX > rr.right ? clientX - rr.right : 0);
+              if (dist < bestDist) {
+                bestDist = dist;
+                closest = rw;
+              }
+            }
+            return closest;
+          }
         }
       }
 
@@ -402,7 +434,47 @@
         } catch (_) {}
       }, { signal });
 
-      // Pointer move: update selection with geometric clamping for margin-initiated drags
+      let selectionMoveRaf = 0;
+      let pendingMoveCoords = null;
+
+      const applySelectionMove = () => {
+        selectionMoveRaf = 0;
+        if (!selectionDragState || !pendingMoveCoords) return;
+        const { clientX, clientY } = pendingMoveCoords;
+
+        const pageWrapper = findPageWrapperAtPoint(clientX, clientY) || selectionDragState.anchorPageWrapper;
+        if (!pageWrapper) return;
+        selectionDragState.lastPageWrapper = pageWrapper;
+
+        const textLayer = pageWrapper.querySelector('.textLayer');
+        if (!textLayer) return;
+
+        const geometry = getOrComputePageGeometry(textLayer);
+        if (!geometry) return;
+
+        const hit = findCaretPositionInPage(textLayer, geometry, clientX, clientY);
+        if (!hit?.node) return;
+
+        const sel = window.getSelection();
+        try {
+          sel.setBaseAndExtent(
+            selectionDragState.anchorNode,
+            selectionDragState.anchorOffset,
+            hit.node,
+            hit.offset
+          );
+        } catch (_) {}
+      };
+
+      signal.addEventListener('abort', () => {
+        if (selectionMoveRaf) {
+          cancelAnimationFrame(selectionMoveRaf);
+          selectionMoveRaf = 0;
+        }
+        pendingMoveCoords = null;
+      }, { once: true });
+
+      // Pointer move: coalesce selection geometry updates to at most once per animation frame
       document.addEventListener("pointermove", (evt) => {
         if (!selectionDragState) return;
 
@@ -416,39 +488,32 @@
 
         selectionDragState.isDragging = true;
         isUserSelectingText = true;
+        pendingMoveCoords = { clientX: evt.clientX, clientY: evt.clientY };
 
-        const pageWrapper = findPageWrapperAtPoint(evt.clientX, evt.clientY) || selectionDragState.anchorPageWrapper;
-        if (!pageWrapper) return;
-
-        const textLayer = pageWrapper.querySelector('.textLayer');
-        if (!textLayer) return;
-
-        const geometry = getOrComputePageGeometry(textLayer);
-        if (!geometry) return;
-
-        const hit = findCaretPositionInPage(textLayer, geometry, evt.clientX, evt.clientY);
-        if (!hit?.node) return;
-
-        const sel = window.getSelection();
-        try {
-          sel.setBaseAndExtent(
-            selectionDragState.anchorNode,
-            selectionDragState.anchorOffset,
-            hit.node,
-            hit.offset
-          );
-        } catch (_) {}
+        if (!selectionMoveRaf) {
+          selectionMoveRaf = requestAnimationFrame(applySelectionMove);
+        }
       }, { signal });
 
       // Pointer up: complete selection and position floating action bar
       document.addEventListener("pointerup", () => {
+        if (selectionMoveRaf) {
+          cancelAnimationFrame(selectionMoveRaf);
+          selectionMoveRaf = 0;
+        }
         if (selectionDragState) {
+          if (selectionDragState.isDragging && pendingMoveCoords) {
+            applySelectionMove();
+          }
+          pendingMoveCoords = null;
           if (selectionDragState.isDragging) {
             handleTextSelection();
           } else {
             clearSelection();
           }
           selectionDragState = null;
+        } else {
+          pendingMoveCoords = null;
         }
         isUserSelectingText = false;
         resetAllEndOfContent();
